@@ -222,16 +222,14 @@ function ScoringAccordionControl({ option }: { option: OptionData }) {
 
 function ScoringAccordionPanel({
   option,
-  nextOption,
+  advance,
   disabled,
   setScore,
-  onAdvance,
 }: {
   option: OptionData
-  nextOption: OptionData | null
+  advance?: () => void
   disabled?: boolean
   setScore: ReturnType<typeof useSetScore>
-  onAdvance: (optionId: string) => void
 }) {
   return (
     <Stack gap="xs">
@@ -253,7 +251,7 @@ function ScoringAccordionPanel({
         disabled={disabled}
         setScore={setScore}
       />
-      {nextOption && <NextButton onClick={() => onAdvance(nextOption.id)} />}
+      {advance && <NextButton onClick={advance} />}
     </Stack>
   )
 }
@@ -269,10 +267,15 @@ function ScoringAccordionPanel({
  * that expand/collapse distinction — and its "Next >" button — is only shown while this column
  * is `active`; otherwise every item stays collapsed and undecorated, since the whole column is
  * already dimmed as a unit and the walkthrough position doesn't need to be visible to explain
- * that dimming. */
+ * that dimming.
+ *
+ * The "Next >" button always lives in the same spot — the focused option's panel — regardless
+ * of what it does: while there's a next option it advances the walkthrough, and on the last
+ * option it advances the phase instead. Only its action changes, never its position. */
 export function ScoringColumn({ options, disabled, active, onAdvancePhase }: ScoringColumnProps) {
   const setScore = useSetScore()
   const { activeOption, nextOption, focus } = useOptionWalkthrough(options)
+  const advance = nextOption ? () => focus(nextOption.id) : onAdvancePhase
 
   if (options.length === 0) {
     return (
@@ -283,7 +286,7 @@ export function ScoringColumn({ options, disabled, active, onAdvancePhase }: Sco
           description="Add some options in the Options column first, or jump in anyway."
           placeholder="Placeholder scoring card"
         />
-        {active && !nextOption && onAdvancePhase && <NextButton onClick={onAdvancePhase} />}
+        {active && advance && <NextButton onClick={advance} />}
       </>
     )
   }
@@ -305,16 +308,14 @@ export function ScoringColumn({ options, disabled, active, onAdvancePhase }: Sco
             <Accordion.Panel>
               <ScoringAccordionPanel
                 option={option}
-                nextOption={active && option.id === activeOption?.id ? nextOption : null}
+                advance={active && option.id === activeOption?.id ? advance : undefined}
                 disabled={disabled}
                 setScore={setScore}
-                onAdvance={focus}
               />
             </Accordion.Panel>
           </Accordion.Item>
         ))}
       </Accordion>
-      {active && !nextOption && onAdvancePhase && <NextButton onClick={onAdvancePhase} />}
       <RankingLeaderboard options={options} />
     </>
   )

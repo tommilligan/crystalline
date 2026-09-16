@@ -21,7 +21,11 @@ interface EvaluationColumnProps {
  * focused. That per-option focus is only ever shown while this column itself is `active`
  * (the selected phase) — otherwise the whole column is already dimmed as a unit by
  * `BoardColumnShell`, and layering a second, per-option dim on top of that would double-fade
- * it. The walkthrough position is still tracked while inactive, just not displayed. */
+ * it. The walkthrough position is still tracked while inactive, just not displayed.
+ *
+ * The "Next >" button always lives in the same spot — attached to the focused option's card —
+ * regardless of what it does: while there's a next option it advances the walkthrough, and on
+ * the last option it advances the phase instead. Only its action changes, never its position. */
 export function EvaluationColumn({
   options,
   disabled,
@@ -29,6 +33,7 @@ export function EvaluationColumn({
   onAdvancePhase,
 }: EvaluationColumnProps) {
   const { activeOption, nextOption, focus } = useOptionWalkthrough(options)
+  const advance = nextOption ? () => focus(nextOption.id) : onAdvancePhase
 
   if (options.length === 0) {
     return (
@@ -39,7 +44,7 @@ export function EvaluationColumn({
           description="Add some options in the Options column first, or jump in anyway."
           placeholder="Placeholder evaluation space"
         />
-        {active && !nextOption && onAdvancePhase && <NextButton onClick={onAdvancePhase} />}
+        {active && advance && <NextButton onClick={advance} />}
       </>
     )
   }
@@ -95,14 +100,11 @@ export function EvaluationColumn({
                   disabled={disabled}
                 />
               </Box>
-              {active && focused && nextOption && (
-                <NextButton onClick={() => focus(nextOption.id)} />
-              )}
+              {focused && advance && <NextButton onClick={advance} />}
             </Stack>
           </Card>
         )
       })}
-      {active && !nextOption && onAdvancePhase && <NextButton onClick={onAdvancePhase} />}
     </>
   )
 }
