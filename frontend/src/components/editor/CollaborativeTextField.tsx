@@ -48,6 +48,12 @@ export function CollaborativeTextField({
       editorProps: {
         attributes: { class: classes.editor },
       },
+      // Collaboration/CollaborationCaret set Yjs awareness state synchronously during editor
+      // construction, which notifies other components' presence subscriptions (e.g.
+      // PresenceAvatars). Creating the editor immediately during render does that setState
+      // while this component is still rendering, which React disallows. Defer construction to
+      // the mount effect instead.
+      immediatelyRender: false,
     },
     [field, doc, provider, disabled],
   )
