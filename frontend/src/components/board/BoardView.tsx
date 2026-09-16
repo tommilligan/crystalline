@@ -1,6 +1,5 @@
 import {
   Alert,
-  Badge,
   Button,
   Container,
   Group,
@@ -31,7 +30,6 @@ import { EvaluationColumn } from './columns/EvaluationColumn'
 import { OptionsColumn } from './columns/OptionsColumn'
 import { ScoringColumn } from './columns/ScoringColumn'
 import { SituationColumn } from './columns/SituationColumn'
-import { PhaseNav } from './PhaseNav'
 import { PresenceAvatars } from './PresenceAvatars'
 
 export function BoardView() {
@@ -117,9 +115,6 @@ export function BoardView() {
             <Text fw={700} size="lg">
               Crystal Ball
             </Text>
-            <Badge color="blue" variant="light" size="sm">
-              Six Hats Board
-            </Badge>
           </Group>
 
           <Group gap="sm">
@@ -146,9 +141,7 @@ export function BoardView() {
           </Group>
         </Group>
 
-        {!signed ? (
-          <PhaseNav currentPhase={phase} onChange={setPhase} />
-        ) : (
+        {signed && (
           <Text c="dimmed" size="sm">
             This board is signed and read-only. Clone it to make further changes.
           </Text>

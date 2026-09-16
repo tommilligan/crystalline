@@ -1,3 +1,4 @@
+import { hri } from 'human-readable-ids'
 import { useEffect, useState } from 'react'
 import { type Identity, loadIdentity, saveIdentity } from '../lib/localIdentity'
 import { useUpdateMyPresence } from '../liveblocks.config'
@@ -13,7 +14,7 @@ export function useLocalIdentity() {
   }, [identity.name, identity.color, updateMyPresence])
 
   function setName(name: string) {
-    const next = { ...identity, name: name.trim() || 'Facilitator' }
+    const next = { ...identity, name: name.trim() || hri.random() }
     setIdentityState(next)
     saveIdentity(next)
   }

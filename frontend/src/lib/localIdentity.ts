@@ -1,9 +1,13 @@
+import { hri } from 'human-readable-ids'
+
 const STORAGE_KEY = 'crystalline:identity'
 
-/** This device's locally-generated identity. There are no accounts in the MVP (see
- * `docs/mvp-scope.md`), so `id` is a random, per-browser value — it's what the backend uses as
+/** This tab's locally-generated identity. There are no accounts in the MVP (see
+ * `docs/mvp-scope.md`), so `id` is a random, per-session value — it's what the backend uses as
  * the Liveblocks `userId` when minting an access token (see `liveblocks.config.ts`), and what
- * distinguishes this connection's presence/caret from others'. */
+ * distinguishes this connection's presence/caret from others'. Kept in sessionStorage (not
+ * localStorage) so each browser session gets its own generated name rather than every tab on a
+ * device sharing one identity. */
 export interface Identity {
   id: string
   name: string
@@ -17,14 +21,14 @@ function randomPresenceColor(): string {
 
 export function loadIdentity(): Identity {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const raw = sessionStorage.getItem(STORAGE_KEY)
     if (raw) return JSON.parse(raw) as Identity
   } catch {
-    // localStorage unavailable or corrupt value — fall through to a fresh identity.
+    // sessionStorage unavailable or corrupt value — fall through to a fresh identity.
   }
   const identity: Identity = {
     id: crypto.randomUUID(),
-    name: 'Facilitator',
+    name: hri.random(),
     color: randomPresenceColor(),
   }
   saveIdentity(identity)
@@ -33,7 +37,7 @@ export function loadIdentity(): Identity {
 
 export function saveIdentity(identity: Identity) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(identity))
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(identity))
   } catch {
     // Best-effort persistence only.
   }

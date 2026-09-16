@@ -32,7 +32,7 @@ export function OptionsColumn({ options, disabled }: OptionsColumnProps) {
   return (
     <>
       <TextInput
-        leftSection={<IconPlus size={16} />}
+        rightSection={<IconPlus size={16} />}
         placeholder="Type an option, press Enter"
         value={draft}
         disabled={disabled}

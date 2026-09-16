@@ -13,8 +13,8 @@ interface BoardLayoutProps {
 /**
  * Wide screens (projector/laptop, the primary MVP scenarios per `docs/ui-notes.md`) show all
  * five columns side by side. Narrower screens stack the same five columns as full-width rows
- * instead — `PhaseNav` above this layout (and clicking a column) still switches the emphasized
- * phase, so navigation works the same way in both layouts.
+ * instead. Clicking a column switches the emphasized phase, so navigation works the same way
+ * in both layouts.
  */
 export function BoardLayout({ currentPhase, onFocusPhase, columns }: BoardLayoutProps) {
   const isWide = useMediaQuery('(min-width: 1100px)', true)
@@ -30,30 +30,36 @@ export function BoardLayout({ currentPhase, onFocusPhase, columns }: BoardLayout
   if (isWide) {
     return (
       <SimpleGrid cols={5} spacing="md">
-        {PHASES.map((phase) => (
-          <BoardColumnShell
-            key={phase.key}
-            phase={phase}
-            emphasized={phase.key === currentPhase}
-            onFocus={() => onFocusPhase(phase.key)}
-          >
-            {columns[phase.key]}
-          </BoardColumnShell>
-        ))}
+        {PHASES.map((phase, index) => {
+          const nextPhase = PHASES[index + 1]
+          return (
+            <BoardColumnShell
+              key={phase.key}
+              phase={phase}
+              emphasized={phase.key === currentPhase}
+              onFocus={() => onFocusPhase(phase.key)}
+              onAdvance={nextPhase ? () => onFocusPhase(nextPhase.key) : undefined}
+            >
+              {columns[phase.key]}
+            </BoardColumnShell>
+          )
+        })}
       </SimpleGrid>
     )
   }
 
   return (
     <Stack gap="md">
-      {PHASES.map((phase) => {
+      {PHASES.map((phase, index) => {
         const emphasized = phase.key === currentPhase
+        const nextPhase = PHASES[index + 1]
         return (
           <div key={phase.key} ref={emphasized ? emphasizedRef : undefined}>
             <BoardColumnShell
               phase={phase}
               emphasized={emphasized}
               onFocus={() => onFocusPhase(phase.key)}
+              onAdvance={nextPhase ? () => onFocusPhase(nextPhase.key) : undefined}
             >
               {columns[phase.key]}
             </BoardColumnShell>

@@ -121,7 +121,7 @@ export function HomePage() {
 
             <Paper w="100%" p="sm" radius="sm" bg="blue.0">
               <Text size="xs" fw={700} c="blue.8">
-                SIX THINKING HATS METHOD
+                FIVE-PHASE METHOD
               </Text>
               <Text size="xs" c="blue.9">
                 Structure complex debates into five modular operational phases. Avoid concurrent

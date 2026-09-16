@@ -1,4 +1,4 @@
-import { Badge, Button, Card, Grid, Group, Stack, Text, TextInput } from '@mantine/core'
+import { Badge, Button, Card, Group, Stack, Text, TextInput } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconLock } from '@tabler/icons-react'
 import dayjs from 'dayjs'
@@ -99,29 +99,25 @@ export function DecisionColumn({
         />
       </Stack>
 
-      <Grid gap="xs">
-        <Grid.Col span={7}>
-          <TextInput
-            label="Approved by"
-            placeholder="Name of the approver"
-            value={decision.approvedBy ?? ''}
-            disabled={disabled}
-            onChange={(event) => setApprovedBy(event.currentTarget.value)}
-          />
-        </Grid.Col>
-        <Grid.Col span={5}>
-          <Stack gap={2}>
-            <Text size="sm" fw={500}>
-              Date
-            </Text>
-            {signed && signedAt ? (
-              <Text size="sm">{dayjs(signedAt).format('D MMM YYYY')}</Text>
-            ) : (
-              <LiveClock />
-            )}
-          </Stack>
-        </Grid.Col>
-      </Grid>
+      <Stack gap={4}>
+        <TextInput
+          label="Approved by"
+          placeholder="Name of the approver"
+          value={decision.approvedBy ?? ''}
+          disabled={disabled}
+          onChange={(event) => setApprovedBy(event.currentTarget.value)}
+        />
+        <Group gap={4} align="baseline">
+          <Text size="sm" c="dimmed">
+            on
+          </Text>
+          {signed && signedAt ? (
+            <Text size="sm">{dayjs(signedAt).format('D MMM YYYY')}</Text>
+          ) : (
+            <LiveClock />
+          )}
+        </Group>
+      </Stack>
 
       {signed ? (
         <Badge color="gray" variant="light">

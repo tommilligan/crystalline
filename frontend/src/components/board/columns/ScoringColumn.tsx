@@ -1,4 +1,4 @@
-import { Badge, Card, Divider, Group, NumberInput, Stack, Text } from '@mantine/core'
+import { ActionIcon, Badge, Card, Divider, Group, Stack, Text } from '@mantine/core'
 import { IconChartBar } from '@tabler/icons-react'
 import { useSetScore } from '../../../hooks/useBoardMutations'
 import { useFragmentPlainText } from '../../../liveblocks-yjs/useFragmentPlainText'
@@ -16,19 +16,113 @@ interface ScoringColumnProps {
 const COST_DIMENSIONS = SCORE_DIMENSIONS.slice(0, 3)
 const BENEFIT_DIMENSIONS = SCORE_DIMENSIONS.slice(3)
 const MAX_TOTAL = SCORE_DIMENSIONS.length * 5
+const SCORE_VALUES = [1, 2, 3, 4, 5] as const
+const SCORE_BUTTON_SIZE = 20
+// Buttons overlap by 1px of shared border (split-button join, see Mantine's SplitButton
+// example), so the row is narrower than SCORE_VALUES.length * SCORE_BUTTON_SIZE.
+const SCORE_BUTTONS_WIDTH = SCORE_BUTTON_SIZE + (SCORE_VALUES.length - 1) * (SCORE_BUTTON_SIZE - 1)
 
-function abbreviate(label: string): string {
-  return label.slice(0, 2)
+function ScoreButtons({
+  value,
+  dimensionLabel,
+  disabled,
+  onChange,
+}: {
+  value: number | null
+  dimensionLabel: string
+  disabled?: boolean
+  onChange: (value: number) => void
+}) {
+  return (
+    <Group gap={0} wrap="nowrap">
+      {SCORE_VALUES.map((n, index) => {
+        const isFirst = index === 0
+        const isLast = index === SCORE_VALUES.length - 1
+        const isSelected = value === n
+        return (
+          <ActionIcon
+            key={n}
+            size={SCORE_BUTTON_SIZE}
+            variant={isSelected ? 'filled' : 'default'}
+            color="blue"
+            disabled={disabled}
+            aria-label={`${dimensionLabel}: ${n}`}
+            title={`${dimensionLabel}: ${n}`}
+            onClick={() => onChange(n)}
+            style={{
+              borderTopLeftRadius: isFirst ? 'var(--mantine-radius-sm)' : 0,
+              borderBottomLeftRadius: isFirst ? 'var(--mantine-radius-sm)' : 0,
+              borderTopRightRadius: isLast ? 'var(--mantine-radius-sm)' : 0,
+              borderBottomRightRadius: isLast ? 'var(--mantine-radius-sm)' : 0,
+              marginLeft: isFirst ? 0 : -1,
+              position: 'relative',
+              zIndex: isSelected ? 1 : 0,
+            }}
+          >
+            <Text size="xs" fw={700} style={{ fontSize: 10 }}>
+              {n}
+            </Text>
+          </ActionIcon>
+        )
+      })}
+    </Group>
+  )
+}
+
+function ScaleHint({ lowLabel, highLabel }: { lowLabel: string; highLabel: string }) {
+  return (
+    <Group justify="flex-end" wrap="nowrap" mb={2}>
+      <Group justify="space-between" wrap="nowrap" style={{ width: SCORE_BUTTONS_WIDTH }}>
+        <Text size="xs" c="dimmed" fw={700} tt="uppercase" style={{ fontSize: 9 }}>
+          {lowLabel}
+        </Text>
+        <Text size="xs" c="dimmed" fw={700} tt="uppercase" style={{ fontSize: 9 }}>
+          {highLabel}
+        </Text>
+      </Group>
+    </Group>
+  )
 }
 
 function DimensionRow({
+  dimension,
+  option,
+  disabled,
+  setScore,
+}: {
+  dimension: (typeof SCORE_DIMENSIONS)[number]
+  option: OptionData
+  disabled?: boolean
+  setScore: ReturnType<typeof useSetScore>
+}) {
+  const value = option.scores?.[dimension.key] ?? null
+  return (
+    <Group justify="space-between" wrap="nowrap" gap="xs">
+      <Text size="xs" c="dimmed" fw={600} style={{ flexShrink: 0 }}>
+        {dimension.label}
+      </Text>
+      <ScoreButtons
+        value={value}
+        dimensionLabel={dimension.label}
+        disabled={disabled}
+        onChange={(n) => setScore(option.id, dimension.key as ScoreDimension, n)}
+      />
+    </Group>
+  )
+}
+
+function DimensionGroup({
   groupLabel,
+  lowLabel,
+  highLabel,
   dimensions,
   option,
   disabled,
   setScore,
 }: {
   groupLabel: string
+  lowLabel: string
+  highLabel: string
   dimensions: readonly (typeof SCORE_DIMENSIONS)[number][]
   option: OptionData
   disabled?: boolean
@@ -36,31 +130,21 @@ function DimensionRow({
 }) {
   return (
     <div>
-      <Text size="xs" c="dimmed" fw={600} mb={4}>
-        {groupLabel.toUpperCase()} (
-        {dimensions.map((dimension) => abbreviate(dimension.label)).join('/')})
+      <Text size="xs" c="dimmed" fw={700} mb={4}>
+        {groupLabel.toUpperCase()}
       </Text>
-      <Group gap={6}>
+      <ScaleHint lowLabel={lowLabel} highLabel={highLabel} />
+      <Stack gap={4}>
         {dimensions.map((dimension) => (
-          <NumberInput
+          <DimensionRow
             key={dimension.key}
-            aria-label={dimension.label}
-            title={dimension.label}
-            value={option.scores?.[dimension.key] ?? undefined}
-            placeholder="–"
-            min={1}
-            max={5}
-            hideControls
+            dimension={dimension}
+            option={option}
             disabled={disabled}
-            w={52}
-            onChange={(value) => {
-              if (typeof value === 'number') {
-                setScore(option.id, dimension.key as ScoreDimension, value)
-              }
-            }}
+            setScore={setScore}
           />
         ))}
-      </Group>
+      </Stack>
     </div>
   )
 }
@@ -118,7 +202,8 @@ function LeaderboardRow({
 
 /** Six-dimension scoring, always shown with the 1=bad/5=good legend pinned above the inputs —
  * an inverted, unexplained cost scale was the single biggest point of confusion in the original
- * whiteboard tool (see `docs/concept.md`). */
+ * whiteboard tool (see `docs/concept.md`). Each dimension gets its own row with 1-5 quick-pick
+ * buttons rather than a numeric input, so scoring is a single click. */
 export function ScoringColumn({ options, disabled }: ScoringColumnProps) {
   const setScore = useSetScore()
 
@@ -152,15 +237,19 @@ export function ScoringColumn({ options, disabled }: ScoringColumnProps) {
             </Group>
             <Divider my="xs" />
             <Stack gap="xs">
-              <DimensionRow
+              <DimensionGroup
                 groupLabel="Costs"
+                lowLabel="Expensive"
+                highLabel="Cheap"
                 dimensions={COST_DIMENSIONS}
                 option={option}
                 disabled={disabled}
                 setScore={setScore}
               />
-              <DimensionRow
+              <DimensionGroup
                 groupLabel="Benefits"
+                lowLabel="Poor"
+                highLabel="Great"
                 dimensions={BENEFIT_DIMENSIONS}
                 option={option}
                 disabled={disabled}

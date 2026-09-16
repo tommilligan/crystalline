@@ -1,48 +1,40 @@
 export type Phase = 'situation' | 'ideation' | 'evaluation' | 'scoring' | 'decision'
 
-/** `color` drives each column's tinted header (see `BoardColumnShell`) and echoes the Six
- * Thinking Hats colour associated with that phase's dominant hat(s), per `docs/concept.md`. */
 export const PHASES: ReadonlyArray<{
   key: Phase
   label: string
   number: number
   subtitle: string
-  color: string
 }> = [
   {
     key: 'situation',
     label: 'Situation',
     number: 1,
-    subtitle: 'Red & White Hat: The Problem',
-    color: 'red',
+    subtitle: 'The Problem',
   },
   {
     key: 'ideation',
     label: 'Options',
     number: 2,
-    subtitle: 'Green Hat: Rapid-Fire Ideas',
-    color: 'blue',
+    subtitle: 'Rapid-Fire Ideas',
   },
   {
     key: 'evaluation',
     label: 'Evaluation',
     number: 3,
-    subtitle: 'Yellow Hat & Black Hat Review',
-    color: 'gray',
+    subtitle: 'Pros & Cons Review',
   },
   {
     key: 'scoring',
     label: 'Costs/Benefits',
     number: 4,
-    subtitle: 'White Hat: Numerical Trade-offs',
-    color: 'dark',
+    subtitle: 'Numerical Trade-offs',
   },
   {
     key: 'decision',
     label: 'Decision',
     number: 5,
-    subtitle: 'Blue & Red Hat: Implementation',
-    color: 'green',
+    subtitle: 'Implementation',
   },
 ]
 
