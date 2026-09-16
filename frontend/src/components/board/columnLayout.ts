@@ -17,14 +17,18 @@ export type ColumnLayoutState = 'hidden' | 'collapsed' | 'primary' | 'secondary'
  *   selected — once the team has moved on, the option list is redundant (every later column
  *   echoes it), so it doesn't need space. Selecting it again re-expands it, since idea text is
  *   only editable there.
- * - Columns 3-5 expand once they hold data, or whenever they're the selected column; otherwise
- *   they stay hidden or collapsed.
+ * - Columns 3-4 expand once they hold data, or whenever they're the selected column; otherwise
+ *   they stay hidden or collapsed. The Decision column (phase 5) is stricter: it only expands
+ *   while selected — holding data alone isn't enough — since comparing/choosing between options
+ *   is only relevant while that phase is actively in focus; once you move away from it, it
+ *   collapses to a sliver like everything else, rather than lingering open.
  * - The Evaluation column (phase 3) collapses to a sliver whenever Scoring or Decision (4-5) is
  *   selected, and the Scoring column (phase 4) collapses to a sliver whenever Decision (5) is
- *   selected — regardless of whether either holds data — because each later column inlines a
- *   read-only copy of the one(s) before it (see `ScoringColumn`/`DecisionColumn`), so the
- *   earlier column's own space would just be showing the same information twice. Selecting a
- *   collapsed column again re-expands it, same as the options column.
+ *   selected — regardless of whether either holds data — to keep focus on the column currently
+ *   being worked in. Decision (5) inlines a read-only copy of both (see `DecisionColumn`), so
+ *   nothing is lost by collapsing them there; Scoring's own column no longer repeats Evaluation's
+ *   fields, so collapsing Evaluation while Scoring is selected just means re-selecting it to look
+ *   back. Selecting a collapsed column again re-expands it, same as the options column.
  * - The selected column, if visible, is always "primary"; every other expanded column is
  *   "secondary".
  */
@@ -59,7 +63,7 @@ export function computeColumnLayout(
       (number === 1 ||
         isSelected ||
         (number === 2 && selectedNumber <= 2) ||
-        (number >= 3 && hasData[key]))
+        (number >= 3 && number <= 4 && hasData[key]))
 
     layout[key] = !expanded ? 'collapsed' : isSelected ? 'primary' : 'secondary'
   }

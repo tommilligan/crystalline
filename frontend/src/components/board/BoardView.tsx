@@ -160,6 +160,28 @@ export function BoardView() {
     return next ? () => focusPhase(next) : undefined
   }
 
+  // Scoring's header carries a "Skip >" escape hatch straight to Decision, for teams that want
+  // to decide without scoring every option — distinct from `NextButton`'s walkthrough, which
+  // requires each option to be scored first. Only shown while Scoring is the active column.
+  const headerActions: Partial<Record<Phase, ReactNode>> =
+    phase === 'scoring' && !signed
+      ? {
+          scoring: (
+            <Button
+              variant="subtle"
+              color="gray"
+              size="xs"
+              onClick={(event) => {
+                event.stopPropagation()
+                advanceFrom('scoring')?.()
+              }}
+            >
+              Skip &gt;
+            </Button>
+          ),
+        }
+      : {}
+
   const columns: Record<Phase, ReactNode> = {
     situation: (
       <SituationColumn
@@ -288,6 +310,7 @@ export function BoardView() {
           onFocusPhase={focusPhase}
           hasData={hasData}
           columns={columns}
+          headerActions={headerActions}
         />
       </Stack>
     </Container>

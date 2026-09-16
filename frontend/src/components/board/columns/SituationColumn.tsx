@@ -20,7 +20,7 @@ interface SituationColumnProps {
  *
  * Once this column isn't the active one, it doesn't dim like the others (see the situation
  * special-case in `BoardColumnShell`) — instead the editable field itself transforms into a
- * large, header-styled read-out of the agreed statement, since the team has moved on from
+ * yellow blockquote read-out of the agreed statement, since the team has moved on from
  * editing it. Selecting the column again reverses this back to the edit view.
  */
 export function SituationColumn({ disabled, active, onAdvancePhase }: SituationColumnProps) {
@@ -38,9 +38,11 @@ export function SituationColumn({ disabled, active, onAdvancePhase }: SituationC
 
   if (!active) {
     return (
-      <Text size="xl" fw={700}>
-        {situationText || 'No problem statement yet.'}
-      </Text>
+      <Blockquote color="yellow">
+        <Text size="xl" fw={700}>
+          {situationText || 'No problem statement yet.'}
+        </Text>
+      </Blockquote>
     )
   }
 

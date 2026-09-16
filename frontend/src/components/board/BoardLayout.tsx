@@ -10,6 +10,7 @@ interface BoardLayoutProps {
   onFocusPhase: (phase: Phase) => void
   hasData: Record<Phase, boolean>
   columns: Record<Phase, ReactNode>
+  headerActions?: Partial<Record<Phase, ReactNode>>
 }
 
 // Fixed width for a collapsed column's rotated-label sliver — enough to fit the label at the
@@ -38,7 +39,13 @@ const FLEX_GROW: Record<Extract<ColumnLayoutState, 'primary' | 'secondary'>, num
  * `BoardColumnShell`) since there's no room to rotate it without wasting more height than it
  * saves.
  */
-export function BoardLayout({ currentPhase, onFocusPhase, hasData, columns }: BoardLayoutProps) {
+export function BoardLayout({
+  currentPhase,
+  onFocusPhase,
+  hasData,
+  columns,
+  headerActions,
+}: BoardLayoutProps) {
   const isWide = useMediaQuery('(min-width: 1100px)', true)
   const emphasizedRef = useRef<HTMLDivElement>(null)
   const layout = computeColumnLayout(currentPhase, hasData)
@@ -79,6 +86,7 @@ export function BoardLayout({ currentPhase, onFocusPhase, hasData, columns }: Bo
                     layout={state}
                     isWide={isWide}
                     onFocus={() => onFocusPhase(phase.key)}
+                    headerAction={headerActions?.[phase.key]}
                   >
                     {columns[phase.key]}
                   </BoardColumnShell>
@@ -103,6 +111,7 @@ export function BoardLayout({ currentPhase, onFocusPhase, hasData, columns }: Bo
               layout={state}
               isWide={isWide}
               onFocus={() => onFocusPhase(phase.key)}
+              headerAction={headerActions?.[phase.key]}
             >
               {columns[phase.key]}
             </BoardColumnShell>

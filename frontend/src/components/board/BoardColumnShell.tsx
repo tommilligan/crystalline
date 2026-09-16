@@ -11,6 +11,9 @@ interface BoardColumnShellProps {
   // stays full width and shrinks in height, with its label left horizontal (see `BoardLayout`).
   isWide: boolean
   onFocus: () => void
+  // Optional control shown top-right of the header, alongside the phase title — e.g. Scoring's
+  // "Skip >" button. Only rendered in the expanded (non-collapsed) header.
+  headerAction?: ReactNode
   children: ReactNode
 }
 
@@ -25,7 +28,14 @@ interface BoardColumnShellProps {
  *
  * Fully irrelevant columns aren't rendered at all — see the `hidden` filter in `BoardLayout`.
  */
-export function BoardColumnShell({ phase, layout, isWide, onFocus, children }: BoardColumnShellProps) {
+export function BoardColumnShell({
+  phase,
+  layout,
+  isWide,
+  onFocus,
+  headerAction,
+  children,
+}: BoardColumnShellProps) {
   const collapsed = layout === 'collapsed'
   const emphasized = layout === 'primary'
   // The situation column transforms into a read-out instead of dimming when it's not selected
@@ -86,6 +96,7 @@ export function BoardColumnShell({ phase, layout, isWide, onFocus, children }: B
                 {phase.subtitle}
               </Text>
             </Stack>
+            {headerAction}
           </Group>
           <Box style={{ overflowY: 'auto', overflowX: 'hidden', maxHeight: '70vh' }}>
             <Stack gap="sm" p="sm">

@@ -112,8 +112,8 @@ async function main() {
     await step('phase 4 — scoring', async () => {
       const body = await page.locator('body').innerText()
       await assert(
-        body.includes('Fast to set up') && body.includes('Costs overtime budget'),
-        'Scoring column should inline the (now-collapsed) Evaluation column\'s Good/Bad fields',
+        !body.includes('Fast to set up') && !body.includes('Costs overtime budget'),
+        'Scoring column should not inline the (now-collapsed) Evaluation column\'s Good/Bad fields — just scoring',
       )
       for (const [optionIndex, values] of scores.entries()) {
         for (const [dimIndex, dim] of SCORE_DIMENSIONS.entries()) {

@@ -5,7 +5,7 @@ import type { OptionData } from '../../../types/board'
 import { optionTextField } from '../../../types/board'
 import { EmptyColumnState } from '../EmptyColumnState'
 import { NextButton } from '../NextButton'
-import { EvaluationFields, ScoringFields } from './OptionSummaries'
+import { ScoringFields } from './OptionSummaries'
 
 interface ScoringColumnProps {
   options: readonly OptionData[]
@@ -46,7 +46,6 @@ function ScoringAccordionPanel({
 }) {
   return (
     <Stack gap="xs">
-      <EvaluationFields option={option} disabled />
       <ScoringFields option={option} disabled={disabled} />
       {advance && <NextButton onClick={advance} />}
     </Stack>
@@ -65,9 +64,9 @@ function ScoringAccordionPanel({
  * already dimmed as a unit and the walkthrough position doesn't need to be visible to explain
  * that dimming.
  *
- * Each option's panel also inlines a read-only copy of its Evaluation (Good/Bad) fields, since
- * `columnLayout.ts` fully collapses the Evaluation column once Scoring is reached — this is the
- * only place that information stays visible from here on. Ranking by score now happens visually
+ * This column only shows scoring — the Evaluation (Good/Bad) fields aren't repeated here, so
+ * revisiting them means selecting the Evaluation column again (it collapses to a sliver, not
+ * hidden, once Scoring is reached — see `columnLayout.ts`). Ranking by score now happens visually
  * in the Decision column instead of a leaderboard here (see `DecisionColumn`'s "Summary of
  * options" section).
  *

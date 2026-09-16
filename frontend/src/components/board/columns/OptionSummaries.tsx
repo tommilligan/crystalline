@@ -215,7 +215,7 @@ export function ScoringFields({
 }) {
   const setScore = useSetScore()
   return (
-    <Stack gap="xs">
+    <Group gap="lg" align="flex-start" grow wrap="wrap">
       <DimensionGroup
         groupLabel="Costs"
         lowLabel="Expensive"
@@ -236,7 +236,7 @@ export function ScoringFields({
         readOnly={readOnly}
         setScore={setScore}
       />
-    </Stack>
+    </Group>
   )
 }
 
