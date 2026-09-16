@@ -71,15 +71,13 @@ function ScoreButtons({
 
 function ScaleHint({ lowLabel, highLabel }: { lowLabel: string; highLabel: string }) {
   return (
-    <Group justify="flex-end" wrap="nowrap" mb={2}>
-      <Group justify="space-between" wrap="nowrap" style={{ width: SCORE_BUTTONS_WIDTH }}>
-        <Text size="xs" c="dimmed" fw={700} tt="uppercase" style={{ fontSize: 9 }}>
-          {lowLabel}
-        </Text>
-        <Text size="xs" c="dimmed" fw={700} tt="uppercase" style={{ fontSize: 9 }}>
-          {highLabel}
-        </Text>
-      </Group>
+    <Group justify="space-between" wrap="nowrap" style={{ width: SCORE_BUTTONS_WIDTH }}>
+      <Text size="xs" c="dimmed" fw={700} tt="uppercase" style={{ fontSize: 9 }}>
+        {lowLabel}
+      </Text>
+      <Text size="xs" c="dimmed" fw={700} tt="uppercase" style={{ fontSize: 9 }}>
+        {highLabel}
+      </Text>
     </Group>
   )
 }
@@ -130,10 +128,12 @@ function DimensionGroup({
 }) {
   return (
     <div>
-      <Text size="xs" c="dimmed" fw={700} mb={4}>
-        {groupLabel.toUpperCase()}
-      </Text>
-      <ScaleHint lowLabel={lowLabel} highLabel={highLabel} />
+      <Group justify="space-between" align="flex-end" wrap="nowrap" mb={4}>
+        <Text size="xs" c="dimmed" fw={700}>
+          {groupLabel.toUpperCase()}
+        </Text>
+        <ScaleHint lowLabel={lowLabel} highLabel={highLabel} />
+      </Group>
       <Stack gap={4}>
         {dimensions.map((dimension) => (
           <DimensionRow

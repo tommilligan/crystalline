@@ -37,7 +37,7 @@ export function EvaluationColumn({ options, disabled }: EvaluationColumnProps) {
                   <IconCheck size={11} />
                 </ThemeIcon>
                 <Text size="xs" fw={700} c="teal.8">
-                  ENABLER
+                  Good
                 </Text>
               </Group>
               <CollaborativeTextField
@@ -52,7 +52,7 @@ export function EvaluationColumn({ options, disabled }: EvaluationColumnProps) {
                   <IconX size={11} />
                 </ThemeIcon>
                 <Text size="xs" fw={700} c="red.8">
-                  BLOCKER
+                  Bad
                 </Text>
               </Group>
               <CollaborativeTextField

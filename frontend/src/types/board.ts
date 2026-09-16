@@ -6,37 +6,37 @@ export const PHASES: ReadonlyArray<{
   number: number
   subtitle: string
 }> = [
-  {
-    key: 'situation',
-    label: 'Situation',
-    number: 1,
-    subtitle: 'The Problem',
-  },
-  {
-    key: 'ideation',
-    label: 'Options',
-    number: 2,
-    subtitle: 'Rapid-Fire Ideas',
-  },
-  {
-    key: 'evaluation',
-    label: 'Evaluation',
-    number: 3,
-    subtitle: 'Pros & Cons Review',
-  },
-  {
-    key: 'scoring',
-    label: 'Costs/Benefits',
-    number: 4,
-    subtitle: 'Numerical Trade-offs',
-  },
-  {
-    key: 'decision',
-    label: 'Decision',
-    number: 5,
-    subtitle: 'Implementation',
-  },
-]
+    {
+      key: 'situation',
+      label: 'Situation',
+      number: 1,
+      subtitle: 'What is the problem?',
+    },
+    {
+      key: 'ideation',
+      label: 'Options',
+      number: 2,
+      subtitle: 'How can we fix this?',
+    },
+    {
+      key: 'evaluation',
+      label: 'Evaluation',
+      number: 3,
+      subtitle: 'Is this a good option?',
+    },
+    {
+      key: 'scoring',
+      label: 'Costs/Benefits',
+      number: 4,
+      subtitle: 'Evaluate key metrics',
+    },
+    {
+      key: 'decision',
+      label: 'Decision',
+      number: 5,
+      subtitle: 'What we are going to do',
+    },
+  ]
 
 export type LifecycleState = 'active' | 'signed'
 
@@ -86,6 +86,9 @@ export type DecisionData = {
   chosenOptionId: string | null
   approvedBy: string | null
   date: string | null
+  nextStep: string | null
+  owner: string | null
+  deadline: string | null
 }
 
 export interface BoardSummary {

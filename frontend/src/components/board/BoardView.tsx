@@ -11,13 +11,12 @@ import {
 } from '@mantine/core'
 import { IconCopy, IconCrystalBall, IconDownload, IconLock } from '@tabler/icons-react'
 import dayjs from 'dayjs'
-import { type ReactNode, useEffect } from 'react'
-import { useSetPhase, useSetTitle, useUnsignBoard } from '../../hooks/useBoardMutations'
+import { type ReactNode, useEffect, useState } from 'react'
+import { useSetTitle, useUnsignBoard } from '../../hooks/useBoardMutations'
 import {
   useBoardDecision,
   useBoardLifecycle,
   useBoardOptions,
-  useBoardPhase,
   useBoardTitle,
 } from '../../hooks/useBoardState'
 import { useRegisterBoard } from '../../hooks/useBoardsRegistry'
@@ -35,11 +34,13 @@ import { PresenceAvatars } from './PresenceAvatars'
 export function BoardView() {
   const room = useRoom()
   const title = useBoardTitle()
-  const phase = useBoardPhase()
+  // Which phase/column is emphasized is per-viewer UI state, not shared board data — each
+  // participant can be looking at a different column without dragging everyone else's view
+  // along with them. See the comment on `Storage` in `liveblocks.config.ts`.
+  const [phase, setPhase] = useState<Phase>('situation')
   const lifecycle = useBoardLifecycle()
   const options = useBoardOptions()
   const decision = useBoardDecision()
-  const setPhase = useSetPhase()
   const setTitle = useSetTitle()
   const unsignBoard = useUnsignBoard()
   const registerBoard = useRegisterBoard()

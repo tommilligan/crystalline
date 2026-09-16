@@ -7,10 +7,6 @@ export function useBoardTitle() {
   return useStorage((root) => root.title)
 }
 
-export function useBoardPhase() {
-  return useStorage((root) => root.currentPhase)
-}
-
 export function useBoardLifecycle() {
   return useStorage((root) => ({ state: root.lifecycleState, signedAt: root.signedAt }), shallow)
 }

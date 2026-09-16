@@ -1,10 +1,14 @@
 import { Badge, Button, Card, Group, Stack, Text, TextInput } from '@mantine/core'
+import { DateInput } from '@mantine/dates'
 import { useDisclosure } from '@mantine/hooks'
 import { IconLock } from '@tabler/icons-react'
 import dayjs from 'dayjs'
 import {
   useSetApprovedBy,
   useSetChosenOption,
+  useSetDeadline,
+  useSetNextStep,
+  useSetOwner,
   useSignBoard,
 } from '../../../hooks/useBoardMutations'
 import type { DecisionData, OptionData } from '../../../types/board'
@@ -33,11 +37,19 @@ export function DecisionColumn({
 }: DecisionColumnProps) {
   const setChosenOption = useSetChosenOption()
   const setApprovedBy = useSetApprovedBy()
+  const setNextStep = useSetNextStep()
+  const setOwner = useSetOwner()
+  const setDeadline = useSetDeadline()
   const signBoard = useSignBoard()
   const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false)
 
   const canSign =
-    !signed && Boolean(decision.chosenOptionId) && Boolean(decision.approvedBy?.trim())
+    !signed &&
+    Boolean(decision.chosenOptionId) &&
+    Boolean(decision.approvedBy?.trim()) &&
+    Boolean(decision.nextStep?.trim()) &&
+    Boolean(decision.owner?.trim()) &&
+    Boolean(decision.deadline)
 
   return (
     <>
@@ -97,6 +109,40 @@ export function DecisionColumn({
           placeholder="Note any objections, even after a decision has been drafted…"
           disabled={disabled}
         />
+      </Stack>
+
+      <Stack gap={4}>
+        <Text size="xs" fw={700} c="dimmed">
+          NEXT STEP
+        </Text>
+        <Text size="xs" c="dimmed">
+          This doesn't need to describe who owns everything going forward — just the immediate
+          next step (e.g. "write an RFC" or "organise a further design session"). It must have an
+          owner and a deadline attached before signing.
+        </Text>
+        <TextInput
+          placeholder="e.g. Write an RFC"
+          value={decision.nextStep ?? ''}
+          disabled={disabled}
+          onChange={(event) => setNextStep(event.currentTarget.value)}
+        />
+        <Group grow>
+          <TextInput
+            label="Owner"
+            placeholder="Who's driving this"
+            value={decision.owner ?? ''}
+            disabled={disabled}
+            onChange={(event) => setOwner(event.currentTarget.value)}
+          />
+          <DateInput
+            label="Deadline"
+            placeholder="Pick a date"
+            value={decision.deadline ? new Date(decision.deadline) : null}
+            disabled={disabled}
+            onChange={(value) => setDeadline(value ? value.toISOString().slice(0, 10) : null)}
+            valueFormat="D MMM YYYY"
+          />
+        </Group>
       </Stack>
 
       <Stack gap={4}>

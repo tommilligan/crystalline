@@ -46,8 +46,14 @@ should ever prevent an action, only suggest:
 ## Phase state is derived, not stored per-se
 
 Because the app is event-sourced (see `event-schema.md`), "current phase" is itself just the
-latest `phase_changed` event's value, replayed like everything else. This means undo/redo,
-board reload, and (later) multi-user sync all get correct current-phase behaviour for free.
+latest `phase_changed` event's value, replayed like everything else. This means undo/redo and
+board reload get correct current-phase behaviour for free.
+
+In multi-user sessions, "current phase" is deliberately **per-viewer, not shared**: it's UI
+emphasis, not board data. One participant clicking into the Scoring column while another is
+mid-edit in Evaluation should not yank the second participant's view along with it. Each
+client tracks its own current phase locally; only the underlying field data (ideas, scores,
+decision, etc.) syncs between participants.
 
 ## Signed / read-only state
 

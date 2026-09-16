@@ -1,4 +1,4 @@
-import { ActionIcon, Card, Group, Text, TextInput } from '@mantine/core'
+import { ActionIcon, Group, Text, TextInput } from '@mantine/core'
 import { IconPlus, IconX } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useAddIdea, useRemoveIdea } from '../../../hooks/useBoardMutations'
@@ -14,7 +14,8 @@ interface OptionsColumnProps {
 }
 
 /** Pure idea generation — no idea is bad. Optimised for a facilitator transcribing a room's
- * ideas live: type-and-press-Enter keeps the input focused for rapid successive entries. */
+ * ideas live: type-and-press-Enter keeps the input focused for rapid successive entries. The
+ * input stays pinned below the list so newly added ideas appear above it, in order. */
 export function OptionsColumn({ options, disabled }: OptionsColumnProps) {
   const addIdea = useAddIdea()
   const removeIdea = useRemoveIdea()
@@ -31,6 +32,31 @@ export function OptionsColumn({ options, disabled }: OptionsColumnProps) {
 
   return (
     <>
+      {options.length === 0 && (
+        <Text size="sm" c="dimmed">
+          No ideas yet — add some below, or jump to another phase anyway.
+        </Text>
+      )}
+      {options.map((option) => (
+        <Group key={option.id} align="center" wrap="nowrap" gap="xs">
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <CollaborativeTextField
+              field={optionTextField(option.id)}
+              placeholder="Describe this idea…"
+              disabled={disabled}
+            />
+          </div>
+          <ActionIcon
+            variant="subtle"
+            color="red"
+            aria-label="Remove idea"
+            disabled={disabled}
+            onClick={() => removeIdea(option.id)}
+          >
+            <IconX size={16} />
+          </ActionIcon>
+        </Group>
+      ))}
       <TextInput
         rightSection={<IconPlus size={16} />}
         placeholder="Type an option, press Enter"
@@ -44,33 +70,6 @@ export function OptionsColumn({ options, disabled }: OptionsColumnProps) {
           }
         }}
       />
-      {options.length === 0 && (
-        <Text size="sm" c="dimmed">
-          No ideas yet — add some above, or jump to another phase anyway.
-        </Text>
-      )}
-      {options.map((option) => (
-        <Card key={option.id} withBorder padding="xs" radius="sm" bg="gray.0">
-          <Group align="center" wrap="nowrap" gap="xs">
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <CollaborativeTextField
-                field={optionTextField(option.id)}
-                placeholder="Describe this idea…"
-                disabled={disabled}
-              />
-            </div>
-            <ActionIcon
-              variant="subtle"
-              color="red"
-              aria-label="Remove idea"
-              disabled={disabled}
-              onClick={() => removeIdea(option.id)}
-            >
-              <IconX size={16} />
-            </ActionIcon>
-          </Group>
-        </Card>
-      ))}
     </>
   )
 }

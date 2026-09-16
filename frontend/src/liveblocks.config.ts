@@ -2,7 +2,7 @@ import type { LiveblocksAuthRequest } from '@crystalline/shared'
 import { createClient, LiveList, LiveObject } from '@liveblocks/client'
 import { createRoomContext } from '@liveblocks/react'
 import { loadIdentity } from './lib/localIdentity'
-import type { DecisionData, LifecycleState, OptionData, Phase, TimerState } from './types/board'
+import type { DecisionData, LifecycleState, OptionData, TimerState } from './types/board'
 import { DEFAULT_TIMER_DURATION_MS } from './types/board'
 
 // Path to the backend's Liveblocks auth endpoint (see `backend/src/liveblocksAuth.ts`). Relative
@@ -41,11 +41,13 @@ export type Presence = {
 /** Persisted, synced board state. Free-text fields (idea/enabler/blocker/situation/
  * countermeasure/dissent) are intentionally excluded here — they live as collaboratively
  * edited Yjs text fragments (see `YjsRoomProvider`), keyed by the field helpers in
- * `types/board.ts`. This split lets structured fields (scores, phase, lifecycle) use
- * Liveblocks Storage directly while free text gets fine-grained, per-keystroke merging. */
+ * `types/board.ts`. This split lets structured fields (scores, lifecycle) use Liveblocks
+ * Storage directly while free text gets fine-grained, per-keystroke merging. The currently
+ * *focused* phase/column is deliberately not here — that's per-viewer UI state (see
+ * `BoardView`'s local `useState`), not shared data, so one person clicking into a column
+ * doesn't drag everyone else's view along with it. */
 export type Storage = {
   title: string
-  currentPhase: Phase
   lifecycleState: LifecycleState
   signedAt: string | null
   options: LiveList<LiveObject<OptionData>>
@@ -66,11 +68,17 @@ export const { useStorage, useSelf } = context.suspense
 export function initialStorage(): Storage {
   return {
     title: 'Untitled board',
-    currentPhase: 'situation',
     lifecycleState: 'active',
     signedAt: null,
     options: new LiveList([]),
-    decision: new LiveObject({ chosenOptionId: null, approvedBy: null, date: null }),
+    decision: new LiveObject({
+      chosenOptionId: null,
+      approvedBy: null,
+      date: null,
+      nextStep: null,
+      owner: null,
+      deadline: null,
+    }),
     timer: new LiveObject({
       status: 'idle',
       durationMs: DEFAULT_TIMER_DURATION_MS,

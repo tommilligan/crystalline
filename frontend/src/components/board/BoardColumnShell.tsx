@@ -50,7 +50,7 @@ export function BoardColumnShell({
       >
         <Stack gap={0}>
           <Text fw={700} c="dark.7" size="sm">
-            {phase.number}. {phase.label.toUpperCase()}
+            {phase.number}. {phase.label}
           </Text>
           <Text size="xs" c="dimmed">
             {phase.subtitle}

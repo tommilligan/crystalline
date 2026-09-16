@@ -50,6 +50,9 @@ export function HomePage() {
       <Stack gap="xl" w={420} py="xl">
         <Stack gap={4} align="center" ta="center">
           <Title order={1}>Crystal Ball</Title>
+          <Text size="sm" fw={600} c="blue.7">
+            Make good decisions efficiently
+          </Text>
           <Text c="dimmed">
             A structured, five-phase decision-making board — situation, options, evaluation,
             scoring, decision.

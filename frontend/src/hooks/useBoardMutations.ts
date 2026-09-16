@@ -1,6 +1,5 @@
 import { LiveObject } from '@liveblocks/client'
 import { useMutation } from '../liveblocks.config'
-import type { Phase } from '../types/board'
 import { emptyScoreSet, type ScoreDimension, type ScoreSet } from '../types/board'
 
 /**
@@ -10,12 +9,6 @@ import { emptyScoreSet, type ScoreDimension, type ScoreSet } from '../types/boar
  * history/undo and multiplayer conflict resolution now provide what the local event log was
  * designed to provide for a single-device MVP.
  */
-
-export function useSetPhase() {
-  return useMutation(({ storage }, phase: Phase) => {
-    storage.set('currentPhase', phase)
-  }, [])
-}
 
 export function useSetTitle() {
   return useMutation(({ storage }, title: string) => {
@@ -59,6 +52,24 @@ export function useSetChosenOption() {
 export function useSetApprovedBy() {
   return useMutation(({ storage }, approvedBy: string) => {
     storage.get('decision').set('approvedBy', approvedBy)
+  }, [])
+}
+
+export function useSetNextStep() {
+  return useMutation(({ storage }, nextStep: string) => {
+    storage.get('decision').set('nextStep', nextStep)
+  }, [])
+}
+
+export function useSetOwner() {
+  return useMutation(({ storage }, owner: string) => {
+    storage.get('decision').set('owner', owner)
+  }, [])
+}
+
+export function useSetDeadline() {
+  return useMutation(({ storage }, deadline: string | null) => {
+    storage.get('decision').set('deadline', deadline)
   }, [])
 }
 
