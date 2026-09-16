@@ -20,6 +20,7 @@ import {
   useBoardTitle,
 } from '../../hooks/useBoardState'
 import { useRegisterBoard } from '../../hooks/useBoardsRegistry'
+import { useColumnHasData } from '../../hooks/useColumnHasData'
 import { useLocalIdentity } from '../../hooks/useLocalIdentity'
 import { useRoom } from '../../liveblocks.config'
 import type { Phase } from '../../types/board'
@@ -41,6 +42,7 @@ export function BoardView() {
   const lifecycle = useBoardLifecycle()
   const options = useBoardOptions()
   const decision = useBoardDecision()
+  const hasData = useColumnHasData(options, decision)
   const setTitle = useSetTitle()
   const unsignBoard = useUnsignBoard()
   const registerBoard = useRegisterBoard()
@@ -71,7 +73,7 @@ export function BoardView() {
   }
 
   return (
-    <Container size="xl" py="md">
+    <Container fluid px="md" py="md">
       <Stack gap="md">
         {signed && lifecycle.signedAt && (
           <Alert color="green" radius="sm" icon={<IconLock size={18} />} p="xs">
@@ -148,7 +150,12 @@ export function BoardView() {
           </Text>
         )}
 
-        <BoardLayout currentPhase={phase} onFocusPhase={setPhase} columns={columns} />
+        <BoardLayout
+          currentPhase={phase}
+          onFocusPhase={setPhase}
+          hasData={hasData}
+          columns={columns}
+        />
       </Stack>
     </Container>
   )
