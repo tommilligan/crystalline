@@ -1,10 +1,10 @@
-import { ActionIcon, Badge, Card, Divider, Group, Stack, Text } from '@mantine/core'
-import { IconChartBar } from '@tabler/icons-react'
+import { Accordion, ActionIcon, Badge, Button, Card, Group, Stack, Text } from '@mantine/core'
+import { IconChartBar, IconChevronRight } from '@tabler/icons-react'
 import { useSetScore } from '../../../hooks/useBoardMutations'
+import { useOptionWalkthrough } from '../../../hooks/useOptionWalkthrough'
 import { useFragmentPlainText } from '../../../liveblocks-yjs/useFragmentPlainText'
 import type { OptionData, ScoreDimension } from '../../../types/board'
 import { optionTextField, SCORE_DIMENSIONS, totalScore } from '../../../types/board'
-import { CollaborativeTextField } from '../../editor/CollaborativeTextField'
 import { EmptyColumnState } from '../EmptyColumnState'
 import { ScoreLegend } from '../ScoreLegend'
 
@@ -200,12 +200,82 @@ function LeaderboardRow({
   )
 }
 
+function ScoringAccordionControl({ option }: { option: OptionData }) {
+  const text = useFragmentPlainText(optionTextField(option.id))
+  const total = totalScore(option.scores)
+  return (
+    <Group justify="space-between" align="center" wrap="nowrap" gap="xs" style={{ flex: 1 }}>
+      <Text size="sm" truncate style={{ flex: 1, minWidth: 0 }}>
+        {text || 'Untitled option'}
+      </Text>
+      {total !== null && (
+        <Badge color="blue" variant="light" style={{ flexShrink: 0 }}>
+          {total}/{MAX_TOTAL}
+        </Badge>
+      )}
+    </Group>
+  )
+}
+
+function ScoringAccordionPanel({
+  option,
+  nextOption,
+  disabled,
+  setScore,
+  onAdvance,
+}: {
+  option: OptionData
+  nextOption: OptionData | null
+  disabled?: boolean
+  setScore: ReturnType<typeof useSetScore>
+  onAdvance: (optionId: string) => void
+}) {
+  return (
+    <Stack gap="xs">
+      <DimensionGroup
+        groupLabel="Costs"
+        lowLabel="Expensive"
+        highLabel="Cheap"
+        dimensions={COST_DIMENSIONS}
+        option={option}
+        disabled={disabled}
+        setScore={setScore}
+      />
+      <DimensionGroup
+        groupLabel="Benefits"
+        lowLabel="Poor"
+        highLabel="Great"
+        dimensions={BENEFIT_DIMENSIONS}
+        option={option}
+        disabled={disabled}
+        setScore={setScore}
+      />
+      {nextOption && (
+        <Button
+          variant="light"
+          color="blue"
+          fullWidth
+          rightSection={<IconChevronRight size={16} />}
+          onClick={() => onAdvance(nextOption.id)}
+        >
+          Next option
+        </Button>
+      )}
+    </Stack>
+  )
+}
+
 /** Six-dimension scoring, always shown with the 1=bad/5=good legend pinned above the inputs —
  * an inverted, unexplained cost scale was the single biggest point of confusion in the original
  * whiteboard tool (see `docs/concept.md`). Each dimension gets its own row with 1-5 quick-pick
- * buttons rather than a numeric input, so scoring is a single click. */
+ * buttons rather than a numeric input, so scoring is a single click.
+ *
+ * Options are walked through one at a time via an Accordion (mirroring the phase "Go to next
+ * step" flow one level down): only the active option's score breakdown is expanded, saving
+ * vertical space, while the rest collapse to just their idea text and running total. */
 export function ScoringColumn({ options, disabled }: ScoringColumnProps) {
   const setScore = useSetScore()
+  const { activeOption, nextOption, focus } = useOptionWalkthrough(options)
 
   if (options.length === 0) {
     return (
@@ -221,44 +291,29 @@ export function ScoringColumn({ options, disabled }: ScoringColumnProps) {
   return (
     <>
       <ScoreLegend />
-      {options.map((option) => {
-        const total = totalScore(option.scores)
-        return (
-          <Card key={option.id} withBorder padding="sm" radius="sm">
-            <Group justify="space-between" align="flex-start" wrap="nowrap">
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <CollaborativeTextField field={optionTextField(option.id)} disabled />
-              </div>
-              {total !== null && (
-                <Badge color="blue" variant="light" style={{ flexShrink: 0 }}>
-                  {total}/{MAX_TOTAL}
-                </Badge>
-              )}
-            </Group>
-            <Divider my="xs" />
-            <Stack gap="xs">
-              <DimensionGroup
-                groupLabel="Costs"
-                lowLabel="Expensive"
-                highLabel="Cheap"
-                dimensions={COST_DIMENSIONS}
+      <Accordion
+        value={activeOption?.id ?? null}
+        onChange={(value) => value && focus(value)}
+        disableCollapse
+        variant="separated"
+      >
+        {options.map((option) => (
+          <Accordion.Item key={option.id} value={option.id}>
+            <Accordion.Control>
+              <ScoringAccordionControl option={option} />
+            </Accordion.Control>
+            <Accordion.Panel>
+              <ScoringAccordionPanel
                 option={option}
+                nextOption={option.id === activeOption?.id ? nextOption : null}
                 disabled={disabled}
                 setScore={setScore}
+                onAdvance={focus}
               />
-              <DimensionGroup
-                groupLabel="Benefits"
-                lowLabel="Poor"
-                highLabel="Great"
-                dimensions={BENEFIT_DIMENSIONS}
-                option={option}
-                disabled={disabled}
-                setScore={setScore}
-              />
-            </Stack>
-          </Card>
-        )
-      })}
+            </Accordion.Panel>
+          </Accordion.Item>
+        ))}
+      </Accordion>
       <RankingLeaderboard options={options} />
     </>
   )
