@@ -1,6 +1,7 @@
 import { ActionIcon, Box, Group, Stack, Text, ThemeIcon } from '@mantine/core'
 import { IconCheck, IconX } from '@tabler/icons-react'
 import { useSetScore } from '../../../hooks/useBoardMutations'
+import { useFragmentPlainText } from '../../../liveblocks-yjs/useFragmentPlainText'
 import type { OptionData, ScoreDimension } from '../../../types/board'
 import { optionBlockerField, optionEnablerField, SCORE_DIMENSIONS } from '../../../types/board'
 import { CollaborativeTextField } from '../../editor/CollaborativeTextField'
@@ -228,7 +229,7 @@ export function ScoringFields({
       <DimensionGroup
         groupLabel="Benefits"
         lowLabel="Poor"
-        highLabel="Great"
+        highLabel="Good"
         dimensions={BENEFIT_DIMENSIONS}
         option={option}
         disabled={disabled}
@@ -236,5 +237,131 @@ export function ScoringFields({
         setScore={setScore}
       />
     </Stack>
+  )
+}
+
+function SummaryDots({ value }: { value: number | null }) {
+  return (
+    <Group gap={3} wrap="nowrap">
+      {SCORE_VALUES.map((n) => (
+        <Box
+          key={n}
+          w={8}
+          h={8}
+          style={{
+            borderRadius: '50%',
+            backgroundColor:
+              value !== null && n <= value
+                ? 'var(--mantine-color-blue-6)'
+                : 'var(--mantine-color-gray-3)',
+          }}
+        />
+      ))}
+    </Group>
+  )
+}
+
+function SummaryDimensionRow({
+  dimension,
+  value,
+}: {
+  dimension: (typeof SCORE_DIMENSIONS)[number]
+  value: number | null
+}) {
+  return (
+    <Group justify="space-between" wrap="nowrap" gap="xs">
+      <Text size="xs" c="dimmed" fw={600} style={{ flexShrink: 0 }}>
+        {dimension.label}
+      </Text>
+      <Group gap={6} wrap="nowrap">
+        <SummaryDots value={value} />
+        <Text size="xs" fw={600} style={{ width: 14, textAlign: 'right' }}>
+          {value ?? '–'}
+        </Text>
+      </Group>
+    </Group>
+  )
+}
+
+function SummaryDimensionGroup({
+  groupLabel,
+  dimensions,
+  option,
+}: {
+  groupLabel: string
+  dimensions: readonly (typeof SCORE_DIMENSIONS)[number][]
+  option: OptionData
+}) {
+  return (
+    <div>
+      <Text size="xs" c="dimmed" fw={700} mb={4}>
+        {groupLabel.toUpperCase()}
+      </Text>
+      <Stack gap={4}>
+        {dimensions.map((dimension) => (
+          <SummaryDimensionRow
+            key={dimension.key}
+            dimension={dimension}
+            value={option.scores?.[dimension.key] ?? null}
+          />
+        ))}
+      </Stack>
+    </div>
+  )
+}
+
+/** Plain, non-interactive readout of an option's Good/Bad evaluation — for pure reference views
+ * (the Decision column's summary, the printable export) where there's nothing to edit and the
+ * `CollaborativeTextField` editor chrome `EvaluationFields` renders would only get in the way.
+ * Reads the same Yjs fragments `EvaluationFields` edits, just as plain text. */
+export function EvaluationSummary({ option }: { option: OptionData }) {
+  const enablerText = useFragmentPlainText(optionEnablerField(option.id))
+  const blockerText = useFragmentPlainText(optionBlockerField(option.id))
+  return (
+    <Group gap="xs" align="flex-start" grow wrap="nowrap">
+      <Box>
+        <Group gap={6} mb={4}>
+          <ThemeIcon size={16} radius="xl" color="teal" variant="filled">
+            <IconCheck size={11} />
+          </ThemeIcon>
+          <Text size="xs" fw={700} c="teal.8">
+            Good
+          </Text>
+        </Group>
+        <Text size="sm" c={enablerText ? undefined : 'dimmed'} style={{ whiteSpace: 'pre-wrap' }}>
+          {enablerText || 'Nothing noted'}
+        </Text>
+      </Box>
+      <Box>
+        <Group gap={6} mb={4}>
+          <ThemeIcon size={16} radius="xl" color="red" variant="filled">
+            <IconX size={11} />
+          </ThemeIcon>
+          <Text size="xs" fw={700} c="red.8">
+            Bad
+          </Text>
+        </Group>
+        <Text size="sm" c={blockerText ? undefined : 'dimmed'} style={{ whiteSpace: 'pre-wrap' }}>
+          {blockerText || 'Nothing noted'}
+        </Text>
+      </Box>
+    </Group>
+  )
+}
+
+/** Plain, non-interactive readout of an option's six-dimension scoring — the counterpart to
+ * `EvaluationSummary` for the same pure-reference views. Dots give an at-a-glance shape without
+ * relying on color alone; the number is always printed alongside them too, so this also holds up
+ * in print/export where color may not render or be legible. */
+export function ScoringSummary({ option }: { option: OptionData }) {
+  return (
+    <Group gap="lg" align="flex-start" grow wrap="wrap">
+      <SummaryDimensionGroup groupLabel="Costs" dimensions={COST_DIMENSIONS} option={option} />
+      <SummaryDimensionGroup
+        groupLabel="Benefits"
+        dimensions={BENEFIT_DIMENSIONS}
+        option={option}
+      />
+    </Group>
   )
 }

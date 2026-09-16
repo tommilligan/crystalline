@@ -1,4 +1,5 @@
 import {
+  ActionIcon,
   Alert,
   Anchor,
   Button,
@@ -10,9 +11,9 @@ import {
   ThemeIcon,
   Tooltip,
 } from '@mantine/core'
-import { IconCopy, IconCrystalBall, IconDownload, IconLock } from '@tabler/icons-react'
+import { IconCopy, IconCrystalBall, IconDownload, IconLock, IconPencil } from '@tabler/icons-react'
 import dayjs from 'dayjs'
-import { type ReactNode, useEffect, useState } from 'react'
+import { type ReactNode, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useSetTitle, useUnsignBoard } from '../../hooks/useBoardMutations'
 import {
@@ -25,7 +26,7 @@ import { useRegisterBoard } from '../../hooks/useBoardsRegistry'
 import { useColumnHasData } from '../../hooks/useColumnHasData'
 import { useLocalIdentity } from '../../hooks/useLocalIdentity'
 import { useRoom } from '../../liveblocks.config'
-import { type Phase, nextPhase as phaseAfter } from '../../types/board'
+import { PHASES, type Phase, nextPhase as phaseAfter } from '../../types/board'
 import { BoardLayout } from './BoardLayout'
 import { DecisionColumn } from './columns/DecisionColumn'
 import { EvaluationColumn } from './columns/EvaluationColumn'
@@ -33,6 +34,81 @@ import { OptionsColumn } from './columns/OptionsColumn'
 import { ScoringColumn } from './columns/ScoringColumn'
 import { SituationColumn } from './columns/SituationColumn'
 import { PresenceAvatars } from './PresenceAvatars'
+
+/** The last phase (in phase order) that already holds data, or `situation` if none does — what
+ * a freshly loaded board should focus, so reopening a partially-worked board resumes where the
+ * team left off instead of always landing back on the first phase. */
+function highestDataPhase(hasData: Record<Phase, boolean>): Phase {
+  let result: Phase = 'situation'
+  for (const { key } of PHASES) {
+    if (hasData[key]) result = key
+  }
+  return result
+}
+
+/** Click-to-edit board title: shows as plain text with a pencil affordance until clicked, then
+ * becomes a focused input so it's obvious the name can be renamed without always looking like a
+ * form field. */
+function BoardTitleEditor({
+  title,
+  onChange,
+  disabled,
+}: {
+  title: string
+  onChange: (value: string) => void
+  disabled: boolean
+}) {
+  const [editing, setEditing] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (editing) inputRef.current?.focus()
+  }, [editing])
+
+  if (editing) {
+    return (
+      <TextInput
+        ref={inputRef}
+        value={title}
+        onChange={(event) => onChange(event.currentTarget.value)}
+        onBlur={() => setEditing(false)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') setEditing(false)
+        }}
+        styles={{ input: { fontWeight: 600, fontSize: 'var(--mantine-font-size-lg)' } }}
+        aria-label="Board title"
+      />
+    )
+  }
+
+  return (
+    <Group
+      gap={6}
+      align="center"
+      wrap="nowrap"
+      onClick={() => !disabled && setEditing(true)}
+      style={{ cursor: disabled ? 'default' : 'pointer' }}
+    >
+      <Text fw={600} size="lg">
+        {title || 'Untitled board'}
+      </Text>
+      {!disabled && (
+        <ActionIcon
+          variant="subtle"
+          color="gray"
+          size="sm"
+          aria-label="Edit board title"
+          onClick={(event) => {
+            event.stopPropagation()
+            setEditing(true)
+          }}
+        >
+          <IconPencil size={14} />
+        </ActionIcon>
+      )}
+    </Group>
+  )
+}
 
 export function BoardView() {
   const room = useRoom()
@@ -58,13 +134,29 @@ export function BoardView() {
     registerBoard.mutate({ id: room.id, title, createdAt: Date.now() })
   }, [room.id, title, registerBoard.mutate])
 
+  // On a fresh load, jump straight to whichever phase the team last left off at, rather than
+  // always opening on Situation — resuming a partially-worked board should show its progress.
+  // This keeps tracking `hasData` (self-correcting as slower-to-sync fields like Yjs text catch
+  // up) only until the viewer picks a phase themselves, at which point `focusPhase` freezes it so
+  // a teammate's later edits elsewhere don't yank the view out from under them.
+  const hasFocusedManually = useRef(false)
+  useEffect(() => {
+    if (hasFocusedManually.current) return
+    setPhase(highestDataPhase(hasData))
+  }, [hasData])
+
+  function focusPhase(next: Phase) {
+    hasFocusedManually.current = true
+    setPhase(next)
+  }
+
   // Each column advances via a single "Next >" button that it owns and places itself (right
   // after its own next-option step, if it has one, else after its content) — see `NextButton`.
   // `active` gates whether it's shown at all: a column not currently selected never shows a
   // Next button or per-item focus styling, even if it remembers which item was selected.
   function advanceFrom(phase: Phase): (() => void) | undefined {
     const next = phaseAfter(phase)
-    return next ? () => setPhase(next) : undefined
+    return next ? () => focusPhase(next) : undefined
   }
 
   const columns: Record<Phase, ReactNode> = {
@@ -111,7 +203,7 @@ export function BoardView() {
   }
 
   return (
-    <Container fluid px="md" py="md">
+    <Container size="xl" px="md" py="md">
       <Stack gap="md">
         {signed && lifecycle.signedAt && (
           <Alert color="green" radius="sm" icon={<IconLock size={18} />} p="xs">
@@ -121,16 +213,17 @@ export function BoardView() {
                 {dayjs(lifecycle.signedAt).format('YYYY-MM-DD')} — Board locked.
               </Text>
               <Group gap="xs">
-                <Tooltip label="Not implemented in this scaffold">
-                  <Button
-                    variant="default"
-                    size="xs"
-                    leftSection={<IconDownload size={14} />}
-                    disabled
-                  >
-                    Export as PNG
-                  </Button>
-                </Tooltip>
+                <Button
+                  component={Link}
+                  to={`/board/${room.id}/export`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  variant="default"
+                  size="xs"
+                  leftSection={<IconDownload size={14} />}
+                >
+                  Export
+                </Button>
                 <Tooltip label="Not implemented in this scaffold">
                   <Button size="xs" leftSection={<IconCopy size={14} />} disabled>
                     Clone Board
@@ -149,29 +242,28 @@ export function BoardView() {
         )}
 
         <Group justify="space-between" align="center" wrap="wrap">
-          <Anchor component={Link} to="/" underline="never" c="inherit">
-            <Group gap="xs">
+          <Group gap="md" align="center" wrap="nowrap">
+            <Anchor component={Link} to="/" underline="never" c="inherit" aria-label="Crystal Ball home">
               <ThemeIcon size={32} radius="xl" variant="light" color="blue">
                 <IconCrystalBall size={18} />
               </ThemeIcon>
-              <Text fw={700} size="lg">
-                Crystal Ball
-              </Text>
-            </Group>
-          </Anchor>
+            </Anchor>
+
+            <BoardTitleEditor title={title} onChange={setTitle} disabled={signed} />
+          </Group>
 
           <Group gap="sm">
-            <Text size="sm" c="dimmed">
-              Project:
-            </Text>
-            <TextInput
-              variant="unstyled"
-              value={title}
-              disabled={signed}
-              onChange={(event) => setTitle(event.currentTarget.value)}
-              styles={{ input: { fontWeight: 600 } }}
-              aria-label="Board title"
-            />
+            <Button
+              component={Link}
+              to={`/board/${room.id}/export`}
+              target="_blank"
+              rel="noopener noreferrer"
+              variant="default"
+              size="xs"
+              leftSection={<IconDownload size={14} />}
+            >
+              Export
+            </Button>
             <PresenceAvatars />
             <TextInput
               size="xs"
@@ -192,7 +284,7 @@ export function BoardView() {
 
         <BoardLayout
           currentPhase={phase}
-          onFocusPhase={setPhase}
+          onFocusPhase={focusPhase}
           hasData={hasData}
           columns={columns}
         />

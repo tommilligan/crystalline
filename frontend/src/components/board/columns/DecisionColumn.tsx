@@ -34,7 +34,7 @@ import {
 import { CollaborativeTextField } from '../../editor/CollaborativeTextField'
 import { LiveClock } from '../LiveClock'
 import { SignBoardModal } from '../SignBoardModal'
-import { EvaluationFields, ScoringFields } from './OptionSummaries'
+import { EvaluationSummary, ScoringSummary } from './OptionSummaries'
 
 interface DecisionColumnProps {
   options: readonly OptionData[]
@@ -146,8 +146,8 @@ export function DecisionColumn({
                 </Accordion.Control>
                 <Accordion.Panel>
                   <Stack gap="xs">
-                    <EvaluationFields option={option} disabled />
-                    <ScoringFields option={option} readOnly />
+                    <EvaluationSummary option={option} />
+                    <ScoringSummary option={option} />
                   </Stack>
                 </Accordion.Panel>
               </Accordion.Item>

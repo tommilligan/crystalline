@@ -32,10 +32,11 @@ const FLEX_GROW: Record<Extract<ColumnLayoutState, 'primary' | 'secondary'>, num
  * Wide screens (projector/laptop, the primary MVP scenario per `docs/ui-notes.md`) lay the
  * remaining columns out in a single row below whose widths follow `computeColumnLayout`: hidden
  * columns aren't rendered, collapsed ones shrink to a fixed-width rotated-text sliver, and
- * expanded ones share the rest of the row (primary getting the most). Narrower screens stack
- * the same columns as full-width rows instead, except collapsed columns stay a compact
- * sliver-width block rather than stretching full width, since there's nothing to show at that
- * size anyway.
+ * expanded ones share the rest of the row (primary getting the most). Narrower screens stack the
+ * same columns as full-width rows instead; a collapsed column there stays full width like its
+ * siblings but shrinks to just its header row, with the label left horizontal (see
+ * `BoardColumnShell`) since there's no room to rotate it without wasting more height than it
+ * saves.
  */
 export function BoardLayout({ currentPhase, onFocusPhase, hasData, columns }: BoardLayoutProps) {
   const isWide = useMediaQuery('(min-width: 1100px)', true)
@@ -58,6 +59,7 @@ export function BoardLayout({ currentPhase, onFocusPhase, hasData, columns }: Bo
         <BoardColumnShell
           phase={situationPhase}
           layout={layout[situationPhase.key] as Exclude<ColumnLayoutState, 'hidden'>}
+          isWide={isWide}
           onFocus={() => onFocusPhase(situationPhase.key)}
         >
           {columns[situationPhase.key]}
@@ -75,6 +77,7 @@ export function BoardLayout({ currentPhase, onFocusPhase, hasData, columns }: Bo
                   <BoardColumnShell
                     phase={phase}
                     layout={state}
+                    isWide={isWide}
                     onFocus={() => onFocusPhase(phase.key)}
                   >
                     {columns[phase.key]}
@@ -94,12 +97,13 @@ export function BoardLayout({ currentPhase, onFocusPhase, hasData, columns }: Bo
         const state = layout[phase.key] as Exclude<ColumnLayoutState, 'hidden'>
         const emphasized = phase.key === currentPhase
         return (
-          <div
-            key={phase.key}
-            ref={emphasized ? emphasizedRef : undefined}
-            style={state === 'collapsed' ? { width: COLLAPSED_WIDTH } : undefined}
-          >
-            <BoardColumnShell phase={phase} layout={state} onFocus={() => onFocusPhase(phase.key)}>
+          <div key={phase.key} ref={emphasized ? emphasizedRef : undefined}>
+            <BoardColumnShell
+              phase={phase}
+              layout={state}
+              isWide={isWide}
+              onFocus={() => onFocusPhase(phase.key)}
+            >
               {columns[phase.key]}
             </BoardColumnShell>
           </div>

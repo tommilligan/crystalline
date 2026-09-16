@@ -1,8 +1,12 @@
 import { Accordion, Stack, Text } from '@mantine/core'
+import { useMemo } from 'react'
 import { useOptionWalkthrough } from '../../../hooks/useOptionWalkthrough'
-import { useFragmentPlainText } from '../../../liveblocks-yjs/useFragmentPlainText'
+import {
+  useFragmentPlainText,
+  useFragmentPlainTexts,
+} from '../../../liveblocks-yjs/useFragmentPlainText'
 import type { OptionData } from '../../../types/board'
-import { optionTextField } from '../../../types/board'
+import { optionBlockerField, optionEnablerField, optionTextField } from '../../../types/board'
 import { EmptyColumnState } from '../EmptyColumnState'
 import { NextButton } from '../NextButton'
 import { EvaluationFields } from './OptionSummaries'
@@ -58,7 +62,16 @@ export function EvaluationColumn({
   active,
   onAdvancePhase,
 }: EvaluationColumnProps) {
-  const { activeOption, nextOption, focus } = useOptionWalkthrough(options)
+  const evaluationFields = useMemo(
+    () =>
+      options.flatMap((option) => [optionEnablerField(option.id), optionBlockerField(option.id)]),
+    [options],
+  )
+  const evaluationTexts = useFragmentPlainTexts(evaluationFields)
+  const hasOptionData = options.map(
+    (_, index) => Boolean(evaluationTexts[2 * index]) || Boolean(evaluationTexts[2 * index + 1]),
+  )
+  const { activeOption, nextOption, focus } = useOptionWalkthrough(options, hasOptionData)
   const advance = nextOption ? () => focus(nextOption.id) : onAdvancePhase
 
   if (options.length === 0) {

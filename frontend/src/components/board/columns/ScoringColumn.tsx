@@ -65,7 +65,8 @@ function ScoringAccordionPanel({
  * of what it does: while there's a next option it advances the walkthrough, and on the last
  * option it advances the phase instead. Only its action changes, never its position. */
 export function ScoringColumn({ options, disabled, active, onAdvancePhase }: ScoringColumnProps) {
-  const { activeOption, nextOption, focus } = useOptionWalkthrough(options)
+  const hasOptionData = options.map((option) => option.scores !== null)
+  const { activeOption, nextOption, focus } = useOptionWalkthrough(options, hasOptionData)
   const advance = nextOption ? () => focus(nextOption.id) : onAdvancePhase
 
   if (options.length === 0) {

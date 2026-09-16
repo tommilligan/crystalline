@@ -6,6 +6,10 @@ import type { ColumnLayoutState } from './columnLayout'
 interface BoardColumnShellProps {
   phase: (typeof PHASES)[number]
   layout: Exclude<ColumnLayoutState, 'hidden'>
+  // Wide screens lay collapsed columns out side-by-side, so they shrink to a narrow sliver with
+  // rotated text; narrow screens stack columns as full-width rows, so a collapsed column instead
+  // stays full width and shrinks in height, with its label left horizontal (see `BoardLayout`).
+  isWide: boolean
   onFocus: () => void
   children: ReactNode
 }
@@ -16,12 +20,12 @@ interface BoardColumnShellProps {
  * - `primary` — the current phase. Full detail, most of the row's width.
  * - `secondary` — expanded (full detail) but not current, e.g. the problem statement staying
  *   readable once later phases are in progress.
- * - `collapsed` — reduced to a narrow sliver with just the rotated phase label, for columns
- *   whose content is redundant right now (see `columnLayout.ts`). Still clickable to re-expand.
+ * - `collapsed` — reduced to just the phase label, for columns whose content is redundant right
+ *   now (see `columnLayout.ts`). Still clickable to re-expand.
  *
  * Fully irrelevant columns aren't rendered at all — see the `hidden` filter in `BoardLayout`.
  */
-export function BoardColumnShell({ phase, layout, onFocus, children }: BoardColumnShellProps) {
+export function BoardColumnShell({ phase, layout, isWide, onFocus, children }: BoardColumnShellProps) {
   const collapsed = layout === 'collapsed'
   const emphasized = layout === 'primary'
   // The situation column transforms into a read-out instead of dimming when it's not selected
@@ -47,7 +51,7 @@ export function BoardColumnShell({ phase, layout, onFocus, children }: BoardColu
         cursor: collapsed ? 'pointer' : undefined,
       }}
     >
-      {collapsed ? (
+      {collapsed && isWide ? (
         <Stack align="center" justify="flex-start" gap="xs" p="xs" h="100%">
           <Text
             fw={700}
@@ -58,6 +62,12 @@ export function BoardColumnShell({ phase, layout, onFocus, children }: BoardColu
             {phase.number}. {phase.label}
           </Text>
         </Stack>
+      ) : collapsed ? (
+        <Group justify="space-between" align="center" wrap="nowrap" p="sm" bg="white">
+          <Text fw={700} c="dark.7" size="sm">
+            {phase.number}. {phase.label}
+          </Text>
+        </Group>
       ) : (
         <>
           <Group
