@@ -2,7 +2,8 @@ import { ClientSideSuspense } from '@liveblocks/react'
 import { Center, Loader, Stack, Text } from '@mantine/core'
 import { Navigate, useParams } from 'react-router-dom'
 import { BoardView } from '../components/board/BoardView'
-import { initialStorage, RoomProvider, randomPresenceColor } from '../liveblocks.config'
+import { loadIdentity } from '../lib/localIdentity'
+import { initialStorage, RoomProvider } from '../liveblocks.config'
 import { YjsRoomProvider } from '../liveblocks-yjs/YjsRoomProvider'
 
 export function BoardPage() {
@@ -12,11 +13,13 @@ export function BoardPage() {
     return <Navigate to="/" replace />
   }
 
+  const identity = loadIdentity()
+
   return (
     <RoomProvider
       id={boardId}
       initialStorage={initialStorage}
-      initialPresence={{ name: 'Anonymous', color: randomPresenceColor() }}
+      initialPresence={{ name: identity.name, color: identity.color }}
     >
       <ClientSideSuspense fallback={<BoardLoadingState />}>
         <YjsRoomProvider>

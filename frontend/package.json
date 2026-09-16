@@ -15,6 +15,7 @@
     "format": "biome format --write ."
   },
   "dependencies": {
+    "@crystalline/shared": "*",
     "@liveblocks/client": "^3.24.1",
     "@liveblocks/react": "^3.24.1",
     "@liveblocks/yjs": "^3.24.1",
