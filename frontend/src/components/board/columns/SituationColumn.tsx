@@ -1,4 +1,4 @@
-import { SegmentedControl, Stack, Text } from '@mantine/core'
+import { Blockquote, SegmentedControl, Stack, Text } from '@mantine/core'
 import { useEffect, useRef } from 'react'
 import { useSetSituationAgreed } from '../../../hooks/useBoardMutations'
 import { useBoardSituationAgreed } from '../../../hooks/useBoardState'
