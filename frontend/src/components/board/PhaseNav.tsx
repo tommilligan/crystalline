@@ -15,8 +15,13 @@ export function PhaseNav({ currentPhase, onChange, disabled }: PhaseNavProps) {
       value={currentPhase}
       onChange={(value) => value && !disabled && onChange(value as Phase)}
       variant="pills"
+      color="blue"
     >
-      <Tabs.List>
+      <Tabs.List
+        bg="gray.1"
+        p={4}
+        style={{ borderRadius: 'var(--mantine-radius-md)', display: 'inline-flex' }}
+      >
         {PHASES.map((phase) => (
           <Tabs.Tab key={phase.key} value={phase.key} disabled={disabled}>
             {phase.label}

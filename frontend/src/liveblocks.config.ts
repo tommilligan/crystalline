@@ -2,7 +2,8 @@ import type { LiveblocksAuthRequest } from '@crystalline/shared'
 import { createClient, LiveList, LiveObject } from '@liveblocks/client'
 import { createRoomContext } from '@liveblocks/react'
 import { loadIdentity } from './lib/localIdentity'
-import type { DecisionData, LifecycleState, OptionData, Phase } from './types/board'
+import type { DecisionData, LifecycleState, OptionData, Phase, TimerState } from './types/board'
+import { DEFAULT_TIMER_DURATION_MS } from './types/board'
 
 // Path to the backend's Liveblocks auth endpoint (see `backend/src/liveblocksAuth.ts`). Relative
 // by default so Vite's dev proxy (`vite.config.ts`) and a same-origin reverse proxy in prod both
@@ -49,6 +50,7 @@ export type Storage = {
   signedAt: string | null
   options: LiveList<LiveObject<OptionData>>
   decision: LiveObject<DecisionData>
+  timer: LiveObject<TimerState>
 }
 
 const context = createRoomContext<Presence, Storage>(client)
@@ -69,5 +71,11 @@ export function initialStorage(): Storage {
     signedAt: null,
     options: new LiveList([]),
     decision: new LiveObject({ chosenOptionId: null, approvedBy: null, date: null }),
+    timer: new LiveObject({
+      status: 'idle',
+      durationMs: DEFAULT_TIMER_DURATION_MS,
+      remainingMs: DEFAULT_TIMER_DURATION_MS,
+      endsAt: null,
+    }),
   }
 }

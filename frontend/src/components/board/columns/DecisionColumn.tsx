@@ -1,5 +1,6 @@
-import { Badge, Button, Card, Group, Stack, Text, TextInput } from '@mantine/core'
+import { Badge, Button, Card, Grid, Group, Stack, Text, TextInput } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
+import { IconLock } from '@tabler/icons-react'
 import dayjs from 'dayjs'
 import {
   useSetApprovedBy,
@@ -41,8 +42,8 @@ export function DecisionColumn({
   return (
     <>
       <Stack gap={4}>
-        <Text size="sm" fw={500}>
-          Chosen option
+        <Text size="xs" fw={700} c="dimmed">
+          SELECT OPTION
         </Text>
         {options.length === 0 && (
           <Text size="sm" c="dimmed">
@@ -55,19 +56,25 @@ export function DecisionColumn({
             <Card
               key={option.id}
               withBorder
-              padding="xs"
+              padding={6}
+              radius="sm"
               onClick={() => !disabled && setChosenOption(isChosen ? null : option.id)}
               style={{
                 cursor: disabled ? 'default' : 'pointer',
-                borderColor: isChosen ? 'var(--mantine-color-teal-6)' : undefined,
+                borderColor: isChosen ? 'var(--mantine-color-green-6)' : undefined,
                 borderWidth: isChosen ? 2 : 1,
+                background: isChosen ? 'var(--mantine-color-green-0)' : undefined,
               }}
             >
               <Group justify="space-between" wrap="nowrap">
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <CollaborativeTextField field={optionTextField(option.id)} disabled />
                 </div>
-                {isChosen && <Badge color="teal">Chosen</Badge>}
+                {isChosen && (
+                  <Badge color="green" style={{ flexShrink: 0 }}>
+                    Selected
+                  </Badge>
+                )}
               </Group>
             </Card>
           )
@@ -76,44 +83,59 @@ export function DecisionColumn({
 
       <CollaborativeTextField
         field={COUNTERMEASURE_FIELD}
-        label="Countermeasure"
+        label="Countermeasure plan"
         placeholder="Notes on how to overcome the chosen option's blocker…"
         disabled={disabled}
       />
 
-      <CollaborativeTextField
-        field={DISSENT_FIELD}
-        label="Dissent"
-        placeholder="Note any objections, even after a decision has been drafted…"
-        disabled={disabled}
-      />
-
-      <TextInput
-        label="Approved by"
-        placeholder="Name of the approver"
-        value={decision.approvedBy ?? ''}
-        disabled={disabled}
-        onChange={(event) => setApprovedBy(event.currentTarget.value)}
-      />
-
-      <Stack gap={2}>
-        <Text size="sm" fw={500}>
-          Date
+      <Stack gap={4}>
+        <Text size="xs" fw={700} c="red.7">
+          DISSENT / MINORITY OPINION
         </Text>
-        {signed && signedAt ? (
-          <Text size="sm">{dayjs(signedAt).format('D MMM YYYY, HH:mm:ss')}</Text>
-        ) : (
-          <LiveClock />
-        )}
+        <CollaborativeTextField
+          field={DISSENT_FIELD}
+          placeholder="Note any objections, even after a decision has been drafted…"
+          disabled={disabled}
+        />
       </Stack>
+
+      <Grid gap="xs">
+        <Grid.Col span={7}>
+          <TextInput
+            label="Approved by"
+            placeholder="Name of the approver"
+            value={decision.approvedBy ?? ''}
+            disabled={disabled}
+            onChange={(event) => setApprovedBy(event.currentTarget.value)}
+          />
+        </Grid.Col>
+        <Grid.Col span={5}>
+          <Stack gap={2}>
+            <Text size="sm" fw={500}>
+              Date
+            </Text>
+            {signed && signedAt ? (
+              <Text size="sm">{dayjs(signedAt).format('D MMM YYYY')}</Text>
+            ) : (
+              <LiveClock />
+            )}
+          </Stack>
+        </Grid.Col>
+      </Grid>
 
       {signed ? (
         <Badge color="gray" variant="light">
           Signed — board is read-only
         </Badge>
       ) : (
-        <Button onClick={openModal} disabled={!canSign} color="teal">
-          Sign board
+        <Button
+          onClick={openModal}
+          disabled={!canSign}
+          color="red"
+          fullWidth
+          leftSection={<IconLock size={16} />}
+        >
+          Sign Decision
         </Button>
       )}
 

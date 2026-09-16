@@ -10,7 +10,7 @@ function renderWithProvider(ui: React.ReactElement) {
 describe('PhaseNav', () => {
   it('renders all five phases', () => {
     renderWithProvider(<PhaseNav currentPhase="situation" onChange={vi.fn()} />)
-    for (const label of ['Situation', 'Ideation', 'Evaluation', 'Scoring', 'Decision']) {
+    for (const label of ['Situation', 'Options', 'Evaluation', 'Costs/Benefits', 'Decision']) {
       expect(screen.getByRole('tab', { name: label })).toBeInTheDocument()
     }
   })

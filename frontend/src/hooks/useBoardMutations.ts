@@ -82,3 +82,38 @@ export function useUnsignBoard() {
     storage.set('signedAt', null)
   }, [])
 }
+
+/** Starts (or resumes from pause) the session timer. Writes only `endsAt`/`status` — clients
+ * derive the ticking display locally by comparing `endsAt` to their own clock, so this is the
+ * only network write until the next start/pause/reset. */
+export function useStartTimer() {
+  return useMutation(({ storage }) => {
+    const timer = storage.get('timer')
+    if (timer.get('status') === 'running') return
+    timer.set('endsAt', Date.now() + timer.get('remainingMs'))
+    timer.set('status', 'running')
+  }, [])
+}
+
+/** Pauses the session timer, snapshotting the remaining time at the moment of pause. */
+export function usePauseTimer() {
+  return useMutation(({ storage }) => {
+    const timer = storage.get('timer')
+    if (timer.get('status') !== 'running') return
+    const endsAt = timer.get('endsAt')
+    const remainingMs =
+      endsAt === null ? timer.get('remainingMs') : Math.max(0, endsAt - Date.now())
+    timer.set('remainingMs', remainingMs)
+    timer.set('endsAt', null)
+    timer.set('status', 'paused')
+  }, [])
+}
+
+export function useResetTimer() {
+  return useMutation(({ storage }) => {
+    const timer = storage.get('timer')
+    timer.set('status', 'idle')
+    timer.set('remainingMs', timer.get('durationMs'))
+    timer.set('endsAt', null)
+  }, [])
+}

@@ -1,4 +1,5 @@
 import { ActionIcon, Card, Group, Text, TextInput } from '@mantine/core'
+import { IconPlus, IconX } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useAddIdea, useRemoveIdea } from '../../../hooks/useBoardMutations'
 import { seedTextFragment } from '../../../liveblocks-yjs/seedTextFragment'
@@ -31,7 +32,8 @@ export function OptionsColumn({ options, disabled }: OptionsColumnProps) {
   return (
     <>
       <TextInput
-        placeholder="Type an idea and press Enter…"
+        leftSection={<IconPlus size={16} />}
+        placeholder="Type an option, press Enter"
         value={draft}
         disabled={disabled}
         onChange={(event) => setDraft(event.currentTarget.value)}
@@ -48,9 +50,9 @@ export function OptionsColumn({ options, disabled }: OptionsColumnProps) {
         </Text>
       )}
       {options.map((option) => (
-        <Card key={option.id} withBorder padding="xs">
-          <Group align="flex-start" wrap="nowrap" gap="xs">
-            <div style={{ flex: 1 }}>
+        <Card key={option.id} withBorder padding="xs" radius="sm" bg="gray.0">
+          <Group align="center" wrap="nowrap" gap="xs">
+            <div style={{ flex: 1, minWidth: 0 }}>
               <CollaborativeTextField
                 field={optionTextField(option.id)}
                 placeholder="Describe this idea…"
@@ -64,7 +66,7 @@ export function OptionsColumn({ options, disabled }: OptionsColumnProps) {
               disabled={disabled}
               onClick={() => removeIdea(option.id)}
             >
-              ✕
+              <IconX size={16} />
             </ActionIcon>
           </Group>
         </Card>

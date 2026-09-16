@@ -1,4 +1,4 @@
-import { Group, Text } from '@mantine/core'
+import { Paper, Text } from '@mantine/core'
 
 /**
  * Persistently visible, per `docs/concept.md` / `docs/ui-notes.md`: the single biggest source
@@ -7,19 +7,10 @@ import { Group, Text } from '@mantine/core'
  */
 export function ScoreLegend() {
   return (
-    <Group gap={6} wrap="nowrap">
-      <Text size="xs" fw={600} c="red.7">
-        1 = bad
+    <Paper radius="sm" p="xs" bg="blue.0">
+      <Text size="xs" fw={700} c="blue.8" ta="center">
+        1 = Worst · 5 = Best (every dimension, costs included)
       </Text>
-      <Text size="xs" c="dimmed">
-        →
-      </Text>
-      <Text size="xs" fw={600} c="teal.7">
-        5 = good
-      </Text>
-      <Text size="xs" c="dimmed">
-        (every dimension, costs included)
-      </Text>
-    </Group>
+    </Paper>
   )
 }

@@ -1,11 +1,49 @@
 export type Phase = 'situation' | 'ideation' | 'evaluation' | 'scoring' | 'decision'
 
-export const PHASES: ReadonlyArray<{ key: Phase; label: string; column: string }> = [
-  { key: 'situation', label: 'Situation', column: 'Situation' },
-  { key: 'ideation', label: 'Ideation', column: 'Options' },
-  { key: 'evaluation', label: 'Evaluation', column: 'Evaluation' },
-  { key: 'scoring', label: 'Scoring', column: 'Costs / Benefits' },
-  { key: 'decision', label: 'Decision', column: 'Decision' },
+/** `color` drives each column's tinted header (see `BoardColumnShell`) and echoes the Six
+ * Thinking Hats colour associated with that phase's dominant hat(s), per `docs/concept.md`. */
+export const PHASES: ReadonlyArray<{
+  key: Phase
+  label: string
+  number: number
+  subtitle: string
+  color: string
+}> = [
+  {
+    key: 'situation',
+    label: 'Situation',
+    number: 1,
+    subtitle: 'Red & White Hat: The Problem',
+    color: 'red',
+  },
+  {
+    key: 'ideation',
+    label: 'Options',
+    number: 2,
+    subtitle: 'Green Hat: Rapid-Fire Ideas',
+    color: 'blue',
+  },
+  {
+    key: 'evaluation',
+    label: 'Evaluation',
+    number: 3,
+    subtitle: 'Yellow Hat & Black Hat Review',
+    color: 'gray',
+  },
+  {
+    key: 'scoring',
+    label: 'Costs/Benefits',
+    number: 4,
+    subtitle: 'White Hat: Numerical Trade-offs',
+    color: 'dark',
+  },
+  {
+    key: 'decision',
+    label: 'Decision',
+    number: 5,
+    subtitle: 'Blue & Red Hat: Implementation',
+    color: 'green',
+  },
 ]
 
 export type LifecycleState = 'active' | 'signed'
@@ -75,6 +113,21 @@ export function optionEnablerField(optionId: string): string {
 export function optionBlockerField(optionId: string): string {
   return `option-blocker-${optionId}`
 }
+
+export type TimerStatus = 'idle' | 'running' | 'paused'
+
+/** Synced session-timer state (advisory time-box on the situation phase, `docs/ui-notes.md`).
+ * Liveblocks Storage is the single source of truth: a running timer needs only `endsAt` (the
+ * epoch ms it counts down to), so clients compute the displayed remaining time locally against
+ * their own clock — ticking never causes a network write, only start/pause/reset do. */
+export type TimerState = {
+  status: TimerStatus
+  durationMs: number
+  remainingMs: number
+  endsAt: number | null
+}
+
+export const DEFAULT_TIMER_DURATION_MS = 15 * 60 * 1000
 
 export const SITUATION_FIELD = 'situation'
 export const COUNTERMEASURE_FIELD = 'decision-countermeasure'

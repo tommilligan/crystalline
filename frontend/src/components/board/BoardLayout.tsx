@@ -33,7 +33,7 @@ export function BoardLayout({ currentPhase, onFocusPhase, columns }: BoardLayout
         {PHASES.map((phase) => (
           <BoardColumnShell
             key={phase.key}
-            title={phase.column}
+            phase={phase}
             emphasized={phase.key === currentPhase}
             onFocus={() => onFocusPhase(phase.key)}
           >
@@ -51,7 +51,7 @@ export function BoardLayout({ currentPhase, onFocusPhase, columns }: BoardLayout
         return (
           <div key={phase.key} ref={emphasized ? emphasizedRef : undefined}>
             <BoardColumnShell
-              title={phase.column}
+              phase={phase}
               emphasized={emphasized}
               onFocus={() => onFocusPhase(phase.key)}
             >

@@ -1,4 +1,17 @@
-import { Badge, Button, Container, Group, Stack, Text, TextInput, Tooltip } from '@mantine/core'
+import {
+  Alert,
+  Badge,
+  Button,
+  Container,
+  Group,
+  Stack,
+  Text,
+  TextInput,
+  ThemeIcon,
+  Tooltip,
+} from '@mantine/core'
+import { IconCopy, IconCrystalBall, IconDownload, IconLock } from '@tabler/icons-react'
+import dayjs from 'dayjs'
 import { type ReactNode, useEffect } from 'react'
 import { useSetPhase, useSetTitle, useUnsignBoard } from '../../hooks/useBoardMutations'
 import {
@@ -61,24 +74,66 @@ export function BoardView() {
   return (
     <Container size="xl" py="md">
       <Stack gap="md">
+        {signed && lifecycle.signedAt && (
+          <Alert color="green" radius="sm" icon={<IconLock size={18} />} p="xs">
+            <Group justify="space-between" wrap="wrap" gap="xs">
+              <Text size="sm" fw={600} c="green.9">
+                Decision signed by {decision.approvedBy || 'an approver'} on{' '}
+                {dayjs(lifecycle.signedAt).format('YYYY-MM-DD')} — Board locked.
+              </Text>
+              <Group gap="xs">
+                <Tooltip label="Not implemented in this scaffold">
+                  <Button
+                    variant="default"
+                    size="xs"
+                    leftSection={<IconDownload size={14} />}
+                    disabled
+                  >
+                    Export as PNG
+                  </Button>
+                </Tooltip>
+                <Tooltip label="Not implemented in this scaffold">
+                  <Button size="xs" leftSection={<IconCopy size={14} />} disabled>
+                    Clone Board
+                  </Button>
+                </Tooltip>
+                {import.meta.env.DEV && (
+                  <Tooltip label="Dev-only: reverts sign-off so this room can be reused for testing">
+                    <Button size="xs" variant="subtle" color="red" onClick={() => unsignBoard()}>
+                      Unlock (dev)
+                    </Button>
+                  </Tooltip>
+                )}
+              </Group>
+            </Group>
+          </Alert>
+        )}
+
         <Group justify="space-between" align="center" wrap="wrap">
-          <TextInput
-            variant="unstyled"
-            value={title}
-            disabled={signed}
-            onChange={(event) => setTitle(event.currentTarget.value)}
-            styles={{ input: { fontSize: 'var(--mantine-font-size-xl)', fontWeight: 700 } }}
-            aria-label="Board title"
-          />
+          <Group gap="xs">
+            <ThemeIcon size={32} radius="xl" variant="light" color="blue">
+              <IconCrystalBall size={18} />
+            </ThemeIcon>
+            <Text fw={700} size="lg">
+              Crystal Ball
+            </Text>
+            <Badge color="blue" variant="light" size="sm">
+              Six Hats Board
+            </Badge>
+          </Group>
+
           <Group gap="sm">
-            {signed && <Badge color="gray">Signed</Badge>}
-            {signed && import.meta.env.DEV && (
-              <Tooltip label="Dev-only: reverts sign-off so this room can be reused for testing">
-                <Button size="xs" variant="subtle" color="red" onClick={() => unsignBoard()}>
-                  Unlock (dev)
-                </Button>
-              </Tooltip>
-            )}
+            <Text size="sm" c="dimmed">
+              Project:
+            </Text>
+            <TextInput
+              variant="unstyled"
+              value={title}
+              disabled={signed}
+              onChange={(event) => setTitle(event.currentTarget.value)}
+              styles={{ input: { fontWeight: 600 } }}
+              aria-label="Board title"
+            />
             <PresenceAvatars />
             <TextInput
               size="xs"
@@ -91,27 +146,13 @@ export function BoardView() {
           </Group>
         </Group>
 
-        <Group justify="space-between" align="center" wrap="wrap">
-          {!signed ? (
-            <PhaseNav currentPhase={phase} onChange={setPhase} />
-          ) : (
-            <Text c="dimmed" size="sm">
-              This board is signed and read-only. Clone it to make further changes.
-            </Text>
-          )}
-          <Group gap="xs">
-            <Tooltip label="Not implemented in this scaffold">
-              <Button variant="default" disabled>
-                Export PNG
-              </Button>
-            </Tooltip>
-            <Tooltip label="Not implemented in this scaffold">
-              <Button variant="default" disabled={!signed}>
-                Clone
-              </Button>
-            </Tooltip>
-          </Group>
-        </Group>
+        {!signed ? (
+          <PhaseNav currentPhase={phase} onChange={setPhase} />
+        ) : (
+          <Text c="dimmed" size="sm">
+            This board is signed and read-only. Clone it to make further changes.
+          </Text>
+        )}
 
         <BoardLayout currentPhase={phase} onFocusPhase={setPhase} columns={columns} />
       </Stack>
