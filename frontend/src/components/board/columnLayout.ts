@@ -19,6 +19,12 @@ export type ColumnLayoutState = 'hidden' | 'collapsed' | 'primary' | 'secondary'
  *   only editable there.
  * - Columns 3-5 expand once they hold data, or whenever they're the selected column; otherwise
  *   they stay hidden or collapsed.
+ * - The Evaluation column (phase 3) collapses to a sliver whenever Scoring or Decision (4-5) is
+ *   selected, and the Scoring column (phase 4) collapses to a sliver whenever Decision (5) is
+ *   selected — regardless of whether either holds data — because each later column inlines a
+ *   read-only copy of the one(s) before it (see `ScoringColumn`/`DecisionColumn`), so the
+ *   earlier column's own space would just be showing the same information twice. Selecting a
+ *   collapsed column again re-expands it, same as the options column.
  * - The selected column, if visible, is always "primary"; every other expanded column is
  *   "secondary".
  */
@@ -43,11 +49,17 @@ export function computeColumnLayout(
       continue
     }
 
+    // Once a column's content is inlined into a later, selected column, it collapses even if it
+    // has its own data — the data is still visible, just in the later column instead.
+    const inlinedElsewhere =
+      (number === 3 && selectedNumber >= 4) || (number === 4 && selectedNumber >= 5)
+
     const expanded =
-      number === 1 ||
-      isSelected ||
-      (number === 2 && selectedNumber <= 2) ||
-      (number >= 3 && hasData[key])
+      !inlinedElsewhere &&
+      (number === 1 ||
+        isSelected ||
+        (number === 2 && selectedNumber <= 2) ||
+        (number >= 3 && hasData[key]))
 
     layout[key] = !expanded ? 'collapsed' : isSelected ? 'primary' : 'secondary'
   }

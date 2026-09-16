@@ -1,12 +1,11 @@
-import { Accordion, Box, Group, Stack, Text, ThemeIcon } from '@mantine/core'
-import { IconCheck, IconX } from '@tabler/icons-react'
+import { Accordion, Stack, Text } from '@mantine/core'
 import { useOptionWalkthrough } from '../../../hooks/useOptionWalkthrough'
 import { useFragmentPlainText } from '../../../liveblocks-yjs/useFragmentPlainText'
 import type { OptionData } from '../../../types/board'
-import { optionBlockerField, optionEnablerField, optionTextField } from '../../../types/board'
-import { CollaborativeTextField } from '../../editor/CollaborativeTextField'
+import { optionTextField } from '../../../types/board'
 import { EmptyColumnState } from '../EmptyColumnState'
 import { NextButton } from '../NextButton'
+import { EvaluationFields } from './OptionSummaries'
 
 interface EvaluationColumnProps {
   options: readonly OptionData[]
@@ -35,40 +34,7 @@ function EvaluationAccordionPanel({
 }) {
   return (
     <Stack gap="xs">
-      <Group gap="xs" align="flex-start" grow wrap="nowrap">
-        <Box>
-          <Group gap={6} mb={4}>
-            <ThemeIcon size={16} radius="xl" color="teal" variant="filled">
-              <IconCheck size={11} />
-            </ThemeIcon>
-            <Text size="xs" fw={700} c="teal.8">
-              Good
-            </Text>
-          </Group>
-          <CollaborativeTextField
-            field={optionEnablerField(option.id)}
-            placeholder="What helps or supports this option?"
-            disabled={disabled}
-            minRows={2}
-          />
-        </Box>
-        <Box>
-          <Group gap={6} mb={4}>
-            <ThemeIcon size={16} radius="xl" color="red" variant="filled">
-              <IconX size={11} />
-            </ThemeIcon>
-            <Text size="xs" fw={700} c="red.8">
-              Bad
-            </Text>
-          </Group>
-          <CollaborativeTextField
-            field={optionBlockerField(option.id)}
-            placeholder="What limits or risks this option?"
-            disabled={disabled}
-            minRows={2}
-          />
-        </Box>
-      </Group>
+      <EvaluationFields option={option} disabled={disabled} />
       {advance && <NextButton onClick={advance} />}
     </Stack>
   )

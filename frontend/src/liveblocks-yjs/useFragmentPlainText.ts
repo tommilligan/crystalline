@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react'
+import { useRef, useSyncExternalStore } from 'react'
 import type * as Y from 'yjs'
 import { useYjsDoc } from './YjsRoomProvider'
 
@@ -23,6 +23,36 @@ export function useFragmentPlainText(field: string): string {
       return () => fragment.unobserveDeep(onStoreChange)
     },
     () => extractPlainText(doc.getXmlFragment(field)),
+  )
+}
+
+/** Reads several Yjs XmlFragments' plain text reactively, in the same order as `fields` — for a
+ * single component (a `Select`'s option list, an accordion header row) that needs every item's
+ * text at once without calling `useFragmentPlainText` once per item in a loop, which would break
+ * the rules of hooks as the option count changes. Snapshots are memoized by shallow content
+ * equality so `useSyncExternalStore` doesn't see a "changed" (new-array) snapshot, and therefore
+ * doesn't re-render, on every call when nothing actually changed. */
+export function useFragmentPlainTexts(fields: readonly string[]): string[] {
+  const { doc } = useYjsDoc()
+  const cache = useRef<string[]>([])
+
+  return useSyncExternalStore(
+    (onStoreChange) => {
+      const fragments = fields.map((field) => doc.getXmlFragment(field))
+      for (const fragment of fragments) fragment.observeDeep(onStoreChange)
+      return () => {
+        for (const fragment of fragments) fragment.unobserveDeep(onStoreChange)
+      }
+    },
+    () => {
+      const next = fields.map((field) => extractPlainText(doc.getXmlFragment(field)))
+      const prev = cache.current
+      const unchanged =
+        prev.length === next.length && prev.every((value, index) => value === next[index])
+      if (unchanged) return prev
+      cache.current = next
+      return next
+    },
   )
 }
 
