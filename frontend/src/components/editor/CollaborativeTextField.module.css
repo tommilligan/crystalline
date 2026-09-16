@@ -1,0 +1,58 @@
+.wrapper {
+  border: 1px solid var(--mantine-color-gray-4);
+  border-radius: var(--mantine-radius-sm);
+  padding: 6px 10px;
+  background: var(--mantine-color-body);
+  transition: border-color 100ms ease;
+}
+
+.wrapper:focus-within {
+  border-color: var(--mantine-color-blue-5);
+}
+
+.wrapper[data-disabled] {
+  background: var(--mantine-color-gray-0);
+  opacity: 0.75;
+}
+
+.editor {
+  min-height: 1.5em;
+  outline: none;
+  font-size: var(--mantine-font-size-sm);
+  line-height: 1.4;
+}
+
+.editor p {
+  margin: 0;
+}
+
+.editor p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: var(--mantine-color-dimmed);
+}
+
+/* Remote collaborator caret + selection, drawn by @tiptap/extension-collaboration-caret */
+.editor :global(.collaboration-carets__caret) {
+  border-left-width: 2px;
+  border-left-style: solid;
+  margin-left: -1px;
+  position: relative;
+  word-break: normal;
+}
+
+.editor :global(.collaboration-carets__label) {
+  border-radius: 3px 3px 3px 0;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  left: -1px;
+  line-height: 1;
+  padding: 2px 4px;
+  position: absolute;
+  top: -1.2em;
+  user-select: none;
+  white-space: nowrap;
+}

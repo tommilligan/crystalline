@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <title>Crystal Ball</title>
+  <circle cx="16" cy="14" r="11" fill="#3b5bdb" fill-opacity="0.15" stroke="#3b5bdb" stroke-width="1.5" />
+  <circle cx="12" cy="10" r="2.5" fill="#ffffff" fill-opacity="0.8" />
+  <rect x="8" y="27" width="16" height="3" rx="1.5" fill="#495057" />
+</svg>
