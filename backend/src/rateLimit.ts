@@ -12,3 +12,12 @@ export const liveblocksAuthRateLimit = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 })
+
+/** Guards the room-deletion endpoint. Tighter than the auth rate limit above since this is a
+ * destructive action a user should only be hitting occasionally, not on every room join. */
+export const roomDeleteRateLimit = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  limit: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+})

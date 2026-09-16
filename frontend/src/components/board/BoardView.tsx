@@ -1,5 +1,6 @@
 import {
   Alert,
+  Anchor,
   Button,
   Container,
   Group,
@@ -12,6 +13,7 @@ import {
 import { IconCopy, IconCrystalBall, IconDownload, IconLock } from '@tabler/icons-react'
 import dayjs from 'dayjs'
 import { type ReactNode, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useSetTitle, useUnsignBoard } from '../../hooks/useBoardMutations'
 import {
   useBoardDecision,
@@ -147,14 +149,16 @@ export function BoardView() {
         )}
 
         <Group justify="space-between" align="center" wrap="wrap">
-          <Group gap="xs">
-            <ThemeIcon size={32} radius="xl" variant="light" color="blue">
-              <IconCrystalBall size={18} />
-            </ThemeIcon>
-            <Text fw={700} size="lg">
-              Crystal Ball
-            </Text>
-          </Group>
+          <Anchor component={Link} to="/" underline="never" c="inherit">
+            <Group gap="xs">
+              <ThemeIcon size={32} radius="xl" variant="light" color="blue">
+                <IconCrystalBall size={18} />
+              </ThemeIcon>
+              <Text fw={700} size="lg">
+                Crystal Ball
+              </Text>
+            </Group>
+          </Anchor>
 
           <Group gap="sm">
             <Text size="sm" c="dimmed">

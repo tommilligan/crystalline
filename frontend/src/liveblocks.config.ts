@@ -53,6 +53,10 @@ export type Storage = {
   options: LiveList<LiveObject<OptionData>>
   decision: LiveObject<DecisionData>
   timer: LiveObject<TimerState>
+  /** Whether the team has confirmed consensus on the situation phase's problem statement — the
+   * gate on leaving column 1 (`docs/phases.md`). Resets to `false` whenever the problem
+   * statement text changes, since agreement was on that specific wording. */
+  situationAgreed: boolean
 }
 
 const context = createRoomContext<Presence, Storage>(client)
@@ -65,9 +69,9 @@ export const { RoomProvider, useRoom, useMutation, useOthers, useUpdateMyPresenc
 // null instead of every call site having to narrow an "still loading" case that can't happen.
 export const { useStorage, useSelf } = context.suspense
 
-export function initialStorage(): Storage {
+export function initialStorage(title: string = 'Untitled board'): Storage {
   return {
-    title: 'Untitled board',
+    title,
     lifecycleState: 'active',
     signedAt: null,
     options: new LiveList([]),
@@ -85,5 +89,6 @@ export function initialStorage(): Storage {
       remainingMs: DEFAULT_TIMER_DURATION_MS,
       endsAt: null,
     }),
+    situationAgreed: false,
   }
 }

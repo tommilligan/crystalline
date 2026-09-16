@@ -1,9 +1,6 @@
 import { isValidRoomId, type LiveblocksAuthRequest } from '@crystalline/shared'
-import { Liveblocks } from '@liveblocks/node'
 import type { Request, Response } from 'express'
-import { env } from './env.js'
-
-const liveblocks = new Liveblocks({ secret: env.liveblocksSecretKey })
+import { liveblocks } from './liveblocksClient.js'
 
 function isAuthRequestBody(body: unknown): body is LiveblocksAuthRequest {
   if (typeof body !== 'object' || body === null) return false

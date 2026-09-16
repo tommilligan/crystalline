@@ -4,6 +4,7 @@ import CollaborationCaret from '@tiptap/extension-collaboration-caret'
 import Placeholder from '@tiptap/extension-placeholder'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
+import type { CSSProperties } from 'react'
 import { useSelf } from '../../liveblocks.config'
 import { useYjsDoc } from '../../liveblocks-yjs/YjsRoomProvider'
 import classes from './CollaborativeTextField.module.css'
@@ -14,6 +15,9 @@ interface CollaborativeTextFieldProps {
   label?: string
   placeholder?: string
   disabled?: boolean
+  /** Minimum visible rows, so the box is clearly a multiline area (e.g. the problem statement)
+   * rather than a single-line input, before the user has typed enough to grow it. */
+  minRows?: number
 }
 
 /**
@@ -26,6 +30,7 @@ export function CollaborativeTextField({
   label,
   placeholder,
   disabled,
+  minRows,
 }: CollaborativeTextFieldProps) {
   const { doc, provider } = useYjsDoc()
   const self = useSelf()
@@ -59,7 +64,11 @@ export function CollaborativeTextField({
   )
 
   return (
-    <Box className={classes.wrapper} data-disabled={disabled || undefined}>
+    <Box
+      className={classes.wrapper}
+      data-disabled={disabled || undefined}
+      style={minRows ? ({ '--cbf-min-height': `${minRows * 1.4}em` } as CSSProperties) : undefined}
+    >
       {label && (
         <Text size="xs" fw={500} c="dimmed" mb={4}>
           {label}

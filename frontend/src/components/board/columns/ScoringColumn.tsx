@@ -1,4 +1,4 @@
-import { Accordion, ActionIcon, Badge, Card, Group, Stack, Text } from '@mantine/core'
+import { Accordion, ActionIcon, Card, Group, Stack, Text } from '@mantine/core'
 import { useSetScore } from '../../../hooks/useBoardMutations'
 import { useOptionWalkthrough } from '../../../hooks/useOptionWalkthrough'
 import { useFragmentPlainText } from '../../../liveblocks-yjs/useFragmentPlainText'
@@ -6,7 +6,6 @@ import type { OptionData, ScoreDimension } from '../../../types/board'
 import { optionTextField, SCORE_DIMENSIONS, totalScore } from '../../../types/board'
 import { EmptyColumnState } from '../EmptyColumnState'
 import { NextButton } from '../NextButton'
-import { ScoreLegend } from '../ScoreLegend'
 
 interface ScoringColumnProps {
   options: readonly OptionData[]
@@ -17,7 +16,6 @@ interface ScoringColumnProps {
 
 const COST_DIMENSIONS = SCORE_DIMENSIONS.slice(0, 3)
 const BENEFIT_DIMENSIONS = SCORE_DIMENSIONS.slice(3)
-const MAX_TOTAL = SCORE_DIMENSIONS.length * 5
 const SCORE_VALUES = [1, 2, 3, 4, 5] as const
 const SCORE_BUTTON_SIZE = 20
 // Buttons overlap by 1px of shared border (split-button join, see Mantine's SplitButton
@@ -204,17 +202,11 @@ function LeaderboardRow({
 
 function ScoringAccordionControl({ option }: { option: OptionData }) {
   const text = useFragmentPlainText(optionTextField(option.id))
-  const total = totalScore(option.scores)
   return (
     <Group justify="space-between" align="center" wrap="nowrap" gap="xs" style={{ flex: 1 }}>
       <Text size="sm" truncate style={{ flex: 1, minWidth: 0 }}>
         {text || 'Untitled option'}
       </Text>
-      {total !== null && (
-        <Badge color="blue" variant="light" style={{ flexShrink: 0 }}>
-          {total}/{MAX_TOTAL}
-        </Badge>
-      )}
     </Group>
   )
 }
@@ -255,16 +247,15 @@ function ScoringAccordionPanel({
   )
 }
 
-/** Six-dimension scoring, always shown with the 1=bad/5=good legend pinned above the inputs —
- * an inverted, unexplained cost scale was the single biggest point of confusion in the original
- * whiteboard tool (see `docs/concept.md`). Each dimension gets its own row with 1-5 quick-pick
- * buttons rather than a numeric input, so scoring is a single click.
+/** Six-dimension scoring, 1=bad/5=good on every dimension including costs (see
+ * `docs/concept.md`). Each dimension gets its own row with 1-5 quick-pick buttons rather than a
+ * numeric input, so scoring is a single click.
  *
  * Options are walked through one at a time via an Accordion (mirroring the phase "Next >" flow
  * one level down): only the active option's score breakdown is expanded, saving vertical space,
- * while the rest collapse to just their idea text and running total. As with `EvaluationColumn`,
- * that expand/collapse distinction — and its "Next >" button — is only shown while this column
- * is `active`; otherwise every item stays collapsed and undecorated, since the whole column is
+ * while the rest collapse to just their idea text. As with `EvaluationColumn`, that
+ * expand/collapse distinction — and its "Next >" button — is only shown while this column is
+ * `active`; otherwise every item stays collapsed and undecorated, since the whole column is
  * already dimmed as a unit and the walkthrough position doesn't need to be visible to explain
  * that dimming.
  *
@@ -287,7 +278,6 @@ export function ScoringColumn({ options, disabled, active, onAdvancePhase }: Sco
 
   return (
     <>
-      <ScoreLegend />
       <Accordion
         value={active ? (activeOption?.id ?? null) : null}
         onChange={(value) => value && focus(value)}

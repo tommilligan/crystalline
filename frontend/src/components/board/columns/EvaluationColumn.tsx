@@ -65,36 +65,40 @@ export function EvaluationColumn({
             <CollaborativeTextField field={optionTextField(option.id)} disabled />
             <Divider my="xs" />
             <Stack gap="xs">
-              <Box>
-                <Group gap={6} mb={4}>
-                  <ThemeIcon size={16} radius="xl" color="teal" variant="filled">
-                    <IconCheck size={11} />
-                  </ThemeIcon>
-                  <Text size="xs" fw={700} c="teal.8">
-                    Good
-                  </Text>
-                </Group>
-                <CollaborativeTextField
-                  field={optionEnablerField(option.id)}
-                  placeholder="What helps or supports this option?"
-                  disabled={disabled}
-                />
-              </Box>
-              <Box>
-                <Group gap={6} mb={4}>
-                  <ThemeIcon size={16} radius="xl" color="red" variant="filled">
-                    <IconX size={11} />
-                  </ThemeIcon>
-                  <Text size="xs" fw={700} c="red.8">
-                    Bad
-                  </Text>
-                </Group>
-                <CollaborativeTextField
-                  field={optionBlockerField(option.id)}
-                  placeholder="What limits or risks this option?"
-                  disabled={disabled}
-                />
-              </Box>
+              <Group gap="xs" align="flex-start" grow wrap="nowrap">
+                <Box>
+                  <Group gap={6} mb={4}>
+                    <ThemeIcon size={16} radius="xl" color="teal" variant="filled">
+                      <IconCheck size={11} />
+                    </ThemeIcon>
+                    <Text size="xs" fw={700} c="teal.8">
+                      Good
+                    </Text>
+                  </Group>
+                  <CollaborativeTextField
+                    field={optionEnablerField(option.id)}
+                    placeholder="What helps or supports this option?"
+                    disabled={disabled}
+                    minRows={2}
+                  />
+                </Box>
+                <Box>
+                  <Group gap={6} mb={4}>
+                    <ThemeIcon size={16} radius="xl" color="red" variant="filled">
+                      <IconX size={11} />
+                    </ThemeIcon>
+                    <Text size="xs" fw={700} c="red.8">
+                      Bad
+                    </Text>
+                  </Group>
+                  <CollaborativeTextField
+                    field={optionBlockerField(option.id)}
+                    placeholder="What limits or risks this option?"
+                    disabled={disabled}
+                    minRows={2}
+                  />
+                </Box>
+              </Group>
               {focused && advance && <NextButton onClick={advance} />}
             </Stack>
           </Card>

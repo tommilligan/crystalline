@@ -23,6 +23,10 @@ export function useBoardTimer() {
   return useStorage((root) => root.timer, shallow)
 }
 
+export function useBoardSituationAgreed() {
+  return useStorage((root) => root.situationAgreed)
+}
+
 /** Options ordered by total score, highest first; options without a score sort last. */
 export function useRankedOptions(): readonly OptionData[] {
   return useStorage(

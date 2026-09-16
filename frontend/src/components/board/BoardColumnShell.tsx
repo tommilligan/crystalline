@@ -24,6 +24,9 @@ interface BoardColumnShellProps {
 export function BoardColumnShell({ phase, layout, onFocus, children }: BoardColumnShellProps) {
   const collapsed = layout === 'collapsed'
   const emphasized = layout === 'primary'
+  // The situation column transforms into a read-out instead of dimming when it's not selected
+  // (see `SituationColumn`), so it should never actually look dimmed.
+  const isSituation = phase.number === 1
 
   return (
     <Card
@@ -39,7 +42,7 @@ export function BoardColumnShell({ phase, layout, onFocus, children }: BoardColu
         flexDirection: 'column',
         height: '100%',
         minHeight: 0,
-        opacity: emphasized || collapsed ? 1 : 0.55,
+        opacity: emphasized || collapsed || isSituation ? 1 : 0.55,
         transition: 'opacity 0.2s ease, border-color 0.2s ease, flex 0.2s ease',
         cursor: collapsed ? 'pointer' : undefined,
       }}

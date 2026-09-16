@@ -4,6 +4,7 @@ import {
   Button,
   Center,
   Group,
+  Menu,
   Modal,
   Paper,
   Select,
@@ -13,33 +14,78 @@ import {
   TextInput,
   ThemeIcon,
   Title,
+  UnstyledButton,
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconCrystalBall, IconPlus } from '@tabler/icons-react'
-import { useState } from 'react'
+import {
+  IconChevronDown,
+  IconChevronUp,
+  IconCrystalBall,
+  IconDots,
+  IconPlus,
+  IconTrash,
+} from '@tabler/icons-react'
+import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useBoardsList, useForgetBoardEntry, useRegisterBoard } from '../hooks/useBoardsRegistry'
+import { useBoardsList, useDeleteBoard, useRegisterBoard } from '../hooks/useBoardsRegistry'
+import type { BoardSummary } from '../types/board'
 
 const TEMPLATES = [{ value: 'standard-five-phase', label: 'Standard Five-Phase Board' }]
+
+type SortKey = 'title' | 'updatedAt'
 
 export function HomePage() {
   const { data: boards, isLoading } = useBoardsList()
   const registerBoard = useRegisterBoard()
-  const forgetBoard = useForgetBoardEntry()
+  const deleteBoard = useDeleteBoard()
   const navigate = useNavigate()
   const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false)
   const [title, setTitle] = useState('')
   const [template, setTemplate] = useState<string | null>(TEMPLATES[0].value)
+  const [sortKey, setSortKey] = useState<SortKey>('updatedAt')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+  const [deleteTarget, setDeleteTarget] = useState<BoardSummary | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+
+  const DELETE_CONFIRM_PHRASE = 'delete board'
+
+  function toggleSort(key: SortKey) {
+    if (key === sortKey) {
+      setSortDir((direction) => (direction === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortKey(key)
+      setSortDir(key === 'title' ? 'asc' : 'desc')
+    }
+  }
+
+  const sortedBoards = useMemo(() => {
+    if (!boards) return []
+    const compared = [...boards].sort((a, b) =>
+      sortKey === 'title' ? a.title.localeCompare(b.title) : a.updatedAt - b.updatedAt,
+    )
+    return sortDir === 'asc' ? compared : compared.reverse()
+  }, [boards, sortKey, sortDir])
+
+  function handleDeleteConfirm() {
+    if (!deleteTarget) return
+    setDeleteError(null)
+    deleteBoard.mutate(deleteTarget.id, {
+      onSuccess: () => setDeleteTarget(null),
+      onError: () => setDeleteError('Could not delete this board. Please try again.'),
+    })
+  }
 
   function handleCreate(event: React.FormEvent) {
     event.preventDefault()
     const id = crypto.randomUUID()
+    const boardTitle = title.trim() || 'Untitled board'
     registerBoard.mutate(
-      { id, title: title.trim() || 'Untitled board', createdAt: Date.now() },
+      { id, title: boardTitle, createdAt: Date.now() },
       {
         onSuccess: () => {
           closeModal()
-          navigate(`/board/${id}`)
+          navigate(`/board/${id}`, { state: { title: boardTitle } })
         },
       },
     )
@@ -47,7 +93,7 @@ export function HomePage() {
 
   return (
     <Center mih="100vh" bg="gray.0">
-      <Stack gap="xl" w={420} py="xl">
+      <Stack gap="xl" w={560} py="xl">
         <Stack gap={4} align="center" ta="center">
           <Title order={1}>Crystal Ball</Title>
           <Text size="sm" fw={600} c="blue.7">
@@ -77,8 +123,29 @@ export function HomePage() {
           {boards && boards.length > 0 && (
             <Paper withBorder radius="md">
               <Table verticalSpacing="xs">
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th>
+                      <SortableHeader
+                        label="Name"
+                        active={sortKey === 'title'}
+                        direction={sortDir}
+                        onClick={() => toggleSort('title')}
+                      />
+                    </Table.Th>
+                    <Table.Th>
+                      <SortableHeader
+                        label="Updated"
+                        active={sortKey === 'updatedAt'}
+                        direction={sortDir}
+                        onClick={() => toggleSort('updatedAt')}
+                      />
+                    </Table.Th>
+                    <Table.Th w={1} />
+                  </Table.Tr>
+                </Table.Thead>
                 <Table.Tbody>
-                  {boards.map((board) => (
+                  {sortedBoards.map((board) => (
                     <Table.Tr key={board.id}>
                       <Table.Td>
                         <Anchor component={Link} to={`/board/${board.id}`} fw={500}>
@@ -87,18 +154,30 @@ export function HomePage() {
                       </Table.Td>
                       <Table.Td>
                         <Text size="sm" c="dimmed">
-                          {new Date(board.createdAt).toLocaleDateString()}
+                          {new Date(board.updatedAt).toLocaleString()}
                         </Text>
                       </Table.Td>
                       <Table.Td w={1}>
-                        <ActionIcon
-                          variant="subtle"
-                          color="red"
-                          aria-label="Remove from this list"
-                          onClick={() => forgetBoard.mutate(board.id)}
-                        >
-                          ✕
-                        </ActionIcon>
+                        <Menu position="bottom-end" withinPortal>
+                          <Menu.Target>
+                            <ActionIcon variant="subtle" color="gray" aria-label="Board actions">
+                              <IconDots size={16} />
+                            </ActionIcon>
+                          </Menu.Target>
+                          <Menu.Dropdown>
+                            <Menu.Item
+                              color="red"
+                              leftSection={<IconTrash size={14} />}
+                              onClick={() => {
+                                setDeleteError(null)
+                                setDeleteConfirmText('')
+                                setDeleteTarget(board)
+                              }}
+                            >
+                              Delete board
+                            </Menu.Item>
+                          </Menu.Dropdown>
+                        </Menu>
                       </Table.Td>
                     </Table.Tr>
                   ))}
@@ -162,6 +241,68 @@ export function HomePage() {
           </Stack>
         </form>
       </Modal>
+
+      <Modal
+        opened={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        title="Delete board"
+        centered
+      >
+        <Stack gap="md">
+          <Text size="sm">
+            Delete <strong>{deleteTarget?.title}</strong>? This permanently deletes the board so
+            anyone else with the link loses access too.
+            <br />
+          </Text>
+          <Text size="sm">This action cannot be undone.</Text>
+          <TextInput
+            label={`Type "${DELETE_CONFIRM_PHRASE}" to confirm`}
+            placeholder={DELETE_CONFIRM_PHRASE}
+            value={deleteConfirmText}
+            onChange={(event) => setDeleteConfirmText(event.currentTarget.value)}
+            autoComplete="off"
+          />
+          {deleteError && (
+            <Text size="sm" c="red">
+              {deleteError}
+            </Text>
+          )}
+          <Group justify="flex-end">
+            <Button variant="default" onClick={() => setDeleteTarget(null)}>
+              Cancel
+            </Button>
+            <Button
+              color="red"
+              loading={deleteBoard.isPending}
+              disabled={deleteConfirmText.trim().toLowerCase() !== DELETE_CONFIRM_PHRASE}
+              onClick={handleDeleteConfirm}
+            >
+              Delete
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Center>
+  )
+}
+
+interface SortableHeaderProps {
+  label: string
+  active: boolean
+  direction: 'asc' | 'desc'
+  onClick: () => void
+}
+
+function SortableHeader({ label, active, direction, onClick }: SortableHeaderProps) {
+  const Icon = direction === 'asc' ? IconChevronUp : IconChevronDown
+  return (
+    <UnstyledButton onClick={onClick}>
+      <Group gap={4} wrap="nowrap">
+        <Text size="sm" fw={700} c={active ? undefined : 'dimmed'}>
+          {label}
+        </Text>
+        {active && <Icon size={14} />}
+      </Group>
+    </UnstyledButton>
   )
 }

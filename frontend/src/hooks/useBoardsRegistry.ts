@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { deleteBoardRoom } from '../lib/boardsApi'
 import {
   forgetBoardEntry,
   listBoards,
@@ -16,7 +17,8 @@ export function useBoardsList() {
 export function useRegisterBoard() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (summary: BoardSummary) => registerBoard(summary),
+    mutationFn: (summary: Pick<BoardSummary, 'id' | 'title' | 'createdAt'>) =>
+      registerBoard(summary),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: BOARDS_QUERY_KEY }),
   })
 }
@@ -29,10 +31,15 @@ export function useRenameBoardEntry() {
   })
 }
 
-export function useForgetBoardEntry() {
+/** Deletes a board outright: its Liveblocks room (the actual data — see `lib/boardsApi.ts`)
+ * plus this device's local list entry. */
+export function useDeleteBoard() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => forgetBoardEntry(id),
+    mutationFn: async (id: string) => {
+      await deleteBoardRoom(id)
+      await forgetBoardEntry(id)
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: BOARDS_QUERY_KEY }),
   })
 }

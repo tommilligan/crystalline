@@ -16,6 +16,12 @@ export function useSetTitle() {
   }, [])
 }
 
+export function useSetSituationAgreed() {
+  return useMutation(({ storage }, agreed: boolean) => {
+    storage.set('situationAgreed', agreed)
+  }, [])
+}
+
 export function useAddIdea() {
   return useMutation(({ storage }) => {
     const id = crypto.randomUUID()

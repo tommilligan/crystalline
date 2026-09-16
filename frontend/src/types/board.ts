@@ -28,13 +28,13 @@ export const PHASES: ReadonlyArray<{
       key: 'scoring',
       label: 'Costs/Benefits',
       number: 4,
-      subtitle: 'Evaluate key metrics',
+      subtitle: 'What are the key properties?',
     },
     {
       key: 'decision',
       label: 'Decision',
       number: 5,
-      subtitle: 'What we are going to do',
+      subtitle: 'Which option are we going to take forward?',
     },
   ]
 
@@ -102,6 +102,7 @@ export interface BoardSummary {
   id: string
   title: string
   createdAt: number
+  updatedAt: number
 }
 
 export function optionTextField(optionId: string): string {

@@ -16,7 +16,7 @@
 }
 
 .editor {
-  min-height: 1.5em;
+  min-height: var(--cbf-min-height, 1.5em);
   outline: none;
   font-size: var(--mantine-font-size-sm);
   line-height: 1.4;

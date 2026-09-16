@@ -26,11 +26,26 @@ function writeAll(boards: BoardSummary[]) {
 }
 
 export async function listBoards(): Promise<BoardSummary[]> {
-  return [...readAll()].sort((a, b) => b.createdAt - a.createdAt)
+  return [...readAll()].sort((a, b) => b.updatedAt - a.updatedAt)
 }
 
-export async function registerBoard(summary: BoardSummary): Promise<void> {
-  writeAll([summary, ...readAll().filter((board) => board.id !== summary.id)])
+/**
+ * Creates or touches a board's registry entry. `createdAt` only matters the first time a board
+ * id is seen (a first-time create, or opening a board link on a device that's never seen it
+ * before) — on every subsequent call the existing entry's `createdAt` is kept and `updatedAt` is
+ * bumped to now, which is what drives the home page's "most recently updated" ordering.
+ */
+export async function registerBoard(
+  summary: Pick<BoardSummary, 'id' | 'title' | 'createdAt'>,
+): Promise<void> {
+  const existing = readAll().find((board) => board.id === summary.id)
+  const merged: BoardSummary = {
+    id: summary.id,
+    title: summary.title,
+    createdAt: existing?.createdAt ?? summary.createdAt,
+    updatedAt: Date.now(),
+  }
+  writeAll([merged, ...readAll().filter((board) => board.id !== summary.id)])
 }
 
 export async function renameBoardEntry(id: string, title: string): Promise<void> {

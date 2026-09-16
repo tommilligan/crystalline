@@ -73,21 +73,14 @@ export function DecisionColumn({
               onClick={() => !disabled && setChosenOption(isChosen ? null : option.id)}
               style={{
                 cursor: disabled ? 'default' : 'pointer',
-                borderColor: isChosen ? 'var(--mantine-color-green-6)' : undefined,
+                borderColor: isChosen ? 'var(--mantine-primary-color-6)' : undefined,
                 borderWidth: isChosen ? 2 : 1,
-                background: isChosen ? 'var(--mantine-color-green-0)' : undefined,
+                background: isChosen ? 'var(--mantine-primary-color-0)' : undefined,
               }}
             >
-              <Group justify="space-between" wrap="nowrap">
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <CollaborativeTextField field={optionTextField(option.id)} disabled />
-                </div>
-                {isChosen && (
-                  <Badge color="green" style={{ flexShrink: 0 }}>
-                    Selected
-                  </Badge>
-                )}
-              </Group>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <CollaborativeTextField field={optionTextField(option.id)} disabled />
+              </div>
             </Card>
           )
         })}
