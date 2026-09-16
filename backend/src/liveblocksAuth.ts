@@ -33,6 +33,21 @@ export async function handleLiveblocksAuth(req: Request, res: Response): Promise
     return
   }
 
+  // A room only exists once it's been created via `POST /api/rooms` (the "New board" flow —
+  // see `createRoom.ts`). This is the guard that actually matters: Liveblocks auto-creates a
+  // room on first connection for any room id a valid access token names, so without this check
+  // simply visiting/joining a board URL that was never created would silently create it.
+  try {
+    await liveblocks.getRoom(room)
+  } catch (error) {
+    const status = (error as { status?: number }).status
+    if (status === 404) {
+      res.status(404).json({ error: 'not_found' })
+      return
+    }
+    throw error
+  }
+
   const session = liveblocks.prepareSession(userId, { userInfo })
   session.allow(room, ['*:write'])
 

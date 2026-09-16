@@ -1,4 +1,4 @@
-import { Box, Card, Group, Stack, Text } from '@mantine/core'
+import { Box, Card, Group, Stack, Text, Title } from '@mantine/core'
 import type { ReactNode } from 'react'
 import type { PHASES } from '../../types/board'
 import type { ColumnLayoutState } from './columnLayout'
@@ -53,20 +53,20 @@ export function BoardColumnShell({ phase, layout, isWide, onFocus, children }: B
     >
       {collapsed && isWide ? (
         <Stack align="center" justify="flex-start" gap="xs" p="xs" h="100%">
-          <Text
-            fw={700}
+          <Title
+            order={2}
+            size="h5"
             c="dark.7"
-            size="sm"
             style={{ writingMode: 'vertical-rl', whiteSpace: 'nowrap' }}
           >
             {phase.number}. {phase.label}
-          </Text>
+          </Title>
         </Stack>
       ) : collapsed ? (
         <Group justify="space-between" align="center" wrap="nowrap" p="sm" bg="white">
-          <Text fw={700} c="dark.7" size="sm">
+          <Title order={2} size="h5" c="dark.7">
             {phase.number}. {phase.label}
-          </Text>
+          </Title>
         </Group>
       ) : (
         <>
@@ -79,9 +79,9 @@ export function BoardColumnShell({ phase, layout, isWide, onFocus, children }: B
             style={{ borderBottom: '1px solid var(--mantine-color-gray-2)' }}
           >
             <Stack gap={0}>
-              <Text fw={700} c="dark.7" size="sm">
+              <Title order={2} size="h5" c="dark.7">
                 {phase.number}. {phase.label}
-              </Text>
+              </Title>
               <Text size="xs" c="dimmed">
                 {phase.subtitle}
               </Text>

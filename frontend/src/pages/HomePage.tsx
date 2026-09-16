@@ -27,7 +27,7 @@ import {
 } from '@tabler/icons-react'
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useBoardsList, useDeleteBoard, useRegisterBoard } from '../hooks/useBoardsRegistry'
+import { useBoardsList, useCreateBoard, useDeleteBoard } from '../hooks/useBoardsRegistry'
 import type { BoardSummary } from '../types/board'
 
 const TEMPLATES = [{ value: 'standard-five-phase', label: 'Standard Five-Phase Board' }]
@@ -36,7 +36,7 @@ type SortKey = 'title' | 'updatedAt'
 
 export function HomePage() {
   const { data: boards, isLoading } = useBoardsList()
-  const registerBoard = useRegisterBoard()
+  const createBoard = useCreateBoard()
   const deleteBoard = useDeleteBoard()
   const navigate = useNavigate()
   const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false)
@@ -44,6 +44,7 @@ export function HomePage() {
   const [template, setTemplate] = useState<string | null>(TEMPLATES[0].value)
   const [sortKey, setSortKey] = useState<SortKey>('updatedAt')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+  const [createError, setCreateError] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<BoardSummary | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
@@ -78,15 +79,17 @@ export function HomePage() {
 
   function handleCreate(event: React.FormEvent) {
     event.preventDefault()
+    setCreateError(null)
     const id = crypto.randomUUID()
     const boardTitle = title.trim() || 'Untitled board'
-    registerBoard.mutate(
+    createBoard.mutate(
       { id, title: boardTitle, createdAt: Date.now() },
       {
         onSuccess: () => {
           closeModal()
           navigate(`/board/${id}`, { state: { title: boardTitle } })
         },
+        onError: () => setCreateError('Could not create this board. Please try again.'),
       },
     )
   }
@@ -112,7 +115,7 @@ export function HomePage() {
         </Group>
 
         <Stack gap="sm">
-          <Title order={3}>Your boards</Title>
+          <Title order={2}>Your boards</Title>
           {isLoading && <Text c="dimmed">Loading…</Text>}
           {!isLoading && boards?.length === 0 && (
             <Text c="dimmed">
@@ -230,11 +233,17 @@ export function HomePage() {
               styles={{ label: { width: '100%', textAlign: 'left' } }}
             />
 
+            {createError && (
+              <Text size="sm" c="red">
+                {createError}
+              </Text>
+            )}
+
             <Group justify="flex-end" w="100%">
               <Button variant="default" onClick={closeModal}>
                 Cancel
               </Button>
-              <Button type="submit" loading={registerBoard.isPending}>
+              <Button type="submit" loading={createBoard.isPending}>
                 Create Board
               </Button>
             </Group>

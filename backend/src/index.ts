@@ -1,9 +1,16 @@
 import cors from 'cors'
 import express from 'express'
+import { handleCreateRoom } from './createRoom.js'
 import { handleDeleteRoom } from './deleteRoom.js'
 import { env } from './env.js'
+import { handleGetRoom } from './getRoom.js'
 import { handleLiveblocksAuth } from './liveblocksAuth.js'
-import { liveblocksAuthRateLimit, roomDeleteRateLimit } from './rateLimit.js'
+import {
+  liveblocksAuthRateLimit,
+  roomCreateRateLimit,
+  roomDeleteRateLimit,
+  roomLookupRateLimit,
+} from './rateLimit.js'
 
 const app = express()
 
@@ -12,6 +19,14 @@ app.use(express.json())
 
 app.post('/api/liveblocks-auth', liveblocksAuthRateLimit, (req, res, next) => {
   handleLiveblocksAuth(req, res).catch(next)
+})
+
+app.post('/api/rooms', roomCreateRateLimit, (req, res, next) => {
+  handleCreateRoom(req, res).catch(next)
+})
+
+app.get('/api/rooms/:roomId', roomLookupRateLimit, (req, res, next) => {
+  handleGetRoom(req, res).catch(next)
 })
 
 app.delete('/api/rooms/:roomId', roomDeleteRateLimit, (req, res, next) => {

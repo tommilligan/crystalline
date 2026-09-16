@@ -1,4 +1,4 @@
-import { Accordion, Group, Stack, Text } from '@mantine/core'
+import { Accordion, Group, Stack, Title } from '@mantine/core'
 import { useOptionWalkthrough } from '../../../hooks/useOptionWalkthrough'
 import { useFragmentPlainText } from '../../../liveblocks-yjs/useFragmentPlainText'
 import type { OptionData } from '../../../types/board'
@@ -18,9 +18,19 @@ function ScoringAccordionControl({ option }: { option: OptionData }) {
   const text = useFragmentPlainText(optionTextField(option.id))
   return (
     <Group justify="space-between" align="center" wrap="nowrap" gap="xs" style={{ flex: 1 }}>
-      <Text size="sm" truncate style={{ flex: 1, minWidth: 0 }}>
+      <Title
+        order={4}
+        size="sm"
+        style={{
+          flex: 1,
+          minWidth: 0,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}
+      >
         {text || 'Untitled option'}
-      </Text>
+      </Title>
     </Group>
   )
 }

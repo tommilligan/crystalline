@@ -9,6 +9,7 @@ import {
   Text,
   TextInput,
   ThemeIcon,
+  Title,
   Tooltip,
 } from '@mantine/core'
 import { IconCopy, IconCrystalBall, IconDownload, IconLock, IconPencil } from '@tabler/icons-react'
@@ -75,7 +76,7 @@ function BoardTitleEditor({
         onKeyDown={(event) => {
           if (event.key === 'Enter') setEditing(false)
         }}
-        styles={{ input: { fontWeight: 600, fontSize: 'var(--mantine-font-size-lg)' } }}
+        styles={{ input: { fontWeight: 700, fontSize: 'var(--mantine-h4-font-size)' } }}
         aria-label="Board title"
       />
     )
@@ -89,9 +90,9 @@ function BoardTitleEditor({
       onClick={() => !disabled && setEditing(true)}
       style={{ cursor: disabled ? 'default' : 'pointer' }}
     >
-      <Text fw={600} size="lg">
+      <Title order={1} size="h4">
         {title || 'Untitled board'}
-      </Text>
+      </Title>
       {!disabled && (
         <ActionIcon
           variant="subtle"

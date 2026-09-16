@@ -1,4 +1,4 @@
-import { Accordion, Stack, Text } from '@mantine/core'
+import { Accordion, Stack, Title } from '@mantine/core'
 import { useMemo } from 'react'
 import { useOptionWalkthrough } from '../../../hooks/useOptionWalkthrough'
 import {
@@ -21,9 +21,19 @@ interface EvaluationColumnProps {
 function EvaluationAccordionControl({ option }: { option: OptionData }) {
   const text = useFragmentPlainText(optionTextField(option.id))
   return (
-    <Text size="sm" truncate style={{ flex: 1, minWidth: 0 }}>
+    <Title
+      order={4}
+      size="sm"
+      style={{
+        flex: 1,
+        minWidth: 0,
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+      }}
+    >
       {text || 'Untitled option'}
-    </Text>
+    </Title>
   )
 }
 

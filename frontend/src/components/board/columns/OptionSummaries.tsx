@@ -1,4 +1,4 @@
-import { ActionIcon, Box, Group, Stack, Text, ThemeIcon } from '@mantine/core'
+import { ActionIcon, Box, Group, Stack, Text, ThemeIcon, Title } from '@mantine/core'
 import { IconCheck, IconX } from '@tabler/icons-react'
 import { useSetScore } from '../../../hooks/useBoardMutations'
 import { useFragmentPlainText } from '../../../liveblocks-yjs/useFragmentPlainText'
@@ -100,7 +100,7 @@ function DimensionRow({
   const value = option.scores?.[dimension.key] ?? null
   return (
     <Group justify="space-between" wrap="nowrap" gap="xs">
-      <Text size="xs" c="dimmed" fw={600} style={{ flexShrink: 0 }}>
+      <Text size="xs" fw={600} style={{ flexShrink: 0 }}>
         {dimension.label}
       </Text>
       <ScoreButtons
@@ -136,9 +136,9 @@ function DimensionGroup({
   return (
     <div>
       <Group justify="space-between" align="flex-end" wrap="nowrap" mb={4}>
-        <Text size="xs" c="dimmed" fw={700}>
+        <Title order={5} size="xs">
           {groupLabel.toUpperCase()}
-        </Text>
+        </Title>
         <ScaleHint lowLabel={lowLabel} highLabel={highLabel} />
       </Group>
       <Stack gap={4}>
@@ -165,12 +165,12 @@ export function EvaluationFields({ option, disabled }: { option: OptionData; dis
     <Group gap="xs" align="flex-start" grow wrap="nowrap">
       <Box>
         <Group gap={6} mb={4}>
+          <Title order={5} size="xs">
+            Good
+          </Title>
           <ThemeIcon size={16} radius="xl" color="teal" variant="filled">
             <IconCheck size={11} />
           </ThemeIcon>
-          <Text size="xs" fw={700} c="teal.8">
-            Good
-          </Text>
         </Group>
         <CollaborativeTextField
           field={optionEnablerField(option.id)}
@@ -181,12 +181,12 @@ export function EvaluationFields({ option, disabled }: { option: OptionData; dis
       </Box>
       <Box>
         <Group gap={6} mb={4}>
+          <Title order={5} size="xs">
+            Bad
+          </Title>
           <ThemeIcon size={16} radius="xl" color="red" variant="filled">
             <IconX size={11} />
           </ThemeIcon>
-          <Text size="xs" fw={700} c="red.8">
-            Bad
-          </Text>
         </Group>
         <CollaborativeTextField
           field={optionBlockerField(option.id)}
@@ -270,7 +270,7 @@ function SummaryDimensionRow({
 }) {
   return (
     <Group justify="space-between" wrap="nowrap" gap="xs">
-      <Text size="xs" c="dimmed" fw={600} style={{ flexShrink: 0 }}>
+      <Text size="xs" fw={600} style={{ flexShrink: 0 }}>
         {dimension.label}
       </Text>
       <Group gap={6} wrap="nowrap">
@@ -294,9 +294,9 @@ function SummaryDimensionGroup({
 }) {
   return (
     <div>
-      <Text size="xs" c="dimmed" fw={700} mb={4}>
+      <Title order={5} size="xs" mb={4}>
         {groupLabel.toUpperCase()}
-      </Text>
+      </Title>
       <Stack gap={4}>
         {dimensions.map((dimension) => (
           <SummaryDimensionRow
@@ -321,12 +321,12 @@ export function EvaluationSummary({ option }: { option: OptionData }) {
     <Group gap="xs" align="flex-start" grow wrap="nowrap">
       <Box>
         <Group gap={6} mb={4}>
+          <Title order={5} size="xs">
+            Good
+          </Title>
           <ThemeIcon size={16} radius="xl" color="teal" variant="filled">
             <IconCheck size={11} />
           </ThemeIcon>
-          <Text size="xs" fw={700} c="teal.8">
-            Good
-          </Text>
         </Group>
         <Text size="sm" c={enablerText ? undefined : 'dimmed'} style={{ whiteSpace: 'pre-wrap' }}>
           {enablerText || 'Nothing noted'}
@@ -334,12 +334,12 @@ export function EvaluationSummary({ option }: { option: OptionData }) {
       </Box>
       <Box>
         <Group gap={6} mb={4}>
+          <Title order={5} size="xs">
+            Bad
+          </Title>
           <ThemeIcon size={16} radius="xl" color="red" variant="filled">
             <IconX size={11} />
           </ThemeIcon>
-          <Text size="xs" fw={700} c="red.8">
-            Bad
-          </Text>
         </Group>
         <Text size="sm" c={blockerText ? undefined : 'dimmed'} style={{ whiteSpace: 'pre-wrap' }}>
           {blockerText || 'Nothing noted'}

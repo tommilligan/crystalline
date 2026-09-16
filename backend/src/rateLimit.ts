@@ -21,3 +21,21 @@ export const roomDeleteRateLimit = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 })
+
+/** Guards the room-creation endpoint. Same shape as the delete limit above — a user should only
+ * be hitting "New board" occasionally, not on every board open. */
+export const roomCreateRateLimit = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  limit: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+})
+
+/** Guards the room-existence-check endpoint. As generous as the auth rate limit since the
+ * frontend calls this every time a board link is opened, same cadence as auth itself. */
+export const roomLookupRateLimit = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  limit: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+})

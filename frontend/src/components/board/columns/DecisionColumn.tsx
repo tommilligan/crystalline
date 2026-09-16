@@ -47,12 +47,22 @@ interface DecisionColumnProps {
 function SummaryAccordionControl({ title, points }: { title: string; points: number }) {
   return (
     <Group justify="space-between" align="center" wrap="nowrap" gap="xs" style={{ flex: 1 }}>
-      <Text size="sm" fw={600} truncate style={{ flex: 1, minWidth: 0 }}>
+      <Title
+        order={4}
+        size="sm"
+        style={{
+          flex: 1,
+          minWidth: 0,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}
+      >
         {title}
-      </Text>
+      </Title>
       {/* A plain number, not a `Badge` — Mantine's Badge is uppercase by default, which would
        * shout "POINTS" rather than read as a simple total. */}
-      <Text size="sm" fw={600} c="dimmed" style={{ flexShrink: 0 }}>
+      <Text size="sm" fw={600} c="dimmed" mr={4} style={{ flexShrink: 0 }}>
         {points} points
       </Text>
     </Group>
@@ -125,7 +135,9 @@ export function DecisionColumn({
   return (
     <>
       <Stack gap="xs">
-        <Title order={5}>Summary of options</Title>
+        <Title order={3} size="h5">
+          Summary of options
+        </Title>
         {options.length === 0 ? (
           <Text size="sm" c="dimmed">
             Add some options first, or jump in anyway.
@@ -159,7 +171,9 @@ export function DecisionColumn({
       <Divider />
 
       <Stack gap="sm">
-        <Title order={5}>Decision</Title>
+        <Title order={3} size="h5">
+          Decision
+        </Title>
 
         <Select
           label="Chosen option"
@@ -213,7 +227,9 @@ export function DecisionColumn({
       <Divider />
 
       <Stack gap="xs">
-        <Title order={5}>Next steps</Title>
+        <Title order={3} size="h5">
+          Next steps
+        </Title>
         <Text size="xs" c="dimmed">
           This doesn't need to describe who owns everything going forward — just the immediate next
           step (e.g. "write an RFC" or "organise a further design session"). It must have an owner
