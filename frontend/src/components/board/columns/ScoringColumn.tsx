@@ -1,5 +1,4 @@
 import { Accordion, ActionIcon, Badge, Card, Group, Stack, Text } from '@mantine/core'
-import { IconChartBar } from '@tabler/icons-react'
 import { useSetScore } from '../../../hooks/useBoardMutations'
 import { useOptionWalkthrough } from '../../../hooks/useOptionWalkthrough'
 import { useFragmentPlainText } from '../../../liveblocks-yjs/useFragmentPlainText'
@@ -280,12 +279,7 @@ export function ScoringColumn({ options, disabled, active, onAdvancePhase }: Sco
   if (options.length === 0) {
     return (
       <>
-        <EmptyColumnState
-          icon={IconChartBar}
-          title="No Numerical Trade-offs Yet"
-          description="Add some options in the Options column first, or jump in anyway."
-          placeholder="Placeholder scoring card"
-        />
+        <EmptyColumnState />
         {active && advance && <NextButton onClick={advance} />}
       </>
     )

@@ -1,5 +1,5 @@
 import { Box, Card, Divider, Group, Stack, Text, ThemeIcon } from '@mantine/core'
-import { IconCheck, IconStack2, IconX } from '@tabler/icons-react'
+import { IconCheck, IconX } from '@tabler/icons-react'
 import { useOptionWalkthrough } from '../../../hooks/useOptionWalkthrough'
 import type { OptionData } from '../../../types/board'
 import { optionBlockerField, optionEnablerField, optionTextField } from '../../../types/board'
@@ -38,12 +38,7 @@ export function EvaluationColumn({
   if (options.length === 0) {
     return (
       <>
-        <EmptyColumnState
-          icon={IconStack2}
-          title="No Options to Evaluate Yet"
-          description="Add some options in the Options column first, or jump in anyway."
-          placeholder="Placeholder evaluation space"
-        />
+        <EmptyColumnState />
         {active && advance && <NextButton onClick={advance} />}
       </>
     )

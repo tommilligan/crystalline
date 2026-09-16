@@ -37,6 +37,7 @@ export function BoardColumnShell({ phase, layout, onFocus, children }: BoardColu
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
+        height: '100%',
         minHeight: 0,
         opacity: emphasized || collapsed ? 1 : 0.55,
         transition: 'opacity 0.2s ease, border-color 0.2s ease, flex 0.2s ease',

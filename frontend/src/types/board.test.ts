@@ -11,8 +11,17 @@ describe('totalScore', () => {
     expect(totalScore(scores)).toBe(18)
   })
 
-  it('defaults every dimension to the same neutral value', () => {
-    const scores = emptyScoreSet()
-    expect(Object.values(scores).every((value) => value === scores.people)).toBe(true)
+  it('starts with no dimensions scored', () => {
+    expect(emptyScoreSet()).toEqual({})
+  })
+
+  it('sums only the dimensions scored so far, ignoring the rest', () => {
+    expect(totalScore({ people: 4, money: 2 })).toBe(6)
+  })
+
+  it('treats a single scored dimension as not affecting the others', () => {
+    const scores = { people: 5 }
+    expect(scores.time).toBeUndefined()
+    expect(scores.money).toBeUndefined()
   })
 })

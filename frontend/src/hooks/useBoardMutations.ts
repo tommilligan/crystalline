@@ -1,6 +1,6 @@
 import { LiveObject } from '@liveblocks/client'
 import { useMutation } from '../liveblocks.config'
-import { emptyScoreSet, type ScoreDimension, type ScoreSet } from '../types/board'
+import type { ScoreDimension, ScoreSet } from '../types/board'
 
 /**
  * These mutations mirror the event types in `docs/event-schema.md` (idea_added,
@@ -38,7 +38,7 @@ export function useSetScore() {
   return useMutation(({ storage }, optionId: string, dimension: ScoreDimension, value: number) => {
     const option = storage.get('options').find((item) => item.get('id') === optionId)
     if (!option) return
-    const current: ScoreSet = option.get('scores') ?? emptyScoreSet()
+    const current: ScoreSet = option.get('scores') ?? {}
     option.set('scores', { ...current, [dimension]: value })
   }, [])
 }

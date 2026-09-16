@@ -58,24 +58,24 @@ export const SCORE_DIMENSIONS = [
 
 export type ScoreDimension = (typeof SCORE_DIMENSIONS)[number]['key']
 
-export type ScoreSet = Record<ScoreDimension, number>
-
-export const DEFAULT_SCORE_VALUE = 3
+/** Each dimension is scored independently — a dimension with no entry is simply unscored,
+ * not defaulted to some "neutral" number, so a single click never silently sets every other
+ * dimension at once. */
+export type ScoreSet = Partial<Record<ScoreDimension, number>>
 
 export function emptyScoreSet(): ScoreSet {
-  return {
-    people: DEFAULT_SCORE_VALUE,
-    time: DEFAULT_SCORE_VALUE,
-    money: DEFAULT_SCORE_VALUE,
-    quality: DEFAULT_SCORE_VALUE,
-    service: DEFAULT_SCORE_VALUE,
-    price: DEFAULT_SCORE_VALUE,
-  }
+  return {}
 }
 
+/** Null once no dimension has been scored yet; otherwise the sum of whichever dimensions have
+ * been scored so far (unscored dimensions don't count towards it). */
 export function totalScore(scores: ScoreSet | null): number | null {
   if (!scores) return null
-  return SCORE_DIMENSIONS.reduce((sum, dimension) => sum + scores[dimension.key], 0)
+  const scored = SCORE_DIMENSIONS.map((dimension) => scores[dimension.key]).filter(
+    (value): value is number => value !== undefined,
+  )
+  if (scored.length === 0) return null
+  return scored.reduce((sum, value) => sum + value, 0)
 }
 
 /** Non-text, structured fields for an Option. Text fields (idea, enabler, blocker) live in

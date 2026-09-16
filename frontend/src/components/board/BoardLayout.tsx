@@ -25,12 +25,17 @@ const FLEX_GROW: Record<Extract<ColumnLayoutState, 'primary' | 'secondary'>, num
 }
 
 /**
- * Wide screens (projector/laptop, the primary MVP scenario per `docs/ui-notes.md`) lay columns
- * out in a single row whose widths follow `computeColumnLayout`: hidden columns aren't rendered,
- * collapsed ones shrink to a fixed-width rotated-text sliver, and expanded ones share the rest
- * of the row (primary getting the most). Narrower screens stack the same columns as full-width
- * rows instead, except collapsed columns stay a compact sliver-width block rather than
- * stretching full width, since there's nothing to show at that size anyway.
+ * The situation column (the problem statement) always sits in its own full-width row at the
+ * top, since it must stay visible at all times — every other column, however it's arranged,
+ * only ever echoes or builds on it.
+ *
+ * Wide screens (projector/laptop, the primary MVP scenario per `docs/ui-notes.md`) lay the
+ * remaining columns out in a single row below whose widths follow `computeColumnLayout`: hidden
+ * columns aren't rendered, collapsed ones shrink to a fixed-width rotated-text sliver, and
+ * expanded ones share the rest of the row (primary getting the most). Narrower screens stack
+ * the same columns as full-width rows instead, except collapsed columns stay a compact
+ * sliver-width block rather than stretching full width, since there's nothing to show at that
+ * size anyway.
  */
 export function BoardLayout({ currentPhase, onFocusPhase, hasData, columns }: BoardLayoutProps) {
   const isWide = useMediaQuery('(min-width: 1100px)', true)
@@ -46,27 +51,40 @@ export function BoardLayout({ currentPhase, onFocusPhase, hasData, columns }: Bo
   }, [currentPhase, isWide])
 
   if (isWide) {
+    const situationPhase = PHASES[0]
+    const rowPhases = visiblePhases.filter((phase) => phase.key !== situationPhase.key)
     return (
-      <div style={{ display: 'flex', gap: 'var(--mantine-spacing-md)', alignItems: 'stretch' }}>
-        {visiblePhases.map((phase) => {
-          const state = layout[phase.key] as Exclude<ColumnLayoutState, 'hidden'>
-          const style =
-            state === 'collapsed'
-              ? { flex: `0 0 ${COLLAPSED_WIDTH}px` }
-              : { flex: `${FLEX_GROW[state]} 1 0%`, minWidth: 0 }
-          return (
-            <div key={phase.key} style={style}>
-              <BoardColumnShell
-                phase={phase}
-                layout={state}
-                onFocus={() => onFocusPhase(phase.key)}
-              >
-                {columns[phase.key]}
-              </BoardColumnShell>
-            </div>
-          )
-        })}
-      </div>
+      <Stack gap="md">
+        <BoardColumnShell
+          phase={situationPhase}
+          layout={layout[situationPhase.key] as Exclude<ColumnLayoutState, 'hidden'>}
+          onFocus={() => onFocusPhase(situationPhase.key)}
+        >
+          {columns[situationPhase.key]}
+        </BoardColumnShell>
+        {rowPhases.length > 0 && (
+          <div style={{ display: 'flex', gap: 'var(--mantine-spacing-md)', alignItems: 'stretch' }}>
+            {rowPhases.map((phase) => {
+              const state = layout[phase.key] as Exclude<ColumnLayoutState, 'hidden'>
+              const style =
+                state === 'collapsed'
+                  ? { flex: `0 0 ${COLLAPSED_WIDTH}px` }
+                  : { flex: `${FLEX_GROW[state]} 1 0%`, minWidth: 0 }
+              return (
+                <div key={phase.key} style={style}>
+                  <BoardColumnShell
+                    phase={phase}
+                    layout={state}
+                    onFocus={() => onFocusPhase(phase.key)}
+                  >
+                    {columns[phase.key]}
+                  </BoardColumnShell>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </Stack>
     )
   }
 
