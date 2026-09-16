@@ -62,12 +62,6 @@ export function useSetApprovedBy() {
   }, [])
 }
 
-export function useSetDecisionDate() {
-  return useMutation(({ storage }, date: string | null) => {
-    storage.get('decision').set('date', date)
-  }, [])
-}
-
 export function useSignBoard() {
   return useMutation(({ storage }) => {
     const decision = storage.get('decision')
@@ -76,5 +70,15 @@ export function useSignBoard() {
     if (!decision.get('date')) {
       decision.set('date', new Date().toISOString().slice(0, 10))
     }
+  }, [])
+}
+
+/** Dev-only escape hatch: sign-off is otherwise irreversible in MVP (see `docs/mvp-scope.md`),
+ * but reverting in place lets us reuse the same room for repeated manual testing instead of
+ * spinning up a fresh one every time. Never expose this outside `import.meta.env.DEV`. */
+export function useUnsignBoard() {
+  return useMutation(({ storage }) => {
+    storage.set('lifecycleState', 'active')
+    storage.set('signedAt', null)
   }, [])
 }

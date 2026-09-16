@@ -1,31 +1,37 @@
 import { Badge, Button, Card, Group, Stack, Text, TextInput } from '@mantine/core'
-import { DateInput } from '@mantine/dates'
 import { useDisclosure } from '@mantine/hooks'
+import dayjs from 'dayjs'
 import {
   useSetApprovedBy,
   useSetChosenOption,
-  useSetDecisionDate,
   useSignBoard,
 } from '../../../hooks/useBoardMutations'
 import type { DecisionData, OptionData } from '../../../types/board'
 import { COUNTERMEASURE_FIELD, DISSENT_FIELD, optionTextField } from '../../../types/board'
 import { CollaborativeTextField } from '../../editor/CollaborativeTextField'
+import { LiveClock } from '../LiveClock'
 import { SignBoardModal } from '../SignBoardModal'
 
 interface DecisionColumnProps {
   options: readonly OptionData[]
   decision: DecisionData
   signed: boolean
+  signedAt: string | null
   disabled?: boolean
 }
 
 /** Records the chosen option, its countermeasure, any dissent, and drives the (irreversible in
  * MVP) sign-off action. See `docs/mvp-scope.md`: there is no "unsign" — Clone is the intended
  * flow for further changes after sign-off. */
-export function DecisionColumn({ options, decision, signed, disabled }: DecisionColumnProps) {
+export function DecisionColumn({
+  options,
+  decision,
+  signed,
+  signedAt,
+  disabled,
+}: DecisionColumnProps) {
   const setChosenOption = useSetChosenOption()
   const setApprovedBy = useSetApprovedBy()
-  const setDecisionDate = useSetDecisionDate()
   const signBoard = useSignBoard()
   const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false)
 
@@ -90,13 +96,16 @@ export function DecisionColumn({ options, decision, signed, disabled }: Decision
         onChange={(event) => setApprovedBy(event.currentTarget.value)}
       />
 
-      <DateInput
-        label="Date"
-        placeholder="Pick a date"
-        value={decision.date}
-        disabled={disabled}
-        onChange={(value) => setDecisionDate(value)}
-      />
+      <Stack gap={2}>
+        <Text size="sm" fw={500}>
+          Date
+        </Text>
+        {signed && signedAt ? (
+          <Text size="sm">{dayjs(signedAt).format('D MMM YYYY, HH:mm:ss')}</Text>
+        ) : (
+          <LiveClock />
+        )}
+      </Stack>
 
       {signed ? (
         <Badge color="gray" variant="light">

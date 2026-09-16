@@ -1,6 +1,6 @@
 import { Badge, Button, Container, Group, Stack, Text, TextInput, Tooltip } from '@mantine/core'
 import { type ReactNode, useEffect } from 'react'
-import { useSetPhase, useSetTitle } from '../../hooks/useBoardMutations'
+import { useSetPhase, useSetTitle, useUnsignBoard } from '../../hooks/useBoardMutations'
 import {
   useBoardDecision,
   useBoardLifecycle,
@@ -30,6 +30,7 @@ export function BoardView() {
   const decision = useBoardDecision()
   const setPhase = useSetPhase()
   const setTitle = useSetTitle()
+  const unsignBoard = useUnsignBoard()
   const registerBoard = useRegisterBoard()
   const { identity, setName } = useLocalIdentity()
 
@@ -47,7 +48,13 @@ export function BoardView() {
     evaluation: <EvaluationColumn options={options} disabled={signed} />,
     scoring: <ScoringColumn options={options} disabled={signed} />,
     decision: (
-      <DecisionColumn options={options} decision={decision} signed={signed} disabled={signed} />
+      <DecisionColumn
+        options={options}
+        decision={decision}
+        signed={signed}
+        signedAt={lifecycle.signedAt}
+        disabled={signed}
+      />
     ),
   }
 
@@ -65,6 +72,13 @@ export function BoardView() {
           />
           <Group gap="sm">
             {signed && <Badge color="gray">Signed</Badge>}
+            {signed && import.meta.env.DEV && (
+              <Tooltip label="Dev-only: reverts sign-off so this room can be reused for testing">
+                <Button size="xs" variant="subtle" color="red" onClick={() => unsignBoard()}>
+                  Unlock (dev)
+                </Button>
+              </Tooltip>
+            )}
             <PresenceAvatars />
             <TextInput
               size="xs"

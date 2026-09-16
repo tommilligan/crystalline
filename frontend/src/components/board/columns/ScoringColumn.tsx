@@ -1,4 +1,4 @@
-import { Badge, Card, Divider, Group, NumberInput, Text } from '@mantine/core'
+import { Badge, Button, Card, Divider, Group, Text } from '@mantine/core'
 import { useSetScore } from '../../../hooks/useBoardMutations'
 import type { OptionData, ScoreDimension } from '../../../types/board'
 import { optionTextField, SCORE_DIMENSIONS, totalScore } from '../../../types/board'
@@ -53,25 +53,28 @@ export function ScoringColumn({ options, disabled }: ScoringColumnProps) {
               )}
             </Group>
             <Divider my="xs" />
-            <Group gap="xs" grow>
-              {SCORE_DIMENSIONS.map((dimension) => (
-                <NumberInput
-                  key={dimension.key}
-                  label={dimension.label}
-                  size="xs"
-                  min={1}
-                  max={5}
-                  disabled={disabled}
-                  value={option.scores?.[dimension.key] ?? undefined}
-                  placeholder="–"
-                  onChange={(value) => {
-                    if (typeof value === 'number') {
-                      setScore(option.id, dimension.key as ScoreDimension, value)
-                    }
-                  }}
-                />
-              ))}
-            </Group>
+            {SCORE_DIMENSIONS.map((dimension) => {
+              const value = option.scores?.[dimension.key] ?? null
+              return (
+                <Group key={dimension.key} justify="space-between" wrap="nowrap" mb={6}>
+                  <Text size="xs">{dimension.label}</Text>
+                  <Button.Group>
+                    {[1, 2, 3, 4, 5].map((score) => (
+                      <Button
+                        key={score}
+                        size="xs"
+                        variant={value === score ? 'filled' : 'default'}
+                        color="teal"
+                        disabled={disabled}
+                        onClick={() => setScore(option.id, dimension.key as ScoreDimension, score)}
+                      >
+                        {score}
+                      </Button>
+                    ))}
+                  </Button.Group>
+                </Group>
+              )
+            })}
           </Card>
         )
       })}
