@@ -1,5 +1,4 @@
-import { Box, Button, Card, Group, Stack, Text } from '@mantine/core'
-import { IconChevronRight } from '@tabler/icons-react'
+import { Box, Card, Group, Stack, Text } from '@mantine/core'
 import type { ReactNode } from 'react'
 import type { PHASES } from '../../types/board'
 import type { ColumnLayoutState } from './columnLayout'
@@ -8,7 +7,6 @@ interface BoardColumnShellProps {
   phase: (typeof PHASES)[number]
   layout: Exclude<ColumnLayoutState, 'hidden'>
   onFocus: () => void
-  onAdvance?: () => void
   children: ReactNode
 }
 
@@ -23,13 +21,7 @@ interface BoardColumnShellProps {
  *
  * Fully irrelevant columns aren't rendered at all — see the `hidden` filter in `BoardLayout`.
  */
-export function BoardColumnShell({
-  phase,
-  layout,
-  onFocus,
-  onAdvance,
-  children,
-}: BoardColumnShellProps) {
+export function BoardColumnShell({ phase, layout, onFocus, children }: BoardColumnShellProps) {
   const collapsed = layout === 'collapsed'
   const emphasized = layout === 'primary'
 
@@ -84,20 +76,6 @@ export function BoardColumnShell({
           <Box style={{ overflowY: 'auto', overflowX: 'hidden', maxHeight: '70vh' }}>
             <Stack gap="sm" p="sm">
               {children}
-              {emphasized && onAdvance && (
-                <Button
-                  variant="light"
-                  color="blue"
-                  fullWidth
-                  rightSection={<IconChevronRight size={16} />}
-                  onClick={(event) => {
-                    event.stopPropagation()
-                    onAdvance()
-                  }}
-                >
-                  Go to next step
-                </Button>
-              )}
             </Stack>
           </Box>
         </>

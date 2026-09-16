@@ -38,6 +38,13 @@ export const PHASES: ReadonlyArray<{
     },
   ]
 
+/** The phase after `phase` in the fixed five-phase order, or `null` for `decision` (the last
+ * one) — what a column's "Next >" button advances to. */
+export function nextPhase(phase: Phase): Phase | null {
+  const index = PHASES.findIndex((candidate) => candidate.key === phase)
+  return PHASES[index + 1]?.key ?? null
+}
+
 export type LifecycleState = 'active' | 'signed'
 
 export const SCORE_DIMENSIONS = [

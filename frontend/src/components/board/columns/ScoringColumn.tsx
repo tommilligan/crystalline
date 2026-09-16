@@ -1,16 +1,19 @@
-import { Accordion, ActionIcon, Badge, Button, Card, Group, Stack, Text } from '@mantine/core'
-import { IconChartBar, IconChevronRight } from '@tabler/icons-react'
+import { Accordion, ActionIcon, Badge, Card, Group, Stack, Text } from '@mantine/core'
+import { IconChartBar } from '@tabler/icons-react'
 import { useSetScore } from '../../../hooks/useBoardMutations'
 import { useOptionWalkthrough } from '../../../hooks/useOptionWalkthrough'
 import { useFragmentPlainText } from '../../../liveblocks-yjs/useFragmentPlainText'
 import type { OptionData, ScoreDimension } from '../../../types/board'
 import { optionTextField, SCORE_DIMENSIONS, totalScore } from '../../../types/board'
 import { EmptyColumnState } from '../EmptyColumnState'
+import { NextButton } from '../NextButton'
 import { ScoreLegend } from '../ScoreLegend'
 
 interface ScoringColumnProps {
   options: readonly OptionData[]
   disabled?: boolean
+  active?: boolean
+  onAdvancePhase?: () => void
 }
 
 const COST_DIMENSIONS = SCORE_DIMENSIONS.slice(0, 3)
@@ -250,17 +253,7 @@ function ScoringAccordionPanel({
         disabled={disabled}
         setScore={setScore}
       />
-      {nextOption && (
-        <Button
-          variant="light"
-          color="blue"
-          fullWidth
-          rightSection={<IconChevronRight size={16} />}
-          onClick={() => onAdvance(nextOption.id)}
-        >
-          Next option
-        </Button>
-      )}
+      {nextOption && <NextButton onClick={() => onAdvance(nextOption.id)} />}
     </Stack>
   )
 }
@@ -270,21 +263,28 @@ function ScoringAccordionPanel({
  * whiteboard tool (see `docs/concept.md`). Each dimension gets its own row with 1-5 quick-pick
  * buttons rather than a numeric input, so scoring is a single click.
  *
- * Options are walked through one at a time via an Accordion (mirroring the phase "Go to next
- * step" flow one level down): only the active option's score breakdown is expanded, saving
- * vertical space, while the rest collapse to just their idea text and running total. */
-export function ScoringColumn({ options, disabled }: ScoringColumnProps) {
+ * Options are walked through one at a time via an Accordion (mirroring the phase "Next >" flow
+ * one level down): only the active option's score breakdown is expanded, saving vertical space,
+ * while the rest collapse to just their idea text and running total. As with `EvaluationColumn`,
+ * that expand/collapse distinction — and its "Next >" button — is only shown while this column
+ * is `active`; otherwise every item stays collapsed and undecorated, since the whole column is
+ * already dimmed as a unit and the walkthrough position doesn't need to be visible to explain
+ * that dimming. */
+export function ScoringColumn({ options, disabled, active, onAdvancePhase }: ScoringColumnProps) {
   const setScore = useSetScore()
   const { activeOption, nextOption, focus } = useOptionWalkthrough(options)
 
   if (options.length === 0) {
     return (
-      <EmptyColumnState
-        icon={IconChartBar}
-        title="No Numerical Trade-offs Yet"
-        description="Add some options in the Options column first, or jump in anyway."
-        placeholder="Placeholder scoring card"
-      />
+      <>
+        <EmptyColumnState
+          icon={IconChartBar}
+          title="No Numerical Trade-offs Yet"
+          description="Add some options in the Options column first, or jump in anyway."
+          placeholder="Placeholder scoring card"
+        />
+        {active && !nextOption && onAdvancePhase && <NextButton onClick={onAdvancePhase} />}
+      </>
     )
   }
 
@@ -292,7 +292,7 @@ export function ScoringColumn({ options, disabled }: ScoringColumnProps) {
     <>
       <ScoreLegend />
       <Accordion
-        value={activeOption?.id ?? null}
+        value={active ? (activeOption?.id ?? null) : null}
         onChange={(value) => value && focus(value)}
         disableCollapse
         variant="separated"
@@ -305,7 +305,7 @@ export function ScoringColumn({ options, disabled }: ScoringColumnProps) {
             <Accordion.Panel>
               <ScoringAccordionPanel
                 option={option}
-                nextOption={option.id === activeOption?.id ? nextOption : null}
+                nextOption={active && option.id === activeOption?.id ? nextOption : null}
                 disabled={disabled}
                 setScore={setScore}
                 onAdvance={focus}
@@ -314,6 +314,7 @@ export function ScoringColumn({ options, disabled }: ScoringColumnProps) {
           </Accordion.Item>
         ))}
       </Accordion>
+      {active && !nextOption && onAdvancePhase && <NextButton onClick={onAdvancePhase} />}
       <RankingLeaderboard options={options} />
     </>
   )

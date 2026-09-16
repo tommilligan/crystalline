@@ -23,7 +23,7 @@ import { useRegisterBoard } from '../../hooks/useBoardsRegistry'
 import { useColumnHasData } from '../../hooks/useColumnHasData'
 import { useLocalIdentity } from '../../hooks/useLocalIdentity'
 import { useRoom } from '../../liveblocks.config'
-import type { Phase } from '../../types/board'
+import { type Phase, nextPhase as phaseAfter } from '../../types/board'
 import { BoardLayout } from './BoardLayout'
 import { DecisionColumn } from './columns/DecisionColumn'
 import { EvaluationColumn } from './columns/EvaluationColumn'
@@ -56,11 +56,47 @@ export function BoardView() {
     registerBoard.mutate({ id: room.id, title, createdAt: Date.now() })
   }, [room.id, title, registerBoard.mutate])
 
+  // Each column advances via a single "Next >" button that it owns and places itself (right
+  // after its own next-option step, if it has one, else after its content) — see `NextButton`.
+  // `active` gates whether it's shown at all: a column not currently selected never shows a
+  // Next button or per-item focus styling, even if it remembers which item was selected.
+  function advanceFrom(phase: Phase): (() => void) | undefined {
+    const next = phaseAfter(phase)
+    return next ? () => setPhase(next) : undefined
+  }
+
   const columns: Record<Phase, ReactNode> = {
-    situation: <SituationColumn disabled={signed} />,
-    ideation: <OptionsColumn options={options} disabled={signed} />,
-    evaluation: <EvaluationColumn options={options} disabled={signed} />,
-    scoring: <ScoringColumn options={options} disabled={signed} />,
+    situation: (
+      <SituationColumn
+        disabled={signed}
+        active={phase === 'situation'}
+        onAdvancePhase={advanceFrom('situation')}
+      />
+    ),
+    ideation: (
+      <OptionsColumn
+        options={options}
+        disabled={signed}
+        active={phase === 'ideation'}
+        onAdvancePhase={advanceFrom('ideation')}
+      />
+    ),
+    evaluation: (
+      <EvaluationColumn
+        options={options}
+        disabled={signed}
+        active={phase === 'evaluation'}
+        onAdvancePhase={advanceFrom('evaluation')}
+      />
+    ),
+    scoring: (
+      <ScoringColumn
+        options={options}
+        disabled={signed}
+        active={phase === 'scoring'}
+        onAdvancePhase={advanceFrom('scoring')}
+      />
+    ),
     decision: (
       <DecisionColumn
         options={options}

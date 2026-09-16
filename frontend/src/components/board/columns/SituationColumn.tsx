@@ -1,13 +1,16 @@
 import { Stack, Text } from '@mantine/core'
 import { SITUATION_FIELD } from '../../../types/board'
 import { CollaborativeTextField } from '../../editor/CollaborativeTextField'
+import { NextButton } from '../NextButton'
 import { SessionTimer } from '../SessionTimer'
 
 interface SituationColumnProps {
   disabled?: boolean
+  active?: boolean
+  onAdvancePhase?: () => void
 }
 
-export function SituationColumn({ disabled }: SituationColumnProps) {
+export function SituationColumn({ disabled, active, onAdvancePhase }: SituationColumnProps) {
   return (
     <Stack gap="sm">
       <Text size="xs" fw={500} c="dimmed">
@@ -19,6 +22,7 @@ export function SituationColumn({ disabled }: SituationColumnProps) {
         disabled={disabled}
       />
       <SessionTimer disabled={disabled} />
+      {active && onAdvancePhase && <NextButton onClick={onAdvancePhase} />}
     </Stack>
   )
 }

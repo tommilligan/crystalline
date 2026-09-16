@@ -1,39 +1,53 @@
-import { Box, Button, Card, Divider, Group, Stack, Text, ThemeIcon } from '@mantine/core'
-import { IconCheck, IconChevronRight, IconStack2, IconX } from '@tabler/icons-react'
+import { Box, Card, Divider, Group, Stack, Text, ThemeIcon } from '@mantine/core'
+import { IconCheck, IconStack2, IconX } from '@tabler/icons-react'
 import { useOptionWalkthrough } from '../../../hooks/useOptionWalkthrough'
 import type { OptionData } from '../../../types/board'
 import { optionBlockerField, optionEnablerField, optionTextField } from '../../../types/board'
 import { CollaborativeTextField } from '../../editor/CollaborativeTextField'
 import { EmptyColumnState } from '../EmptyColumnState'
+import { NextButton } from '../NextButton'
 
 interface EvaluationColumnProps {
   options: readonly OptionData[]
   disabled?: boolean
+  active?: boolean
+  onAdvancePhase?: () => void
 }
 
 /** Enabler/blocker assessment, rendered per-option so the idea text stays in view while its
- * evaluation is filled in (see `docs/ui-notes.md`). Mirrors the phase-to-phase "Go to next
- * step" flow one level down: one option is emphasized at a time, the rest are greyed out but
- * still visible and editable, and clicking into any option (or the "Next" button) advances
- * which one is active. */
-export function EvaluationColumn({ options, disabled }: EvaluationColumnProps) {
+ * evaluation is filled in (see `docs/ui-notes.md`). Mirrors the phase-to-phase "Next >" flow
+ * one level down: one option is focused at a time, the rest are greyed out but still visible
+ * and editable, and clicking into any option (or the "Next >" button) advances which one is
+ * focused. That per-option focus is only ever shown while this column itself is `active`
+ * (the selected phase) — otherwise the whole column is already dimmed as a unit by
+ * `BoardColumnShell`, and layering a second, per-option dim on top of that would double-fade
+ * it. The walkthrough position is still tracked while inactive, just not displayed. */
+export function EvaluationColumn({
+  options,
+  disabled,
+  active,
+  onAdvancePhase,
+}: EvaluationColumnProps) {
   const { activeOption, nextOption, focus } = useOptionWalkthrough(options)
 
   if (options.length === 0) {
     return (
-      <EmptyColumnState
-        icon={IconStack2}
-        title="No Options to Evaluate Yet"
-        description="Add some options in the Options column first, or jump in anyway."
-        placeholder="Placeholder evaluation space"
-      />
+      <>
+        <EmptyColumnState
+          icon={IconStack2}
+          title="No Options to Evaluate Yet"
+          description="Add some options in the Options column first, or jump in anyway."
+          placeholder="Placeholder evaluation space"
+        />
+        {active && !nextOption && onAdvancePhase && <NextButton onClick={onAdvancePhase} />}
+      </>
     )
   }
 
   return (
     <>
       {options.map((option) => {
-        const emphasized = option.id === activeOption?.id
+        const focused = active && option.id === activeOption?.id
         return (
           <Card
             key={option.id}
@@ -42,11 +56,9 @@ export function EvaluationColumn({ options, disabled }: EvaluationColumnProps) {
             radius="sm"
             onClickCapture={() => focus(option.id)}
             style={{
-              borderColor: emphasized
-                ? 'var(--mantine-color-blue-5)'
-                : 'var(--mantine-color-gray-3)',
+              borderColor: focused ? 'var(--mantine-color-blue-5)' : 'var(--mantine-color-gray-3)',
               borderWidth: 2,
-              opacity: emphasized ? 1 : 0.55,
+              opacity: !active || focused ? 1 : 0.55,
               transition: 'opacity 0.2s ease, border-color 0.2s ease',
             }}
           >
@@ -83,24 +95,14 @@ export function EvaluationColumn({ options, disabled }: EvaluationColumnProps) {
                   disabled={disabled}
                 />
               </Box>
-              {emphasized && nextOption && (
-                <Button
-                  variant="light"
-                  color="blue"
-                  fullWidth
-                  rightSection={<IconChevronRight size={16} />}
-                  onClick={(event) => {
-                    event.stopPropagation()
-                    focus(nextOption.id)
-                  }}
-                >
-                  Next option
-                </Button>
+              {active && focused && nextOption && (
+                <NextButton onClick={() => focus(nextOption.id)} />
               )}
             </Stack>
           </Card>
         )
       })}
+      {active && !nextOption && onAdvancePhase && <NextButton onClick={onAdvancePhase} />}
     </>
   )
 }

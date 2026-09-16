@@ -7,16 +7,19 @@ import { useYjsDoc } from '../../../liveblocks-yjs/YjsRoomProvider'
 import type { OptionData } from '../../../types/board'
 import { optionTextField } from '../../../types/board'
 import { CollaborativeTextField } from '../../editor/CollaborativeTextField'
+import { NextButton } from '../NextButton'
 
 interface OptionsColumnProps {
   options: readonly OptionData[]
   disabled?: boolean
+  active?: boolean
+  onAdvancePhase?: () => void
 }
 
 /** Pure idea generation — no idea is bad. Optimised for a facilitator transcribing a room's
  * ideas live: type-and-press-Enter keeps the input focused for rapid successive entries. The
  * input stays pinned below the list so newly added ideas appear above it, in order. */
-export function OptionsColumn({ options, disabled }: OptionsColumnProps) {
+export function OptionsColumn({ options, disabled, active, onAdvancePhase }: OptionsColumnProps) {
   const addIdea = useAddIdea()
   const removeIdea = useRemoveIdea()
   const { doc } = useYjsDoc()
@@ -70,6 +73,7 @@ export function OptionsColumn({ options, disabled }: OptionsColumnProps) {
           }
         }}
       />
+      {active && onAdvancePhase && <NextButton onClick={onAdvancePhase} />}
     </>
   )
 }

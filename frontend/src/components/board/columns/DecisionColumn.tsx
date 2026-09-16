@@ -139,7 +139,7 @@ export function DecisionColumn({
             placeholder="Pick a date"
             value={decision.deadline ? new Date(decision.deadline) : null}
             disabled={disabled}
-            onChange={(value) => setDeadline(value ? value.toISOString().slice(0, 10) : null)}
+            onChange={(value) => setDeadline(value)}
             valueFormat="D MMM YYYY"
           />
         </Group>

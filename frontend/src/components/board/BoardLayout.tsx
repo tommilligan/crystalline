@@ -49,7 +49,6 @@ export function BoardLayout({ currentPhase, onFocusPhase, hasData, columns }: Bo
     return (
       <div style={{ display: 'flex', gap: 'var(--mantine-spacing-md)', alignItems: 'stretch' }}>
         {visiblePhases.map((phase) => {
-          const nextPhase = PHASES[PHASES.indexOf(phase) + 1]
           const state = layout[phase.key] as Exclude<ColumnLayoutState, 'hidden'>
           const style =
             state === 'collapsed'
@@ -61,7 +60,6 @@ export function BoardLayout({ currentPhase, onFocusPhase, hasData, columns }: Bo
                 phase={phase}
                 layout={state}
                 onFocus={() => onFocusPhase(phase.key)}
-                onAdvance={nextPhase ? () => onFocusPhase(nextPhase.key) : undefined}
               >
                 {columns[phase.key]}
               </BoardColumnShell>
@@ -77,19 +75,13 @@ export function BoardLayout({ currentPhase, onFocusPhase, hasData, columns }: Bo
       {visiblePhases.map((phase) => {
         const state = layout[phase.key] as Exclude<ColumnLayoutState, 'hidden'>
         const emphasized = phase.key === currentPhase
-        const nextPhase = PHASES[PHASES.indexOf(phase) + 1]
         return (
           <div
             key={phase.key}
             ref={emphasized ? emphasizedRef : undefined}
             style={state === 'collapsed' ? { width: COLLAPSED_WIDTH } : undefined}
           >
-            <BoardColumnShell
-              phase={phase}
-              layout={state}
-              onFocus={() => onFocusPhase(phase.key)}
-              onAdvance={nextPhase ? () => onFocusPhase(nextPhase.key) : undefined}
-            >
+            <BoardColumnShell phase={phase} layout={state} onFocus={() => onFocusPhase(phase.key)}>
               {columns[phase.key]}
             </BoardColumnShell>
           </div>
