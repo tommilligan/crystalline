@@ -23,4 +23,4 @@ It started life as a physical whiteboard exercise (see the example below) - this
 
 The same phase-by-phase structure, in the app today:
 
-![Crystal Ball's board UI, showing options that have been evaluated and are now awaiting a decision](06-phase-4-decision-leaderboard.png)
+![Crystal Ball's board UI, showing options that have been evaluated and are now awaiting a decision](docs/screenshots/06-phase-4-decision-leaderboard.png)
