@@ -31,7 +31,7 @@ import { useColumnHasData } from '../../hooks/useColumnHasData'
 import { useLocalIdentity } from '../../hooks/useLocalIdentity'
 import { useResumableSelection } from '../../hooks/useResumableSelection'
 import { useRoom } from '../../liveblocks.config'
-import { PHASES, type Phase, nextPhase as phaseAfter } from '../../types/board'
+import { PHASES, type Phase, nextPhase as phaseAfter, phaseNumber } from '../../types/board'
 import { BoardLayout } from './BoardLayout'
 import { DecisionColumn } from './columns/DecisionColumn'
 import { EvaluationColumn } from './columns/EvaluationColumn'
@@ -132,6 +132,16 @@ export function BoardView() {
     PHASES.map((candidate) => hasData[candidate.key]),
   )
   const phase = activePhase?.key ?? 'situation'
+
+  // The highest phase reached this session — also local, per-viewer state, same reasoning as
+  // `phase` above. Evaluation and Decision use this (see `columnLayout.ts`) to expand once
+  // reached and then stay expanded, rather than collapsing again the moment the selection moves
+  // elsewhere. Seeded from `phase` itself (not e.g. `situation`) so a board that resumes straight
+  // into a later phase reflects that immediately, without a first-render flash.
+  const [maxVisitedPhase, setMaxVisitedPhase] = useState<Phase>(() => phase)
+  useEffect(() => {
+    setMaxVisitedPhase((current) => (phaseNumber(phase) > phaseNumber(current) ? phase : current))
+  }, [phase])
 
   // Keep the home page's local board list in sync with the live title, so a rename here shows
   // up there too. This registry is a client-side pointer/cache only — see `lib/boardsRegistry.ts`.
@@ -278,6 +288,7 @@ export function BoardView() {
           currentPhase={phase}
           onFocusPhase={focusPhase}
           hasData={hasData}
+          maxVisitedPhase={maxVisitedPhase}
           columns={columns}
         />
       </Stack>

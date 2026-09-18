@@ -9,6 +9,7 @@ interface BoardLayoutProps {
   currentPhase: Phase
   onFocusPhase: (phase: Phase) => void
   hasData: Record<Phase, boolean>
+  maxVisitedPhase: Phase
   columns: Record<Phase, ReactNode>
 }
 
@@ -32,23 +33,23 @@ const ROW_COLUMN_MAX_WIDTH = 800
  * remaining columns out in a single row below whose widths follow `computeColumnLayout`: hidden
  * columns aren't rendered, collapsed ones shrink to a fixed-width rotated-text sliver, and
  * expanded ones (primary or secondary alike) share the rest of the row equally — emphasis comes
- * from `BoardColumnShell`'s border/opacity, not from width. Narrower screens stack the same
- * columns as full-width rows instead; a collapsed column there stays full width like its
+ * from `BoardColumnShell`'s border color alone, not width or opacity. Narrower screens stack the
+ * same columns as full-width rows instead; a collapsed column there stays full width like its
  * siblings but shrinks to just its header row, with the label left horizontal (see
  * `BoardColumnShell`) since there's no room to rotate it without wasting more height than it
  * saves.
  */
-export function BoardLayout({ currentPhase, onFocusPhase, hasData, columns }: BoardLayoutProps) {
+export function BoardLayout({
+  currentPhase,
+  onFocusPhase,
+  hasData,
+  maxVisitedPhase,
+  columns,
+}: BoardLayoutProps) {
   const isWide = useMediaQuery('(min-width: 1100px)', true)
   const emphasizedRef = useRef<HTMLDivElement>(null)
-  const layout = computeColumnLayout(currentPhase, hasData)
+  const layout = computeColumnLayout(currentPhase, hasData, maxVisitedPhase)
   const visiblePhases = PHASES.filter((phase) => layout[phase.key] !== 'hidden')
-
-  // The Evaluation column stays expanded (not collapsed to a sliver) once Decision is selected,
-  // as a read-only reference alongside it — see `columnLayout.ts` — so it shouldn't look
-  // dimmed/deprioritised the way an ordinary secondary column does.
-  const isReferenceColumn = (phaseKey: Phase) =>
-    phaseKey === 'evaluation' && currentPhase === 'decision'
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: currentPhase changes which element emphasizedRef.current points to (set during render), so it must retrigger this effect
   useEffect(() => {
@@ -85,7 +86,6 @@ export function BoardLayout({ currentPhase, onFocusPhase, hasData, columns }: Bo
                     layout={state}
                     isWide={isWide}
                     onFocus={() => onFocusPhase(phase.key)}
-                    neverDim={isReferenceColumn(phase.key)}
                   >
                     {columns[phase.key]}
                   </BoardColumnShell>
@@ -110,7 +110,6 @@ export function BoardLayout({ currentPhase, onFocusPhase, hasData, columns }: Bo
               layout={state}
               isWide={isWide}
               onFocus={() => onFocusPhase(phase.key)}
-              neverDim={isReferenceColumn(phase.key)}
             >
               {columns[phase.key]}
             </BoardColumnShell>

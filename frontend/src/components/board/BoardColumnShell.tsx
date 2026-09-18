@@ -11,20 +11,16 @@ interface BoardColumnShellProps {
   // stays full width and shrinks in height, with its label left horizontal (see `BoardLayout`).
   isWide: boolean
   onFocus: () => void
-  // True for the Evaluation column specifically while it's shown secondary alongside Decision
-  // (see `BoardLayout`): it's a read-only reference there, not a "come back later" column, so it
-  // shouldn't look dimmed/deprioritised the way an ordinary secondary column does.
-  neverDim?: boolean
   children: ReactNode
 }
 
 /**
- * One of the five board columns. `layout` (from `computeColumnLayout`) drives how much space
- * and detail it gets:
- * - `primary` — the current phase. Full detail, emphasized border, full opacity.
- * - `secondary` — expanded (full detail, same width as primary) but not current, e.g. the
- *   problem statement staying readable once later phases are in progress; dimmed unless
- *   `neverDim`.
+ * One of the four board columns. `layout` (from `computeColumnLayout`) drives how much detail it
+ * gets:
+ * - `primary` — the current phase. Full detail, emphasized (blue) border.
+ * - `secondary` — expanded, same size and detail as primary, just a plain border — e.g. the
+ *   problem statement staying readable once later phases are in progress, or Evaluation staying
+ *   open as a read-only reference once Decision is selected.
  * - `collapsed` — reduced to just the phase label, for columns whose content is redundant right
  *   now (see `columnLayout.ts`). Still clickable to re-expand.
  *
@@ -35,14 +31,10 @@ export function BoardColumnShell({
   layout,
   isWide,
   onFocus,
-  neverDim,
   children,
 }: BoardColumnShellProps) {
   const collapsed = layout === 'collapsed'
   const emphasized = layout === 'primary'
-  // The situation column transforms into a read-out instead of dimming when it's not selected
-  // (see `SituationColumn`), so it should never actually look dimmed.
-  const isSituation = phase.number === 1
 
   return (
     <Card
@@ -58,8 +50,7 @@ export function BoardColumnShell({
         flexDirection: 'column',
         height: '100%',
         minHeight: 0,
-        opacity: emphasized || collapsed || isSituation || neverDim ? 1 : 0.55,
-        transition: 'opacity 0.2s ease, border-color 0.2s ease, flex 0.2s ease',
+        transition: 'border-color 0.2s ease, flex 0.2s ease',
         cursor: collapsed ? 'pointer' : undefined,
       }}
     >

@@ -39,6 +39,11 @@ export function nextPhase(phase: Phase): Phase | null {
   return PHASES[index + 1]?.key ?? null
 }
 
+/** `phase`'s position in the fixed phase order, 1-indexed to match `PHASES[].number`. */
+export function phaseNumber(phase: Phase): number {
+  return PHASES.find((candidate) => candidate.key === phase)?.number ?? 1
+}
+
 export type LifecycleState = 'active' | 'signed'
 
 /** A numeric rating property every option is scored against, 1 (bad) to 5 (good) — shared board
