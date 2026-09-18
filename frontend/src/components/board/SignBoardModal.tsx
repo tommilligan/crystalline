@@ -19,8 +19,8 @@ export function SignBoardModal({ opened, onClose, onConfirm }: SignBoardModalPro
         <Text span fw={700}>
           permanently
         </Text>{' '}
-        record your decision and make this board read-only. No further edits will be possible
-        (except followup-actions)
+        record your decision and make this board read-only. No further edits will be possible,
+        except adding next steps.
       </Text>
       <Group justify="flex-end">
         <Button variant="default" onClick={onClose}>

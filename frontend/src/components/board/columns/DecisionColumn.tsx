@@ -409,8 +409,8 @@ export function DecisionColumn({
           Next steps
         </Title>
         <Text size="xs" c="dimmed">
-          The concrete actions that turn this decision into progress — each needs an owner and,
-          ideally, a due date. Add as many as the plan needs, then commit to lock them in.
+          Action items for carrying out this decision. Each needs an owner and, ideally, a due
+          date. Add as many as the plan needs, then commit to lock them in.
         </Text>
 
         <Table verticalSpacing="xs">

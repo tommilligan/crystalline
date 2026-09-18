@@ -35,8 +35,8 @@ export function RatingPropertiesPicker({ properties, disabled }: RatingPropertie
           Scoring
         </Title>
         <Text size="xs" c="dimmed">
-          Scoring options can help rank similar sounding choices. We've prefilled some common useful
-          ones, but feel free to change them to suit your problem.
+          Use these to rank similar-sounding choices. We've prefilled some common ones — edit them
+          to fit your problem.
         </Text>
       </Stack>
       <PillsInput size="xs" disabled={disabled} onClick={() => inputRef.current?.focus()}>

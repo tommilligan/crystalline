@@ -121,13 +121,7 @@ export function HomePage() {
       <Stack gap="xl" w={560} py="xl">
         <Stack gap={4} align="center" ta="center">
           <Title order={1}>Crystal Ball</Title>
-          <Text size="sm" fw={600} c="blue.7">
-            Make good decisions efficiently
-          </Text>
-          <Text c="dimmed">
-            A structured, five-phase decision-making board — situation, options, evaluation,
-            scoring, decision.
-          </Text>
+          <Text c="dimmed">Make good decisions efficiently.</Text>
         </Stack>
 
         <Group justify="center">
@@ -236,16 +230,6 @@ export function HomePage() {
                 New Board from Template
               </Text>
             </Stack>
-
-            <Paper w="100%" p="sm" radius="sm" bg="blue.0">
-              <Text size="xs" fw={700} c="blue.8">
-                FIVE-PHASE METHOD
-              </Text>
-              <Text size="xs" c="blue.9">
-                Structure complex debates into five modular operational phases. Avoid concurrent
-                arguments by aligning team perspectives on a shared vector.
-              </Text>
-            </Paper>
 
             <TextInput
               w="100%"
