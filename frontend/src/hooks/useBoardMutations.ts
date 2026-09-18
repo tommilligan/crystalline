@@ -96,13 +96,28 @@ export function useSetAgreement() {
   }, [])
 }
 
-/** Appends a blank Next Steps row (see `DecisionColumn`'s add-row input), pre-filled with the
- * given action text so a facilitator can type-and-submit the way `OptionsColumn` works. */
+/** Appends a blank Next Steps row — used by both the "Add action +" button and, once, to seed
+ * the table's always-present first row (see `DecisionColumn`). */
 export function useAddNextStep() {
-  return useMutation(({ storage }, action: string) => {
+  return useMutation(({ storage }, action: string = '') => {
     const id = crypto.randomUUID()
     storage.get('nextSteps').push(new LiveObject({ id, action, owner: '', dueDate: null }))
     return id
+  }, [])
+}
+
+/** Seeds the Next Steps table's first row, but only if it's still actually empty *at the moment
+ * this mutation runs* — checking live storage here, not the `nextSteps` value React last
+ * rendered with, is what makes this safe to call from an effect: two near-simultaneous calls
+ * (e.g. React's dev-mode double effect invocation, or two participants opening Decision at
+ * once) each see the other's write once Liveblocks applies it, so at most one row gets added. */
+export function useEnsureFirstNextStep() {
+  return useMutation(({ storage }) => {
+    const nextSteps = storage.get('nextSteps')
+    if (nextSteps.length === 0) {
+      const id = crypto.randomUUID()
+      nextSteps.push(new LiveObject({ id, action: '', owner: '', dueDate: null }))
+    }
   }, [])
 }
 
@@ -148,11 +163,19 @@ export function useSignBoard() {
 
 /** Dev-only escape hatch: sign-off is otherwise irreversible in MVP (see `docs/mvp-scope.md`),
  * but reverting in place lets us reuse the same room for repeated manual testing instead of
- * spinning up a fresh one every time. Never expose this outside `import.meta.env.DEV`. */
+ * spinning up a fresh one every time. Never expose this outside `import.meta.env.DEV`.
+ *
+ * Also reverts a committed Next Steps plan, if any — otherwise the board would come back
+ * unsigned but with Next Steps still locked, which the normal flow can never produce (committing
+ * is tracked independently of signing, but only reachable *after* signing). */
 export function useUnsignBoard() {
   return useMutation(({ storage }) => {
     storage.set('lifecycleState', 'active')
     storage.set('signedAt', null)
+    if (storage.get('nextStepsCommitted')) {
+      storage.set('nextStepsCommitted', false)
+      storage.set('nextStepsCommittedAt', null)
+    }
   }, [])
 }
 

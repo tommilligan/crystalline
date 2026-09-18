@@ -1,6 +1,5 @@
 import {
   ActionIcon,
-  Badge,
   Box,
   Button,
   Card,
@@ -15,12 +14,13 @@ import {
 } from '@mantine/core'
 import { DateInput } from '@mantine/dates'
 import { useDisclosure } from '@mantine/hooks'
-import { IconLock, IconPlus, IconX } from '@tabler/icons-react'
+import { IconLock, IconX } from '@tabler/icons-react'
 import dayjs from 'dayjs'
-import { type MouseEvent, type ReactNode, useMemo, useRef, useState } from 'react'
+import { type MouseEvent, type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import {
   useAddNextStep,
   useCommitNextSteps,
+  useEnsureFirstNextStep,
   useRemoveNextStep,
   useSetAgreement,
   useSetApprovedBy,
@@ -154,14 +154,24 @@ export function DecisionColumn({
   const setAgreement = useSetAgreement()
   const signBoard = useSignBoard()
   const addNextStep = useAddNextStep()
+  const ensureFirstNextStep = useEnsureFirstNextStep()
   const updateNextStep = useUpdateNextStep()
   const removeNextStep = useRemoveNextStep()
   const commitNextSteps = useCommitNextSteps()
   const properties = useRatingProperties()
   const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false)
-  const [newStepDraft, setNewStepDraft] = useState('')
+  const [signAttempted, setSignAttempted] = useState(false)
   const nextStepsSectionRef = useRef<HTMLDivElement>(null)
-  const addStepInputRef = useRef<HTMLInputElement>(null)
+  const firstActionInputRef = useRef<HTMLInputElement>(null)
+
+  // Keeps at least one (possibly blank) row always present while the plan isn't committed yet,
+  // so the table's header and a row of placeholders are always visible — there's no separate
+  // "type to add the first one" input distinct from the table itself.
+  useEffect(() => {
+    if (nextSteps.length === 0 && !nextStepsCommitted) {
+      ensureFirstNextStep()
+    }
+  }, [nextSteps.length, nextStepsCommitted, ensureFirstNextStep])
 
   const optionTextFields = useMemo(
     () => options.map((option) => optionTextField(option.id)),
@@ -199,13 +209,20 @@ export function DecisionColumn({
 
   const showDissent = decision.agreement !== null && decision.agreement !== 'all'
 
-  const canSign =
-    !signed &&
-    Boolean(decision.chosenOptionId) &&
-    Boolean(decision.approvedBy?.trim()) &&
-    Boolean(decision.agreement)
+  const chosenValid = Boolean(decision.chosenOptionId)
+  const approvedByValid = Boolean(decision.approvedBy?.trim())
+  const agreementValid = Boolean(decision.agreement)
+  const canSign = !signed && chosenValid && approvedByValid && agreementValid
 
   const canCommitNextSteps = !nextStepsCommitted && nextSteps.some((step) => step.action.trim())
+
+  // Rather than just disabling "Sign Decision" until every field is filled, clicking it while
+  // incomplete highlights whichever fields are still missing (in red) and stays put — the
+  // classic "clicked submit on an incomplete form" pattern — instead of silently doing nothing.
+  function handleSignClick() {
+    setSignAttempted(true)
+    if (canSign) openModal()
+  }
 
   function handleSign(event: MouseEvent<HTMLButtonElement>) {
     fireConfettiFromPoint(event.clientX, event.clientY)
@@ -215,15 +232,8 @@ export function DecisionColumn({
     // fighting its own closing transition.
     setTimeout(() => {
       nextStepsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      addStepInputRef.current?.focus()
+      firstActionInputRef.current?.focus()
     }, 50)
-  }
-
-  function handleAddNextStep() {
-    const action = newStepDraft.trim()
-    if (!action || nextStepsCommitted) return
-    addNextStep(action)
-    setNewStepDraft('')
   }
 
   return (
@@ -270,7 +280,7 @@ export function DecisionColumn({
               {chosenDisplayId}: {chosenTitle}
             </Text>
           ) : (
-            <Text span c="dimmed">
+            <Text span c={signAttempted && !chosenValid ? 'red' : 'dimmed'}>
               — not yet chosen, select one from the ranking above
             </Text>
           )}
@@ -281,7 +291,7 @@ export function DecisionColumn({
         <ProseInput>
           <CollaborativeTextField
             field={COUNTERMEASURE_FIELD}
-            placeholder="Notes on how to overcome the chosen option's blocker…"
+            placeholder="Mitigation plan"
             disabled={disabled}
           />
         </ProseInput>
@@ -295,6 +305,7 @@ export function DecisionColumn({
             placeholder="select…"
             disabled={disabled}
             allowDeselect={false}
+            error={signAttempted && !agreementValid}
             size="xs"
             w={150}
           />
@@ -303,13 +314,11 @@ export function DecisionColumn({
 
         {showDissent && (
           <>
-            <Text size="xs" fw={700} c="red.7">
-              For the record, the dissenting opinion states:
-            </Text>
+            <Text size="sm">For the record, the dissenting opinion states:</Text>
             <ProseInput>
               <CollaborativeTextField
                 field={DISSENT_FIELD}
-                placeholder="Note any objections, even after a decision has been drafted…"
+                placeholder="We feel that…"
                 disabled={disabled}
               />
             </ProseInput>
@@ -332,18 +341,26 @@ export function DecisionColumn({
             placeholder="Name of the approver"
             value={decision.approvedBy ?? ''}
             disabled={disabled}
+            error={signAttempted && !approvedByValid}
             onChange={(event) => setApprovedBy(event.currentTarget.value)}
           />
         </ProseInput>
 
         {signed ? (
-          <Badge color="gray" variant="light" style={{ alignSelf: 'flex-start' }}>
-            Signed — decision is read-only
-          </Badge>
+          <Button
+            color="dark"
+            variant="outline"
+            fullWidth
+            aria-disabled="true"
+            tabIndex={-1}
+            style={{ cursor: 'default', pointerEvents: 'none' }}
+          >
+            Decision Signed ✅
+          </Button>
         ) : (
           <Button
-            onClick={openModal}
-            disabled={!canSign}
+            onClick={handleSignClick}
+            disabled={disabled}
             color="red"
             fullWidth
             leftSection={<IconLock size={16} />}
@@ -364,86 +381,87 @@ export function DecisionColumn({
           ideally, a due date. Add as many as the plan needs, then commit to lock them in.
         </Text>
 
-        {nextSteps.length > 0 && (
-          <Table verticalSpacing="xs">
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Action</Table.Th>
-                <Table.Th>Owner</Table.Th>
-                <Table.Th>Due date</Table.Th>
-                {!nextStepsCommitted && <Table.Th w={32} />}
+        <Table verticalSpacing="xs">
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Action</Table.Th>
+              <Table.Th>Owner</Table.Th>
+              <Table.Th>Due date</Table.Th>
+              {!nextStepsCommitted && <Table.Th w={32} />}
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {nextSteps.map((step, index) => (
+              <Table.Tr key={step.id}>
+                <Table.Td>
+                  <TextInput
+                    ref={index === 0 ? firstActionInputRef : undefined}
+                    placeholder="e.g. Write an RFC"
+                    value={step.action}
+                    disabled={nextStepsCommitted}
+                    onChange={(event) =>
+                      updateNextStep(step.id, { action: event.currentTarget.value })
+                    }
+                  />
+                </Table.Td>
+                <Table.Td>
+                  <TextInput
+                    placeholder="Who's driving this"
+                    value={step.owner}
+                    disabled={nextStepsCommitted}
+                    onChange={(event) =>
+                      updateNextStep(step.id, { owner: event.currentTarget.value })
+                    }
+                  />
+                </Table.Td>
+                <Table.Td>
+                  <DateInput
+                    placeholder="Pick a date"
+                    value={step.dueDate}
+                    disabled={nextStepsCommitted}
+                    onChange={(value) => updateNextStep(step.id, { dueDate: value })}
+                    valueFormat="D MMM YYYY"
+                  />
+                </Table.Td>
+                {!nextStepsCommitted && (
+                  <Table.Td>
+                    <ActionIcon
+                      variant="subtle"
+                      color="red"
+                      aria-label="Remove step"
+                      onClick={() => removeNextStep(step.id)}
+                    >
+                      <IconX size={16} />
+                    </ActionIcon>
+                  </Table.Td>
+                )}
               </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {nextSteps.map((step) => (
-                <Table.Tr key={step.id}>
-                  <Table.Td>
-                    <TextInput
-                      placeholder="e.g. Write an RFC"
-                      value={step.action}
-                      disabled={nextStepsCommitted}
-                      onChange={(event) =>
-                        updateNextStep(step.id, { action: event.currentTarget.value })
-                      }
-                    />
-                  </Table.Td>
-                  <Table.Td>
-                    <TextInput
-                      placeholder="Who's driving this"
-                      value={step.owner}
-                      disabled={nextStepsCommitted}
-                      onChange={(event) =>
-                        updateNextStep(step.id, { owner: event.currentTarget.value })
-                      }
-                    />
-                  </Table.Td>
-                  <Table.Td>
-                    <DateInput
-                      placeholder="Pick a date"
-                      value={step.dueDate}
-                      disabled={nextStepsCommitted}
-                      onChange={(value) => updateNextStep(step.id, { dueDate: value })}
-                      valueFormat="D MMM YYYY"
-                    />
-                  </Table.Td>
-                  {!nextStepsCommitted && (
-                    <Table.Td>
-                      <ActionIcon
-                        variant="subtle"
-                        color="red"
-                        aria-label="Remove step"
-                        onClick={() => removeNextStep(step.id)}
-                      >
-                        <IconX size={16} />
-                      </ActionIcon>
-                    </Table.Td>
-                  )}
-                </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
-        )}
+            ))}
+          </Table.Tbody>
+        </Table>
 
         {!nextStepsCommitted && (
-          <TextInput
-            ref={addStepInputRef}
-            rightSection={<IconPlus size={16} />}
-            placeholder="Type a next step, press Enter"
-            value={newStepDraft}
-            onChange={(event) => setNewStepDraft(event.currentTarget.value)}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') {
-                event.preventDefault()
-                handleAddNextStep()
-              }
-            }}
-          />
+          <Button
+            variant="subtle"
+            size="xs"
+            onClick={() => addNextStep('')}
+            style={{ alignSelf: 'flex-start' }}
+          >
+            Add action +
+          </Button>
         )}
 
         {nextStepsCommitted ? (
-          <Badge color="gray" variant="light" style={{ alignSelf: 'flex-start' }}>
-            Committed — plan is read-only
-          </Badge>
+          <Button
+            color="dark"
+            variant="outline"
+            fullWidth
+            aria-disabled="true"
+            tabIndex={-1}
+            style={{ cursor: 'default', pointerEvents: 'none' }}
+          >
+            Actions committed ✅
+          </Button>
         ) : (
           <Button
             onClick={() => commitNextSteps()}

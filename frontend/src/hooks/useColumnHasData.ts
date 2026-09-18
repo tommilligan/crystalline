@@ -37,7 +37,9 @@ export function useColumnHasData(
     Boolean(decision.chosenOptionId) ||
     Boolean(decision.approvedBy?.trim()) ||
     Boolean(decision.agreement) ||
-    nextSteps.length > 0
+    // Not just `nextSteps.length > 0`: the Decision column always keeps at least one blank row
+    // present (see `DecisionColumn`), so an untouched blank row shouldn't count as real data.
+    nextSteps.some((step) => step.action.trim() || step.owner.trim() || step.dueDate)
 
   return {
     situation: situationText !== '',

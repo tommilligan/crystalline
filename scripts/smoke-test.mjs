@@ -157,29 +157,35 @@ async function main() {
         .getByRole('button', { name: 'Select B: Automate the OD test intake queue' })
         .click()
       await fillEditor(0, 'Provision the automation budget ahead of rollout.')
+
+      // Clicking Sign Decision before approver/agreement are filled shouldn't open the
+      // confirmation modal — it should highlight the missing fields in place instead.
+      const signButton = page.getByRole('button', { name: 'Sign Decision' })
+      await signButton.click()
+      await assert(
+        !(await page.getByRole('dialog', { name: 'Sign this decision?' }).isVisible()),
+        'clicking Sign Decision with missing fields should not open the confirmation modal',
+      )
+
       await page.getByPlaceholder('select…').click()
       await page.getByRole('option', { name: 'by all' }).click()
       await page.getByPlaceholder('Name of the approver').fill('Sam')
 
-      const signButton = page.getByRole('button', { name: 'Sign Decision' })
-      await assert(
-        await signButton.isEnabled(),
-        'Sign Decision should be enabled once every required field is filled',
-      )
       await signButton.click()
-      await page.getByRole('button', { name: 'Sign and lock' }).click()
+      const modal = page.getByRole('dialog', { name: 'Sign this decision?' })
+      await modal.getByRole('button', { name: 'Sign Decision' }).click()
 
       await page.getByText('Board locked').waitFor({ timeout: 5000 })
     })
 
     await step('next steps — add a step and commit', async () => {
       // Signing hands focus to Next Steps — it stays editable after sign (only locked by its own
-      // "Commit to Action", not by the board's sign-off) so the team can fill in the plan.
-      const nextStepInput = page.getByPlaceholder('Type a next step, press Enter')
-      await nextStepInput.fill('Kick off automation pilot')
-      await nextStepInput.press('Enter')
-      await page.getByPlaceholder("Who's driving this").fill('Priya')
-      await page.getByPlaceholder('Pick a date').fill('01 Oct 2026')
+      // "Commit to Action", not by the board's sign-off) so the team can fill in the plan. The
+      // table always keeps at least one blank row present, so there's no separate "add the first
+      // one" input to fill first.
+      await page.getByPlaceholder('e.g. Write an RFC').first().fill('Kick off automation pilot')
+      await page.getByPlaceholder("Who's driving this").first().fill('Priya')
+      await page.getByPlaceholder('Pick a date').first().fill('01 Oct 2026')
       await page.keyboard.press('Escape')
 
       const commitButton = page.getByRole('button', { name: 'Commit to Action' })
@@ -188,7 +194,7 @@ async function main() {
         'Commit to Action should be enabled once a step has an action',
       )
       await commitButton.click()
-      await page.getByText('Committed — plan is read-only').waitFor({ timeout: 5000 })
+      await page.getByText('Actions committed ✅').waitFor({ timeout: 5000 })
     })
 
     await assert(

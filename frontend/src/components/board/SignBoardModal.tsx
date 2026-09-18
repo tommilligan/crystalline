@@ -13,17 +13,21 @@ interface SignBoardModalProps {
  * This confirmation is deliberately a real speed bump, not a formality. */
 export function SignBoardModal({ opened, onClose, onConfirm }: SignBoardModalProps) {
   return (
-    <Modal opened={opened} onClose={onClose} title="Sign this board?" centered>
+    <Modal opened={opened} onClose={onClose} title="Sign this decision?" centered>
       <Text size="sm" mb="lg">
-        This will lock the board — every field across all five phases becomes read-only. You can
-        still Clone it later to make changes, but there is no way to unsign it.
+        This will{' '}
+        <Text span fw={700}>
+          permanently
+        </Text>{' '}
+        record your decision and make this board read-only. No further edits will be possible
+        (except followup-actions)
       </Text>
       <Group justify="flex-end">
         <Button variant="default" onClick={onClose}>
           Cancel
         </Button>
         <Button color="teal" onClick={(event) => onConfirm(event)}>
-          Sign and lock
+          Sign Decision
         </Button>
       </Group>
     </Modal>

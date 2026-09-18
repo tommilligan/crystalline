@@ -38,6 +38,10 @@ export function DecisionSummarySection({
   nextSteps,
   nextStepsCommitted,
 }: DecisionSummarySectionProps) {
+  const recordedNextSteps = nextSteps.filter(
+    (step) => step.action.trim() || step.owner.trim() || step.dueDate,
+  )
+
   return (
     <Stack gap="lg">
       <Title order={2}>4. Decision</Title>
@@ -92,9 +96,7 @@ export function DecisionSummarySection({
 
       {decision.agreement && decision.agreement !== 'all' && (
         <Stack gap={4}>
-          <Text fw={700} c="red.7">
-            Dissent / minority opinion
-          </Text>
+          <Text fw={700}>Dissent / minority opinion</Text>
           <Text style={{ whiteSpace: 'pre-wrap' }} c={dissentText ? undefined : 'dimmed'}>
             {dissentText || 'None recorded'}
           </Text>
@@ -127,7 +129,9 @@ export function DecisionSummarySection({
             {nextStepsCommitted ? 'Committed' : 'Not yet committed'}
           </Badge>
         </Group>
-        {nextSteps.length === 0 ? (
+        {/* Excludes the always-present blank row `DecisionColumn` keeps around for new entries
+         * (see its doc comment) — an untouched row isn't a recorded next step. */}
+        {recordedNextSteps.length === 0 ? (
           <Text c="dimmed">None recorded</Text>
         ) : (
           <Table verticalSpacing="xs">
@@ -139,7 +143,7 @@ export function DecisionSummarySection({
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
-              {nextSteps.map((step) => (
+              {recordedNextSteps.map((step) => (
                 <Table.Tr key={step.id}>
                   <Table.Td>{step.action || '—'}</Table.Td>
                   <Table.Td>{step.owner || '—'}</Table.Td>
