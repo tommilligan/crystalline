@@ -35,11 +35,8 @@ export function RatingPropertiesPicker({ properties, disabled }: RatingPropertie
           Scoring
         </Title>
         <Text size="xs" c="dimmed">
-          Scoring options can help rank similar sounding choices. Don't think about the numbers too
-          hard - you can always change them later.
-          <br />
-          5 indicates a good option: e.g. a cheap cost or a great quality. 1 indicates a bad
-          option, such as requiring a lot of time or requiring a lot of people.
+          Scoring options can help rank similar sounding choices. We've prefilled some common useful
+          ones, but feel free to change them to suit your problem.
         </Text>
       </Stack>
       <PillsInput size="xs" disabled={disabled} onClick={() => inputRef.current?.focus()}>

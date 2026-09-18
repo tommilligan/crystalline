@@ -1,4 +1,5 @@
-import { ActionIcon, Box, Group, Stack, Text, Title } from '@mantine/core'
+import { ActionIcon, Box, Group, Stack, Text, Title, Tooltip } from '@mantine/core'
+import { IconQuestionMark } from '@tabler/icons-react'
 import { useSetScore } from '../../../hooks/useBoardMutations'
 import { useFragmentPlainText } from '../../../liveblocks-yjs/useFragmentPlainText'
 import type { OptionData, RatingProperty } from '../../../types/board'
@@ -60,13 +61,36 @@ function ScoreButtons({
 
 function ScaleHint() {
   return (
-    <Group justify="space-between" wrap="nowrap" style={{ width: SCORE_BUTTONS_WIDTH }}>
-      <Text size="xs" c="dimmed" fw={700} tt="uppercase" style={{ fontSize: 9 }}>
-        Bad
-      </Text>
-      <Text size="xs" c="dimmed" fw={700} tt="uppercase" style={{ fontSize: 9 }}>
-        Good
-      </Text>
+    <Group gap={4} wrap="nowrap">
+      <Tooltip
+        label={
+          <Stack gap={4}>
+            <Text size="xs" inherit>
+              5 indicates a good option, like a cheap cost or high quality. 1 indicates a bad
+              option, such as taking a lot of time or needing a lot of people.
+            </Text>
+            <Text size="xs" inherit>
+              Don't think about the numbers too hard, go with your gut - you can always change them
+              later.
+            </Text>
+          </Stack>
+        }
+        multiline
+        w={240}
+        withArrow
+      >
+        <ActionIcon variant="subtle" color="gray" size={14} aria-label="How scoring works">
+          <IconQuestionMark size={10} />
+        </ActionIcon>
+      </Tooltip>
+      <Group justify="space-between" wrap="nowrap" style={{ width: SCORE_BUTTONS_WIDTH }}>
+        <Text size="xs" c="dimmed" fw={700} tt="uppercase" style={{ fontSize: 9 }}>
+          Bad
+        </Text>
+        <Text size="xs" c="dimmed" fw={700} tt="uppercase" style={{ fontSize: 9 }}>
+          Good
+        </Text>
+      </Group>
     </Group>
   )
 }
