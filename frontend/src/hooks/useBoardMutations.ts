@@ -71,13 +71,6 @@ export function useRemoveRatingProperty() {
   }, [])
 }
 
-export function useRenameRatingProperty() {
-  return useMutation(({ storage }, propertyId: string, label: string) => {
-    const property = storage.get('ratingProperties').find((item) => item.get('id') === propertyId)
-    property?.set('label', label)
-  }, [])
-}
-
 export function useSetChosenOption() {
   return useMutation(({ storage }, optionId: string | null) => {
     storage.get('decision').set('chosenOptionId', optionId)

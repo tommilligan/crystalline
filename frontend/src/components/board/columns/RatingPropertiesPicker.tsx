@@ -1,11 +1,6 @@
-import { ActionIcon, Group, Stack, Text, TextInput } from '@mantine/core'
-import { IconPlus, IconX } from '@tabler/icons-react'
-import { useState } from 'react'
-import {
-  useAddRatingProperty,
-  useRemoveRatingProperty,
-  useRenameRatingProperty,
-} from '../../../hooks/useBoardMutations'
+import { Pill, PillsInput, Stack, Text, Title } from '@mantine/core'
+import { useRef, useState } from 'react'
+import { useAddRatingProperty, useRemoveRatingProperty } from '../../../hooks/useBoardMutations'
 import type { RatingProperty } from '../../../types/board'
 
 interface RatingPropertiesPickerProps {
@@ -13,16 +8,18 @@ interface RatingPropertiesPickerProps {
   disabled?: boolean
 }
 
-/** Compact list editor for the numeric rating properties every option is scored against, shown
- * at the top of the Evaluation column while it's active. Mirrors `OptionsColumn`'s add/remove
- * list pattern. Properties are shared board configuration (`Storage.ratingProperties`), not
- * per-option data — removing one doesn't touch any option's already-recorded scores, they just
- * stop counting towards `totalScore` (see that function's doc comment). */
+/** Compact editor for the numeric rating properties every option is scored against, shown at the
+ * top of the Evaluation column while it's active. Existing properties are prefilled as pills in a
+ * Mantine `PillsInput`; typing a new label and pressing Enter adds one, and each pill's remove
+ * button drops it — there's no inline rename, so relabelling a property is remove-and-re-add.
+ * Properties are shared board configuration (`Storage.ratingProperties`), not per-option data —
+ * removing one doesn't touch any option's already-recorded scores, they just stop counting
+ * towards `totalScore` (see that function's doc comment). */
 export function RatingPropertiesPicker({ properties, disabled }: RatingPropertiesPickerProps) {
   const addProperty = useAddRatingProperty()
   const removeProperty = useRemoveRatingProperty()
-  const renameProperty = useRenameRatingProperty()
   const [draft, setDraft] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
 
   function handleAdd() {
     const label = draft.trim()
@@ -33,44 +30,48 @@ export function RatingPropertiesPicker({ properties, disabled }: RatingPropertie
 
   return (
     <Stack gap={4}>
-      <Text size="xs" fw={700} c="dimmed">
-        Rating properties
-      </Text>
-      {properties.map((property) => (
-        <Group key={property.id} align="center" wrap="nowrap" gap="xs">
-          <TextInput
-            size="xs"
-            style={{ flex: 1, minWidth: 0 }}
-            value={property.label}
+      <Stack gap={0}>
+        <Title order={5} size="xs">
+          Scoring
+        </Title>
+        <Text size="xs" c="dimmed">
+          Scoring options can help rank similar sounding choices. Don't think about the numbers too
+          hard - you can always change them later.
+          <br />
+          5 indicates a good option: e.g. a cheap cost or a great quality. 1 indicates a bad
+          option, such as requiring a lot of time or requiring a lot of people.
+        </Text>
+      </Stack>
+      <PillsInput size="xs" disabled={disabled} onClick={() => inputRef.current?.focus()}>
+        <Pill.Group>
+          {properties.map((property) => (
+            <Pill
+              key={property.id}
+              withRemoveButton={!disabled}
+              onRemove={() => removeProperty(property.id)}
+            >
+              {property.label}
+            </Pill>
+          ))}
+          <PillsInput.Field
+            ref={inputRef}
+            placeholder="Add a rating property, press Enter"
+            value={draft}
             disabled={disabled}
-            onChange={(event) => renameProperty(property.id, event.currentTarget.value)}
+            onChange={(event) => setDraft(event.currentTarget.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault()
+                handleAdd()
+              } else if (event.key === 'Backspace' && draft.length === 0 && properties.length > 0) {
+                // The pills' own remove buttons are mouse-only (Mantine hides them from the a11y
+                // tree, expecting Backspace as the keyboard/screen-reader path) — mirror that here.
+                removeProperty(properties[properties.length - 1].id)
+              }
+            }}
           />
-          <ActionIcon
-            variant="subtle"
-            color="red"
-            size="sm"
-            aria-label={`Remove ${property.label || 'rating property'}`}
-            disabled={disabled}
-            onClick={() => removeProperty(property.id)}
-          >
-            <IconX size={14} />
-          </ActionIcon>
-        </Group>
-      ))}
-      <TextInput
-        size="xs"
-        rightSection={<IconPlus size={14} />}
-        placeholder="Add a rating property, press Enter"
-        value={draft}
-        disabled={disabled}
-        onChange={(event) => setDraft(event.currentTarget.value)}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter') {
-            event.preventDefault()
-            handleAdd()
-          }
-        }}
-      />
+        </Pill.Group>
+      </PillsInput>
     </Stack>
   )
 }

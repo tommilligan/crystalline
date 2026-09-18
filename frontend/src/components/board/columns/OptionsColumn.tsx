@@ -1,4 +1,4 @@
-import { ActionIcon, Group, Text, TextInput } from '@mantine/core'
+import { ActionIcon, Group, TextInput } from '@mantine/core'
 import { IconPlus, IconX } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useAddIdea, useRemoveIdea } from '../../../hooks/useBoardMutations'
@@ -35,11 +35,6 @@ export function OptionsColumn({ options, disabled, active, onAdvancePhase }: Opt
 
   return (
     <>
-      {options.length === 0 && (
-        <Text size="sm" c="dimmed">
-          No ideas yet — add some below, or jump to another phase anyway.
-        </Text>
-      )}
       {options.map((option) => (
         <Group key={option.id} align="center" wrap="nowrap" gap="xs">
           <div style={{ flex: 1, minWidth: 0 }}>
