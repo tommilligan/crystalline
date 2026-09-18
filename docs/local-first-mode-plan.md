@@ -62,32 +62,83 @@ real data at stake yet.
 
 Today there are *two* storage mechanisms per room: native Storage (`liveblocks.config.ts`'s
 `Storage` type, structured fields) and a separate `Y.Doc` (`YjsRoomProvider`, text fragments only).
-These merge into one `Y.Doc`, containing both:
+These merge into one `Y.Doc`.
 
-- **Structured shared types** (new): `Y.Map`s and `Y.Array<Y.Map>`s replacing every
-  `LiveObject`/`LiveList` in the current `Storage` type.
-- **Text fragments** (unchanged): the existing `Y.XmlFragment`s, addressed by the same field-name
-  keys already defined in `types/board.ts` (`optionTextField`, `SITUATION_FIELD`, etc.).
+**Guiding rule: no field holds a JSON blob that a whole-value overwrite would clobber if two
+people edit different parts of it concurrently.** Every collection is a real Yjs collection type
+(`Y.Array`/`Y.Map`), all the way down, so concurrent edits merge at the level people actually edit
+independently — a whole option, a single next-step row, a single rating property, a single score.
+The one place the first draft of this plan got this wrong is called out below.
 
-Proposed top-level shape (a root `Y.Map` per doc):
+**Text fragments are nested inside the record they belong to, not kept as a separate flat
+top-level namespace.** Today's flat scheme (`option-text-{id}`, `option-enabler-{id}`,
+`decision-countermeasure`, etc. — top-level `Y.XmlFragment`s addressed by an id-derived string key)
+has a real bug worth fixing while breaking compatibility is free: deleting an option
+(`useRemoveIdea`) only removes its entry from the `options` array — the option's text fragments
+stay behind forever as orphaned top-level shared types, since nothing in Yjs ties a top-level
+name's lifetime to whether some id-derived string still "means" anything. Over a board's lifetime
+of adding/removing options, that's unbounded growth in the persisted doc (worse for local-only
+mode, which serializes the whole doc to IndexedDB on every write).
 
-| Current (`LiveObject`/`LiveList` field) | New (Yjs shared type) |
-|---|---|
-| `title: string` | root map key `title` (plain value) |
-| `lifecycleState`, `signedAt` | root map keys (plain values) |
-| `options: LiveList<LiveObject<OptionData>>` | root map key `options` → `Y.Array<Y.Map>`, each entry map holding `id`/`createdAt`/`scores` |
-| `ratingProperties: LiveList<LiveObject<RatingProperty>>` | `Y.Array<Y.Map>` of `{id, label}` |
-| `decision: LiveObject<DecisionData>` | `Y.Map` of `{chosenOptionId, approvedBy, date, agreement}` |
-| `nextSteps: LiveList<LiveObject<NextStepData>>` | `Y.Array<Y.Map>` of `{id, action, owner, dueDate}` |
-| `nextStepsCommitted`, `nextStepsCommittedAt` | root map keys |
-| `timer: LiveObject<TimerState>` | `Y.Map` of `{status, durationMs, remainingMs, endsAt}` |
-| `situationAgreed` | root map key |
-| *(unchanged)* text fragments | `Y.XmlFragment`s, same keys as today |
+Fix: each text field lives as a **direct sibling value inside its owning record's own `Y.Map`** —
+`option.get('idea')` next to `option.get('id')`/`option.get('scores')` — not a separate `content`
+sub-bucket (one level of nesting, not two; there's no benefit to the extra layer). Deleting the
+option's array entry now correctly reclaims its text content along with the rest of the record,
+since Yjs's garbage collection reclaims anything that becomes unreferenced when its containing
+type is removed. This is supported directly by the library already in use here — confirmed against
+the installed `@tiptap/extension-collaboration` (`^3.31.3`) types: `Collaboration.configure`
+accepts a `fragment: Y.XmlFragment` option ("a raw Y.js fragment, can be used instead of `document`
+and `field`"), specifically for binding to a fragment that lives somewhere other than a top-level
+doc key.
 
-`ScoreSet` (a plain `Partial<Record<string, number>>`) is JSON-serializable as-is and can live as a
-plain nested value inside an option's `Y.Map`, or as its own nested `Y.Map` — plain value is
-simpler and there's no need for per-key CRDT merge granularity on scores (a single client sets a
-score, whole-value overwrite is fine, same semantics `LiveObject.set` had).
+Structured collections follow the same top-level-named-collection convention as before (each is
+its own `doc.getMap(name)`/`doc.getArray(name)`, not one giant root map) — nesting only applies
+*within* a record for fields that conceptually belong to it.
+
+#### Full data model
+
+| Doc key (top-level shared type) | Yjs type | Contents | Concurrency granularity |
+|---|---|---|---|
+| `meta` | `Y.Map` | `title: string`, `lifecycleState: 'active'\|'signed'`, `signedAt: string\|null`, `nextStepsCommitted: boolean`, `nextStepsCommittedAt: string\|null`, `situationAgreed: boolean`, `situation: Y.XmlFragment` (the problem-statement text — board-level, not owned by any array record) | Per key — `Y.Map` merges independently per key, so e.g. one person renaming the board and another toggling `situationAgreed` at the same moment never conflict, even sharing one map. |
+| `options` | `Y.Array<Y.Map>` | one `Y.Map` per option: `id: string`, `createdAt: number`, `scores: Y.Map<propertyId, number>` (see below), `idea: Y.XmlFragment`, `enabler: Y.XmlFragment`, `blocker: Y.XmlFragment` | Per option — array insert/delete merges without clobbering concurrent inserts elsewhere in the list; deleting an option removes its text content with it (no orphaned fragments). |
+| — each option's `scores` | `Y.Map<string, number>` | keyed by `RatingProperty.id` | **Per rating property** — this is the fix from the previous revision: two people scoring *different* properties on the *same* option at the same time each keep their write, because each property is its own map key, not a field inside one merged object. |
+| `ratingProperties` | `Y.Array<Y.Map>` | one `Y.Map` per property: `id: string`, `label: string` | Per property — adding/removing/renaming one property doesn't touch another's entry. |
+| `decision` | `Y.Map` | `chosenOptionId: string\|null`, `approvedBy: string\|null`, `date: string\|null`, `agreement: Agreement\|null`, `countermeasure: Y.XmlFragment`, `dissent: Y.XmlFragment` | Per key — matches today's per-field `LiveObject.set` semantics exactly. `decision` is a singleton, never deleted, so nesting here is for colocation/consistency rather than fixing a leak. |
+| `nextSteps` | `Y.Array<Y.Map>` | one `Y.Map` per row: `id: string`, `action: string`, `owner: string`, `dueDate: string\|null` | Per row and per field within a row — two people editing different rows, or different fields of the same row, don't conflict. No text fragments today (`action`/`owner` are plain inputs, not TipTap) — if a future feature adds rich text here, nest it the same way `options` does, for the same reason. |
+| `timer` | `Y.Map` | `status`, `durationMs`, `remainingMs`, `endsAt` | Per key. |
+
+There is no longer a separate flat namespace of text-field keys — `optionTextField(id)`,
+`optionEnablerField(id)`, `optionBlockerField(id)`, `SITUATION_FIELD`, `COUNTERMEASURE_FIELD`, and
+`DISSENT_FIELD` (`types/board.ts`) are all retired; every field, text or structured, lives inside
+the `Y.Map`/`Y.Array` of the entity it belongs to.
+
+Two deliberate exceptions that stay as plain scalar values rather than being decomposed further,
+because there's no sub-field to split — a rename, a status flip, or a single score is already
+atomic at the level someone actually edits it:
+
+- A rating property's `label` and a next-step's `action`/`owner` are plain strings, not
+  `Y.XmlFragment`s — they're edited via plain inputs today (not TipTap), so a concurrent edit to
+  the exact same field of the exact same row is last-write-wins, matching current behavior
+  precisely (`LiveObject.set('label', ...)` was never more granular than this either).
+- Enum/scalar fields (`lifecycleState`, `status`, a single score value) are single atomic values —
+  decomposing "sub-fields" of a string enum or a number wouldn't mean anything.
+
+**Consequence for `CollaborativeTextField` and record creation.** Two knock-on changes from
+nesting fragments, called out explicitly since they're real (if modest) added complexity, not
+free:
+
+- `CollaborativeTextField`'s prop changes from `field: string` (a name it could derive standalone
+  from an id) to `fragment: Y.XmlFragment` (a live object the caller must already have in hand,
+  since a fragment nested inside a record can't be located from an id alone the way a top-level
+  name could be). Callers get it from the option/decision record they're already rendering — e.g.
+  an `OptionCard` already has its `OptionData`-shaped record in scope and now also needs the
+  underlying `Y.Map` (or a small accessor hook that finds it) to pull out `.get('idea')`.
+- A record's `Y.XmlFragment` values must be constructed **at record-creation time**, inside the
+  same `doc.transact()` that builds the rest of the record — e.g. `useAddIdea` now does
+  `optionMap.set('idea', new Y.XmlFragment())` (and same for `enabler`/`blocker`) before pushing
+  the map into `options`, rather than relying on a fragment springing into existence the first time
+  some component asks for it by name (today's `doc.getXmlFragment(field)` auto-vivifies on first
+  access; a nested value doesn't have that behavior, since it isn't a named doc-level lookup).
 
 `initialStorage()` in `liveblocks.config.ts` (renamed — see below) becomes a function that
 populates a fresh `Y.Doc` with this shape, used identically by both modes.
@@ -101,9 +152,14 @@ Every plain-value shape above (`RatingProperty`, an option's non-text fields, `D
   gives back the same types), or sit alongside them if `types/board.ts`'s other helpers
   (`totalScore`, `optionDisplayId`, etc.) are kept as-is — either works, prefer schema-as-source to
   avoid two definitions drifting.
-- Validate `.toJSON()` output pulled from a `Y.Map` at each read-hook boundary, so a corrupted or
-  stale-schema local doc fails with a clear Zod error instead of `undefined` surfacing deep in a
-  component tree.
+- Validate **per collection/record, not the whole document at once** — one schema for an option,
+  one for a next-step row, one for `meta`, etc. — mirroring the doc's own per-collection
+  granularity, so a read hook only re-validates (and only re-renders on) the slice of state it
+  actually reads, and a corrupted single record doesn't invalidate the rest of the board. Each
+  schema only covers that record's plain-value fields — a nested `Y.XmlFragment`/`Y.Map` isn't
+  itself passed through Zod (it's a live binding, not domain data with a shape to validate); the
+  read-hook layer strips those keys out before validating and returns the live fragment references
+  alongside the validated plain values.
 - Likely belong in `packages/shared` so the backend can reuse the same library/patterns for its own
   request validation (`createRoom.ts`, `liveblocksAuth.ts`) — separate piece of work, same
   dependency.
@@ -139,7 +195,12 @@ provider context above:
   Body logic is nearly copy-shape identical to today (e.g. `useAddIdea` still constructs a fresh
   record and pushes it), just against `Y.Map`/`Y.Array` methods (`.set`, `.push`, `.delete`,
   `.get`) instead of `LiveObject`/`LiveList` methods — the API shapes are close enough that this is
-  mechanical per-hook, not a redesign.
+  mechanical per-hook, not a redesign. `useSetScore` is the one hook that gets simpler, not just
+  ported — today it must read-modify-write the whole `scores` object
+  (`option.set('scores', { ...current, [propertyId]: value })`) specifically to avoid clobbering
+  other properties; with `scores` as its own `Y.Map`, it's just
+  `option.get('scores').set(propertyId, value)`, and the no-clobber guarantee comes from the data
+  model instead of from hook-level care.
 - **Reads**: `useSyncExternalStore`-based selector hooks subscribing to the relevant map/array's
   `observe`/`observeDeep`, re-deriving a plain JS value (validated through the matching Zod schema)
   on each notification — replacing `useStorage(selector, shallow)`. This is genuinely new code (no
