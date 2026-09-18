@@ -9,6 +9,7 @@ import {
   Modal,
   Paper,
   Select,
+  type SelectProps,
   Stack,
   Table,
   Text,
@@ -19,9 +20,12 @@ import {
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import {
+  IconCheck,
   IconChevronDown,
   IconChevronUp,
+  IconCloud,
   IconCrystalBall,
+  IconDeviceFloppy,
   IconDots,
   IconPlus,
   IconTrash,
@@ -31,18 +35,51 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useBoardsList, useCreateBoard, useDeleteBoard } from '../hooks/useBoardsRegistry'
 import type { BoardMode, BoardSummary } from '../types/board'
 
-const MODE_OPTIONS: ReadonlyArray<{ value: BoardMode; label: string; description: string }> = [
+const MODE_OPTIONS: ReadonlyArray<{
+  value: BoardMode
+  label: string
+  description: string
+  icon: typeof IconDeviceFloppy
+}> = [
   {
     value: 'local',
-    label: 'Local only',
-    description: 'Stored only on this device — no backend, nothing to share.',
+    label: 'This device',
+    description: 'Data never leaves your machine. Cannot be shared.',
+    icon: IconDeviceFloppy,
   },
   {
     value: 'shared',
     label: 'Sharable',
     description: 'Synced live via Liveblocks — anyone with the link can join.',
+    icon: IconCloud,
   },
 ]
+
+// Sharable mode is dev-only for now (not offered in production) — see
+// `docs/local-first-mode-plan.md`. The selector itself is always visible, but outside dev it
+// only ever offers 'local', so `mode` state below can never become 'shared' in production.
+const AVAILABLE_MODE_OPTIONS = import.meta.env.DEV
+  ? MODE_OPTIONS
+  : MODE_OPTIONS.filter((option) => option.value === 'local')
+
+const renderModeOption: NonNullable<SelectProps['renderOption']> = ({ option, checked }) => {
+  const item = MODE_OPTIONS.find((entry) => entry.value === option.value)
+  const Icon = item?.icon ?? IconDeviceFloppy
+  return (
+    <Group flex="1" gap="sm" wrap="nowrap">
+      <Icon size={20} style={{ flexShrink: 0 }} />
+      <div>
+        <Text size="sm" fw={500}>
+          {option.label}
+        </Text>
+        <Text size="xs" opacity={0.6}>
+          {item?.description}
+        </Text>
+      </div>
+      {checked && <IconCheck size={16} style={{ marginInlineStart: 'auto', flexShrink: 0 }} />}
+    </Group>
+  )
+}
 
 type SortKey = 'title' | 'updatedAt'
 
@@ -53,9 +90,6 @@ export function HomePage() {
   const navigate = useNavigate()
   const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false)
   const [title, setTitle] = useState('')
-  // Sharable mode is dev-only for now (not offered in production) — see
-  // `docs/local-first-mode-plan.md`. Hard-coded to 'local' outside dev, same gating pattern as
-  // `useUnsignBoard`'s dev-only "Unlock" button.
   const [mode, setMode] = useState<BoardMode>('local')
   const [sortKey, setSortKey] = useState<SortKey>('updatedAt')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
@@ -65,6 +99,9 @@ export function HomePage() {
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
 
   const DELETE_CONFIRM_PHRASE = 'delete board'
+
+  const selectedModeOption = MODE_OPTIONS.find((option) => option.value === mode) ?? MODE_OPTIONS[0]
+  const SelectedModeIcon = selectedModeOption.icon
 
   function toggleSort(key: SortKey) {
     if (key === sortKey) {
@@ -100,6 +137,8 @@ export function HomePage() {
     setCreateError(null)
     const id = crypto.randomUUID()
     const boardTitle = title.trim() || 'Untitled board'
+    // `mode` can already never be 'shared' outside dev (see `AVAILABLE_MODE_OPTIONS`) — re-assert
+    // it here as a safety net.
     const boardMode: BoardMode = import.meta.env.DEV ? mode : 'local'
     createBoard.mutate(
       { id, title: boardTitle, createdAt: Date.now(), mode: boardMode },
@@ -237,18 +276,17 @@ export function HomePage() {
               styles={{ label: { width: '100%', textAlign: 'left' } }}
             />
 
-            {import.meta.env.DEV && (
-              <Select
-                w="100%"
-                label="Board mode (dev only)"
-                description={MODE_OPTIONS.find((option) => option.value === mode)?.description}
-                data={MODE_OPTIONS.map(({ value, label }) => ({ value, label }))}
-                value={mode}
-                onChange={(value) => value && setMode(value as BoardMode)}
-                allowDeselect={false}
-                styles={{ label: { width: '100%', textAlign: 'left' } }}
-              />
-            )}
+            <Select
+              w="100%"
+              label="Stored on"
+              data={AVAILABLE_MODE_OPTIONS.map(({ value, label }) => ({ value, label }))}
+              value={mode}
+              onChange={(value) => value && setMode(value as BoardMode)}
+              allowDeselect={false}
+              leftSection={<SelectedModeIcon size={16} />}
+              renderOption={renderModeOption}
+              styles={{ label: { width: '100%', textAlign: 'left' } }}
+            />
 
             {createError && (
               <Text size="sm" c="red">
