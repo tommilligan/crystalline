@@ -8,20 +8,36 @@
 // Exits 0 and prints "SMOKE TEST PASSED" if every step's assertions hold and the browser logged
 // no console errors; otherwise exits 1 with the failing step and a screenshot of what the page
 // looked like at that point.
+//
+// This same step sequence and its per-step screenshots double as the source of the walkthrough
+// images in `docs/screenshots/` (see `docs/walkthrough.md`) — regenerated via
+// `scripts/capture-doc-screenshots.sh` (`npm run docs:screenshots`), which sets
+// SMOKE_SCREENSHOT_DIR and SMOKE_BOARD_TITLE below so the doc images land in a committed
+// directory with a clean, stable board title instead of the ephemeral local debug output. That
+// way the doc screenshots can never drift from what's actually verified to work here.
 
-import { mkdir } from 'node:fs/promises'
+import { mkdir, rm } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
+const repoRoot = path.join(here, '..')
 const outDir = path.join(here, '.run-app.local')
-const screenshotDir = path.join(outDir, 'screenshots')
+const screenshotDir = process.env.SMOKE_SCREENSHOT_DIR
+  ? path.resolve(repoRoot, process.env.SMOKE_SCREENSHOT_DIR)
+  : path.join(outDir, 'screenshots')
+const isCustomScreenshotDir = Boolean(process.env.SMOKE_SCREENSHOT_DIR)
 const baseUrl = process.argv[2] ?? 'http://localhost:5173'
 
 const SCORE_DIMENSIONS = ['People', 'Time', 'Money', 'Quality', 'Service', 'Price']
 
 async function main() {
+  if (isCustomScreenshotDir) {
+    // Only ever touch the configured directory itself — clear it fresh each run so a doc
+    // walkthrough regeneration never leaves behind stale images from a previous step count/order.
+    await rm(screenshotDir, { recursive: true, force: true })
+  }
   await mkdir(screenshotDir, { recursive: true })
 
   const browser = await chromium.launch()
@@ -68,7 +84,7 @@ async function main() {
       await page.getByRole('button', { name: 'New board' }).waitFor()
     })
 
-    const boardTitle = `Smoke test ${new Date().toISOString()}`
+    const boardTitle = process.env.SMOKE_BOARD_TITLE ?? `Smoke test ${new Date().toISOString()}`
     await step('create a board', async () => {
       await page.getByRole('button', { name: 'New board' }).click()
       await page.getByLabel('Board title').fill(boardTitle)
