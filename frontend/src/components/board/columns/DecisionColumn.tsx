@@ -1,5 +1,6 @@
 import {
   ActionIcon,
+  Blockquote,
   Button,
   Card,
   Divider,
@@ -29,7 +30,10 @@ import {
 } from '../../../hooks/useBoardMutations'
 import { useRatingProperties } from '../../../hooks/useBoardState'
 import { fireConfettiFromPoint } from '../../../lib/confetti'
-import { useFragmentPlainTexts } from '../../../liveblocks-yjs/useFragmentPlainText'
+import {
+  useFragmentPlainText,
+  useFragmentPlainTexts,
+} from '../../../liveblocks-yjs/useFragmentPlainText'
 import type { Agreement, DecisionData, NextStepData, OptionData } from '../../../types/board'
 import {
   AGREEMENT_OPTIONS,
@@ -140,6 +144,8 @@ export function DecisionColumn({
   const removeNextStep = useRemoveNextStep()
   const commitNextSteps = useCommitNextSteps()
   const properties = useRatingProperties()
+  const countermeasureText = useFragmentPlainText(COUNTERMEASURE_FIELD)
+  const dissentText = useFragmentPlainText(DISSENT_FIELD)
   const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false)
   const [signAttempted, setSignAttempted] = useState(false)
   const nextStepsSectionRef = useRef<HTMLDivElement>(null)
@@ -268,57 +274,102 @@ export function DecisionColumn({
         </Text>
 
         <Text size="sm">To mitigate the downsides of this option, we will:</Text>
-        <CollaborativeTextField
-          field={COUNTERMEASURE_FIELD}
-          placeholder="Mitigation plan"
-          disabled={disabled}
-        />
-
-        <Group gap={6} wrap="wrap" align="center">
-          <Text size="sm">This decision was agreed to</Text>
-          <Select
-            data={AGREEMENT_OPTIONS}
-            value={decision.agreement}
-            onChange={(value) => setAgreement((value as Agreement | null) ?? null)}
-            placeholder="select…"
+        {signed ? (
+          <Blockquote color="gray" p="sm">
+            <Text
+              size="sm"
+              style={{ whiteSpace: 'pre-wrap' }}
+              c={countermeasureText ? undefined : 'dimmed'}
+            >
+              {countermeasureText || 'None recorded'}
+            </Text>
+          </Blockquote>
+        ) : (
+          <CollaborativeTextField
+            field={COUNTERMEASURE_FIELD}
+            placeholder="Mitigation plan"
             disabled={disabled}
-            allowDeselect={false}
-            error={signAttempted && !agreementValid}
-            size="xs"
-            w={150}
           />
-          <Text size="sm">.</Text>
-        </Group>
+        )}
+
+        {signed ? (
+          <Text size="sm">
+            This decision was agreed to{' '}
+            <Text span fw={700}>
+              {AGREEMENT_OPTIONS.find((option) => option.value === decision.agreement)?.label ??
+                decision.agreement}
+            </Text>
+            .
+          </Text>
+        ) : (
+          <Group gap={6} wrap="wrap" align="center">
+            <Text size="sm">This decision was agreed to</Text>
+            <Select
+              data={AGREEMENT_OPTIONS}
+              value={decision.agreement}
+              onChange={(value) => setAgreement((value as Agreement | null) ?? null)}
+              placeholder="select…"
+              disabled={disabled}
+              allowDeselect={false}
+              error={signAttempted && !agreementValid}
+              size="xs"
+              w={150}
+            />
+            <Text size="sm">.</Text>
+          </Group>
+        )}
 
         {showDissent && (
           <>
             <Text size="sm">For the record, the dissenting opinion states:</Text>
-            <CollaborativeTextField
-              field={DISSENT_FIELD}
-              placeholder="We feel that…"
-              disabled={disabled}
-            />
+            {signed ? (
+              <Blockquote color="gray" p="sm">
+                <Text
+                  size="sm"
+                  style={{ whiteSpace: 'pre-wrap' }}
+                  c={dissentText ? undefined : 'dimmed'}
+                >
+                  {dissentText || 'None recorded'}
+                </Text>
+              </Blockquote>
+            ) : (
+              <CollaborativeTextField
+                field={DISSENT_FIELD}
+                placeholder="We feel that…"
+                disabled={disabled}
+              />
+            )}
           </>
         )}
 
-        <Group gap={4} wrap="wrap" align="baseline">
-          <Text size="sm">This decision has been formally approved on</Text>
-          {signed && signedAt ? (
-            <Text size="sm" fw={600}>
+        {signed && signedAt ? (
+          <Text size="sm">
+            This decision has been formally approved on{' '}
+            <Text span fw={600}>
               {dayjs(signedAt).format('D MMM YYYY')}
+            </Text>{' '}
+            by{' '}
+            <Text span fw={700}>
+              {decision.approvedBy || '—'}
             </Text>
-          ) : (
-            <LiveClock />
-          )}
-          <Text size="sm">by:</Text>
-        </Group>
-        <TextInput
-          placeholder="Name of the approver"
-          value={decision.approvedBy ?? ''}
-          disabled={disabled}
-          error={signAttempted && !approvedByValid}
-          onChange={(event) => setApprovedBy(event.currentTarget.value)}
-        />
+            .
+          </Text>
+        ) : (
+          <>
+            <Group gap={4} wrap="wrap" align="baseline">
+              <Text size="sm">This decision has been formally approved on</Text>
+              <LiveClock />
+              <Text size="sm">by:</Text>
+            </Group>
+            <TextInput
+              placeholder="Name of the approver"
+              value={decision.approvedBy ?? ''}
+              disabled={disabled}
+              error={signAttempted && !approvedByValid}
+              onChange={(event) => setApprovedBy(event.currentTarget.value)}
+            />
+          </>
+        )}
 
         {signed ? (
           <Button
@@ -365,52 +416,59 @@ export function DecisionColumn({
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {nextSteps.map((step, index) => (
-              <Table.Tr key={step.id}>
-                <Table.Td>
-                  <TextInput
-                    ref={index === 0 ? firstActionInputRef : undefined}
-                    placeholder="e.g. Write an RFC"
-                    value={step.action}
-                    disabled={nextStepsCommitted}
-                    onChange={(event) =>
-                      updateNextStep(step.id, { action: event.currentTarget.value })
-                    }
-                  />
-                </Table.Td>
-                <Table.Td>
-                  <TextInput
-                    placeholder="Who's driving this"
-                    value={step.owner}
-                    disabled={nextStepsCommitted}
-                    onChange={(event) =>
-                      updateNextStep(step.id, { owner: event.currentTarget.value })
-                    }
-                  />
-                </Table.Td>
-                <Table.Td>
-                  <DateInput
-                    placeholder="Pick a date"
-                    value={step.dueDate}
-                    disabled={nextStepsCommitted}
-                    onChange={(value) => updateNextStep(step.id, { dueDate: value })}
-                    valueFormat="D MMM YYYY"
-                  />
-                </Table.Td>
-                {!nextStepsCommitted && (
-                  <Table.Td>
-                    <ActionIcon
-                      variant="subtle"
-                      color="red"
-                      aria-label="Remove step"
-                      onClick={() => removeNextStep(step.id)}
-                    >
-                      <IconX size={16} />
-                    </ActionIcon>
-                  </Table.Td>
-                )}
-              </Table.Tr>
-            ))}
+            {nextStepsCommitted
+              ? nextSteps
+                  .filter((step) => step.action.trim() || step.owner.trim() || step.dueDate)
+                  .map((step) => (
+                    <Table.Tr key={step.id}>
+                      <Table.Td>{step.action || '—'}</Table.Td>
+                      <Table.Td>{step.owner || '—'}</Table.Td>
+                      <Table.Td>
+                        {step.dueDate ? dayjs(step.dueDate).format('D MMM YYYY') : '—'}
+                      </Table.Td>
+                    </Table.Tr>
+                  ))
+              : nextSteps.map((step, index) => (
+                  <Table.Tr key={step.id}>
+                    <Table.Td>
+                      <TextInput
+                        ref={index === 0 ? firstActionInputRef : undefined}
+                        placeholder="e.g. Write an RFC"
+                        value={step.action}
+                        onChange={(event) =>
+                          updateNextStep(step.id, { action: event.currentTarget.value })
+                        }
+                      />
+                    </Table.Td>
+                    <Table.Td>
+                      <TextInput
+                        placeholder="Who's driving this"
+                        value={step.owner}
+                        onChange={(event) =>
+                          updateNextStep(step.id, { owner: event.currentTarget.value })
+                        }
+                      />
+                    </Table.Td>
+                    <Table.Td>
+                      <DateInput
+                        placeholder="Pick a date"
+                        value={step.dueDate}
+                        onChange={(value) => updateNextStep(step.id, { dueDate: value })}
+                        valueFormat="D MMM YYYY"
+                      />
+                    </Table.Td>
+                    <Table.Td>
+                      <ActionIcon
+                        variant="subtle"
+                        color="red"
+                        aria-label="Remove step"
+                        onClick={() => removeNextStep(step.id)}
+                      >
+                        <IconX size={16} />
+                      </ActionIcon>
+                    </Table.Td>
+                  </Table.Tr>
+                ))}
           </Table.Tbody>
         </Table>
 

@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react'
 import { useSetSituationAgreed } from '../../../hooks/useBoardMutations'
 import { useBoardSituationAgreed } from '../../../hooks/useBoardState'
 import { useFragmentPlainText } from '../../../liveblocks-yjs/useFragmentPlainText'
+import { useYjsSynced } from '../../../liveblocks-yjs/YjsRoomProvider'
 import { SITUATION_FIELD } from '../../../types/board'
 import { CollaborativeTextField } from '../../editor/CollaborativeTextField'
 import { NextButton } from '../NextButton'
@@ -27,14 +28,31 @@ export function SituationColumn({ disabled, active, onAdvancePhase }: SituationC
   const agreed = useBoardSituationAgreed()
   const setSituationAgreed = useSetSituationAgreed()
   const situationText = useFragmentPlainText(SITUATION_FIELD)
+  const synced = useYjsSynced()
   const previousTextRef = useRef(situationText)
+  const wasSyncedRef = useRef(false)
 
   useEffect(() => {
+    // While the Yjs doc isn't synced, its fragment can read as stale or empty (initial load, or
+    // a brief drop mid-resync) — don't trust a diff against it either way.
+    if (!synced) {
+      wasSyncedRef.current = false
+      return
+    }
+    // The first render after (re)gaining sync is the persisted/reconciled text arriving, not an
+    // edit — catch the ref up without resetting agreement, so a reload (or a brief reconnect)
+    // doesn't look like someone changed the wording out from under an already-agreed statement.
+    const justResynced = !wasSyncedRef.current
+    wasSyncedRef.current = true
+    if (justResynced) {
+      previousTextRef.current = situationText
+      return
+    }
     if (previousTextRef.current !== situationText) {
       previousTextRef.current = situationText
       if (agreed) setSituationAgreed(false)
     }
-  }, [situationText, agreed, setSituationAgreed])
+  }, [situationText, agreed, setSituationAgreed, synced])
 
   if (!active) {
     return (

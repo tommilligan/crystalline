@@ -6,6 +6,12 @@ import { useRoom } from '../liveblocks.config'
 interface YjsContextValue {
   doc: Y.Doc
   provider: LiveblocksYjsProvider
+  /** Whether `provider` has finished loading the room's persisted Yjs state at least once.
+   * Every fragment reads as empty until this flips to `true` — code that reacts to a fragment's
+   * text *changing* (as opposed to just reading it) needs to ignore that initial empty->loaded
+   * transition, or it'll mistake "the persisted document just arrived" for "someone edited it
+   * just now" (see `SituationColumn`'s agreement-reset effect). */
+  synced: boolean
 }
 
 const YjsContext = createContext<YjsContextValue | null>(null)
@@ -28,9 +34,15 @@ export function YjsRoomProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const doc = new Y.Doc()
     const provider = new LiveblocksYjsProvider(room, doc)
-    setValue({ doc, provider })
+
+    const handleSync = (synced: boolean) => {
+      setValue((current) => (current ? { ...current, synced } : current))
+    }
+    provider.on('sync', handleSync)
+    setValue({ doc, provider, synced: provider.synced })
 
     return () => {
+      provider.off('sync', handleSync)
       provider.destroy()
       doc.destroy()
       setValue(null)
@@ -48,4 +60,10 @@ export function useYjsDoc(): YjsContextValue {
     throw new Error('useYjsDoc must be used within a YjsRoomProvider')
   }
   return ctx
+}
+
+/** Whether the room's persisted Yjs document has finished its initial load — see `synced` on
+ * `YjsContextValue`. */
+export function useYjsSynced(): boolean {
+  return useYjsDoc().synced
 }

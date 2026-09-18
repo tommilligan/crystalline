@@ -1,5 +1,5 @@
 import { Accordion, Stack, Title } from '@mantine/core'
-import { useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useOptionWalkthrough } from '../../../hooks/useOptionWalkthrough'
 import {
   useFragmentPlainText,
@@ -26,6 +26,12 @@ interface EvaluationColumnProps {
    * alongside it as a read-only reference (see `columnLayout.ts`) rather than collapsing to a
    * sliver, showing every option's evaluation at once instead of the one-at-a-time walkthrough. */
   reference?: boolean
+  /** The Decision column's currently-selected option, while `reference` is true — that option's
+   * panel here is highlighted green (matching `DecisionColumn`'s leaderboard row) and scrolled
+   * into view whenever the selection changes, so picking an option in the leaderboard surfaces
+   * its evaluation detail even if it's currently scrolled out of view. Purely a one-off nudge,
+   * not a pinned/sticky position — the viewer is free to scroll away afterwards. */
+  chosenOptionId?: string | null
   onAdvancePhase?: () => void
 }
 
@@ -100,8 +106,19 @@ export function EvaluationColumn({
   disabled,
   active,
   reference,
+  chosenOptionId,
   onAdvancePhase,
 }: EvaluationColumnProps) {
+  const chosenItemRefs = useRef(new Map<string, HTMLDivElement>())
+
+  useEffect(() => {
+    if (!reference || !chosenOptionId) return
+    chosenItemRefs.current.get(chosenOptionId)?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'nearest',
+    })
+  }, [reference, chosenOptionId])
+
   const evaluationFields = useMemo(
     () =>
       options.flatMap((option) => [optionEnablerField(option.id), optionBlockerField(option.id)]),
@@ -136,16 +153,31 @@ export function EvaluationColumn({
     const allOptionIds = options.map((option) => option.id)
     return (
       <Accordion multiple value={allOptionIds} onChange={() => {}} variant="separated">
-        {options.map((option, index) => (
-          <Accordion.Item key={option.id} value={option.id}>
-            <Accordion.Control>
-              <EvaluationAccordionControl option={option} displayId={optionDisplayId(index)} />
-            </Accordion.Control>
-            <Accordion.Panel>
-              <EvaluationSummaryBody option={option} properties={properties} />
-            </Accordion.Panel>
-          </Accordion.Item>
-        ))}
+        {options.map((option, index) => {
+          const chosen = option.id === chosenOptionId
+          return (
+            <Accordion.Item
+              key={option.id}
+              value={option.id}
+              ref={(node) => {
+                if (node) chosenItemRefs.current.set(option.id, node)
+                else chosenItemRefs.current.delete(option.id)
+              }}
+              style={{
+                borderColor: chosen ? 'var(--mantine-color-green-6)' : undefined,
+                borderWidth: chosen ? 2 : undefined,
+                background: chosen ? 'var(--mantine-color-green-0)' : undefined,
+              }}
+            >
+              <Accordion.Control>
+                <EvaluationAccordionControl option={option} displayId={optionDisplayId(index)} />
+              </Accordion.Control>
+              <Accordion.Panel>
+                <EvaluationSummaryBody option={option} properties={properties} />
+              </Accordion.Panel>
+            </Accordion.Item>
+          )
+        })}
       </Accordion>
     )
   }

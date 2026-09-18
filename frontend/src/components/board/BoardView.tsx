@@ -211,6 +211,7 @@ export function BoardView() {
         disabled={signed}
         active={phase === 'evaluation'}
         reference={phase === 'decision'}
+        chosenOptionId={decision.chosenOptionId}
         onAdvancePhase={advanceFrom('evaluation')}
       />
     ),
