@@ -5,8 +5,11 @@ import { useMemo } from 'react'
 import {
   useBoardDecision,
   useBoardLifecycle,
+  useBoardOptions,
   useBoardSituationAgreed,
   useBoardTitle,
+  useNextSteps,
+  useNextStepsCommitted,
   useRankedOptions,
   useRatingProperties,
 } from '../../hooks/useBoardState'
@@ -17,6 +20,7 @@ import {
 import {
   COUNTERMEASURE_FIELD,
   DISSENT_FIELD,
+  optionDisplayId,
   optionTextField,
   SITUATION_FIELD,
 } from '../../types/board'
@@ -34,9 +38,12 @@ export function ExportView() {
   const title = useBoardTitle()
   const situationText = useFragmentPlainText(SITUATION_FIELD)
   const situationAgreed = useBoardSituationAgreed()
+  const canonicalOptions = useBoardOptions()
   const rankedOptions = useRankedOptions()
   const ratingProperties = useRatingProperties()
   const decision = useBoardDecision()
+  const nextSteps = useNextSteps()
+  const nextStepsCommitted = useNextStepsCommitted()
   const lifecycle = useBoardLifecycle()
   const countermeasureText = useFragmentPlainText(COUNTERMEASURE_FIELD)
   const dissentText = useFragmentPlainText(DISSENT_FIELD)
@@ -56,6 +63,12 @@ export function ExportView() {
   const chosenTitle = decision.chosenOptionId
     ? (titleById.get(decision.chosenOptionId) ?? null)
     : null
+  // Derived from `canonicalOptions` (creation order), not `rankedOptions` (score order), so an
+  // option's letter here matches what `EvaluationColumn`/`DecisionColumn` show for it elsewhere.
+  const displayIdById = useMemo(
+    () => new Map(canonicalOptions.map((option, index) => [option.id, optionDisplayId(index)])),
+    [canonicalOptions],
+  )
 
   return (
     <div className={classes.page}>
@@ -83,11 +96,14 @@ export function ExportView() {
             options={rankedOptions}
             properties={ratingProperties}
             titleById={titleById}
+            displayIdById={displayIdById}
             decision={decision}
             chosenTitle={chosenTitle}
             countermeasureText={countermeasureText}
             dissentText={dissentText}
             signed={lifecycle.state === 'signed'}
+            nextSteps={nextSteps}
+            nextStepsCommitted={nextStepsCommitted.committed}
           />
         </Stack>
       </div>

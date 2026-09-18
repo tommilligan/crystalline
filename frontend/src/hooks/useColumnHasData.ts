@@ -3,7 +3,7 @@ import {
   useAnyFragmentsNonEmpty,
   useFragmentPlainText,
 } from '../liveblocks-yjs/useFragmentPlainText'
-import type { DecisionData, OptionData, Phase } from '../types/board'
+import type { DecisionData, NextStepData, OptionData, Phase } from '../types/board'
 import {
   COUNTERMEASURE_FIELD,
   DISSENT_FIELD,
@@ -20,6 +20,7 @@ import {
 export function useColumnHasData(
   options: readonly OptionData[],
   decision: DecisionData,
+  nextSteps: readonly NextStepData[],
 ): Record<Phase, boolean> {
   const situationText = useFragmentPlainText(SITUATION_FIELD)
 
@@ -35,9 +36,8 @@ export function useColumnHasData(
   const hasDecisionFields =
     Boolean(decision.chosenOptionId) ||
     Boolean(decision.approvedBy?.trim()) ||
-    Boolean(decision.nextStep?.trim()) ||
-    Boolean(decision.owner?.trim()) ||
-    Boolean(decision.deadline)
+    Boolean(decision.agreement) ||
+    nextSteps.length > 0
 
   return {
     situation: situationText !== '',

@@ -1,9 +1,12 @@
 import { Button, Group, Modal, Text } from '@mantine/core'
+import type { MouseEvent } from 'react'
 
 interface SignBoardModalProps {
   opened: boolean
   onClose: () => void
-  onConfirm: () => void
+  /** Receives the confirming click event so the caller can anchor a celebratory effect at the
+   * click point (see `DecisionColumn`'s confetti burst). */
+  onConfirm: (event: MouseEvent<HTMLButtonElement>) => void
 }
 
 /** Signing is irreversible in the MVP — no "unsign" action exists (see `docs/mvp-scope.md`).
@@ -19,7 +22,7 @@ export function SignBoardModal({ opened, onClose, onConfirm }: SignBoardModalPro
         <Button variant="default" onClick={onClose}>
           Cancel
         </Button>
-        <Button color="teal" onClick={onConfirm}>
+        <Button color="teal" onClick={(event) => onConfirm(event)}>
           Sign and lock
         </Button>
       </Group>

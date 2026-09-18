@@ -5,6 +5,7 @@ import { loadIdentity } from './lib/localIdentity'
 import type {
   DecisionData,
   LifecycleState,
+  NextStepData,
   OptionData,
   RatingProperty,
   TimerState,
@@ -62,6 +63,13 @@ export type Storage = {
    * `RatingProperty` in `types/board.ts`. */
   ratingProperties: LiveList<LiveObject<RatingProperty>>
   decision: LiveObject<DecisionData>
+  /** The Next Steps plan, recorded once the decision is signed (see `DecisionColumn`) — rows can
+   * be added freely until `nextStepsCommitted` locks them, independent of the board's overall
+   * `lifecycleState`: signing the decision is the point at which the team should *start* filling
+   * this in, so it deliberately isn't locked by the same `signed` flag. */
+  nextSteps: LiveList<LiveObject<NextStepData>>
+  nextStepsCommitted: boolean
+  nextStepsCommittedAt: string | null
   timer: LiveObject<TimerState>
   /** Whether the team has confirmed consensus on the situation phase's problem statement — the
    * gate on leaving column 1 (`docs/phases.md`). Resets to `false` whenever the problem
@@ -92,10 +100,11 @@ export function initialStorage(title: string = 'Untitled board'): Storage {
       chosenOptionId: null,
       approvedBy: null,
       date: null,
-      nextStep: null,
-      owner: null,
-      deadline: null,
+      agreement: null,
     }),
+    nextSteps: new LiveList([]),
+    nextStepsCommitted: false,
+    nextStepsCommittedAt: null,
     timer: new LiveObject({
       status: 'idle',
       durationMs: DEFAULT_TIMER_DURATION_MS,

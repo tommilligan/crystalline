@@ -99,14 +99,34 @@ export type OptionData = {
   scores: ScoreSet | null
 }
 
+/** How the team reached the chosen decision — drives whether the dissent field is shown (only
+ * once a non-'all' agreement is recorded) in both the live board and the export. */
+export type Agreement = 'all' | 'majority' | 'minority' | 'unilateral'
+
+/** Ordered so each `label` reads naturally as the tail of "This decision was agreed to …". */
+export const AGREEMENT_OPTIONS: ReadonlyArray<{ value: Agreement; label: string }> = [
+  { value: 'all', label: 'by all' },
+  { value: 'majority', label: 'by a majority' },
+  { value: 'minority', label: 'by a minority' },
+  { value: 'unilateral', label: 'unilaterally' },
+]
+
 /** Non-text fields for the Decision. `countermeasure` and `dissent` are Yjs text fragments. */
 export type DecisionData = {
   chosenOptionId: string | null
   approvedBy: string | null
   date: string | null
-  nextStep: string | null
-  owner: string | null
-  deadline: string | null
+  agreement: Agreement | null
+}
+
+/** A single row of the Next Steps plan, recorded once the decision itself is signed. A plain
+ * object type (not an interface) so it structurally satisfies Liveblocks' `LsonObject`
+ * constraint when used as `LiveObject<NextStepData>` — see `OptionData`'s doc comment. */
+export type NextStepData = {
+  id: string
+  action: string
+  owner: string
+  dueDate: string | null
 }
 
 export interface BoardSummary {
@@ -114,6 +134,22 @@ export interface BoardSummary {
   title: string
   createdAt: number
   updatedAt: number
+}
+
+/** Spreadsheet-style display label for an option's position in the canonical (creation) order —
+ * A, B, ..., Z, AA, AB, ... — shown anywhere an option's name appears read-only (accordion
+ * headers, ranking, export). Display only: never used as a storage key, and always derived from
+ * an option's index in the canonical `options` list (not a ranked/sorted view of it), so the same
+ * option keeps the same letter no matter where or in what order it's rendered. */
+export function optionDisplayId(index: number): string {
+  let n = index + 1
+  let result = ''
+  while (n > 0) {
+    const remainder = (n - 1) % 26
+    result = String.fromCharCode(65 + remainder) + result
+    n = Math.floor((n - 1) / 26)
+  }
+  return result
 }
 
 export function optionTextField(optionId: string): string {

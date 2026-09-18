@@ -1,6 +1,6 @@
 import { LiveObject } from '@liveblocks/client'
 import { useMutation } from '../liveblocks.config'
-import type { ScoreSet } from '../types/board'
+import type { Agreement, NextStepData, ScoreSet } from '../types/board'
 
 /**
  * These mutations mirror the event types in `docs/event-schema.md` (idea_added,
@@ -90,21 +90,48 @@ export function useSetApprovedBy() {
   }, [])
 }
 
-export function useSetNextStep() {
-  return useMutation(({ storage }, nextStep: string) => {
-    storage.get('decision').set('nextStep', nextStep)
+export function useSetAgreement() {
+  return useMutation(({ storage }, agreement: Agreement | null) => {
+    storage.get('decision').set('agreement', agreement)
   }, [])
 }
 
-export function useSetOwner() {
-  return useMutation(({ storage }, owner: string) => {
-    storage.get('decision').set('owner', owner)
+/** Appends a blank Next Steps row (see `DecisionColumn`'s add-row input), pre-filled with the
+ * given action text so a facilitator can type-and-submit the way `OptionsColumn` works. */
+export function useAddNextStep() {
+  return useMutation(({ storage }, action: string) => {
+    const id = crypto.randomUUID()
+    storage.get('nextSteps').push(new LiveObject({ id, action, owner: '', dueDate: null }))
+    return id
   }, [])
 }
 
-export function useSetDeadline() {
-  return useMutation(({ storage }, deadline: string | null) => {
-    storage.get('decision').set('deadline', deadline)
+export function useUpdateNextStep() {
+  return useMutation(
+    ({ storage }, nextStepId: string, patch: Partial<Omit<NextStepData, 'id'>>) => {
+      const nextStep = storage.get('nextSteps').find((item) => item.get('id') === nextStepId)
+      nextStep?.update(patch)
+    },
+    [],
+  )
+}
+
+export function useRemoveNextStep() {
+  return useMutation(({ storage }, nextStepId: string) => {
+    const nextSteps = storage.get('nextSteps')
+    const index = nextSteps.findIndex((item) => item.get('id') === nextStepId)
+    if (index !== -1) {
+      nextSteps.delete(index)
+    }
+  }, [])
+}
+
+/** Locks the Next Steps plan — irreversible in MVP, mirroring `useSignBoard` below, but tracked
+ * independently so committing the plan doesn't require re-signing the decision itself. */
+export function useCommitNextSteps() {
+  return useMutation(({ storage }) => {
+    storage.set('nextStepsCommitted', true)
+    storage.set('nextStepsCommittedAt', new Date().toISOString())
   }, [])
 }
 

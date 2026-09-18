@@ -6,7 +6,12 @@ import {
   useFragmentPlainTexts,
 } from '../../../liveblocks-yjs/useFragmentPlainText'
 import type { OptionData, RatingProperty } from '../../../types/board'
-import { optionBlockerField, optionEnablerField, optionTextField } from '../../../types/board'
+import {
+  optionBlockerField,
+  optionDisplayId,
+  optionEnablerField,
+  optionTextField,
+} from '../../../types/board'
 import { EmptyColumnState } from '../EmptyColumnState'
 import { NextButton } from '../NextButton'
 import { EvaluationBody, EvaluationSummaryBody } from './OptionSummaries'
@@ -24,7 +29,13 @@ interface EvaluationColumnProps {
   onAdvancePhase?: () => void
 }
 
-function EvaluationAccordionControl({ option }: { option: OptionData }) {
+function EvaluationAccordionControl({
+  option,
+  displayId,
+}: {
+  option: OptionData
+  displayId: string
+}) {
   const text = useFragmentPlainText(optionTextField(option.id))
   return (
     <Title
@@ -38,7 +49,7 @@ function EvaluationAccordionControl({ option }: { option: OptionData }) {
         whiteSpace: 'nowrap',
       }}
     >
-      {text || 'Untitled option'}
+      {displayId}: {text || 'Untitled option'}
     </Title>
   )
 }
@@ -125,10 +136,10 @@ export function EvaluationColumn({
     const allOptionIds = options.map((option) => option.id)
     return (
       <Accordion multiple value={allOptionIds} onChange={() => {}} variant="separated">
-        {options.map((option) => (
+        {options.map((option, index) => (
           <Accordion.Item key={option.id} value={option.id}>
             <Accordion.Control>
-              <EvaluationAccordionControl option={option} />
+              <EvaluationAccordionControl option={option} displayId={optionDisplayId(index)} />
             </Accordion.Control>
             <Accordion.Panel>
               <EvaluationSummaryBody option={option} properties={properties} />
@@ -148,10 +159,10 @@ export function EvaluationColumn({
         disableCollapse
         variant="separated"
       >
-        {options.map((option) => (
+        {options.map((option, index) => (
           <Accordion.Item key={option.id} value={option.id}>
             <Accordion.Control>
-              <EvaluationAccordionControl option={option} />
+              <EvaluationAccordionControl option={option} displayId={optionDisplayId(index)} />
             </Accordion.Control>
             <Accordion.Panel>
               <EvaluationAccordionPanel

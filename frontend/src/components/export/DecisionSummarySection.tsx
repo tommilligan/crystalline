@@ -1,7 +1,7 @@
-import { Badge, Divider, Group, Stack, Text, Title } from '@mantine/core'
+import { Badge, Divider, Group, Stack, Table, Text, Title } from '@mantine/core'
 import dayjs from 'dayjs'
-import type { DecisionData, OptionData, RatingProperty } from '../../types/board'
-import { totalScore } from '../../types/board'
+import type { DecisionData, NextStepData, OptionData, RatingProperty } from '../../types/board'
+import { AGREEMENT_OPTIONS, totalScore } from '../../types/board'
 import { EvaluationSummaryBody } from '../board/columns/OptionSummaries'
 
 interface DecisionSummarySectionProps {
@@ -9,11 +9,14 @@ interface DecisionSummarySectionProps {
   options: readonly OptionData[]
   properties: readonly RatingProperty[]
   titleById: ReadonlyMap<string, string>
+  displayIdById: ReadonlyMap<string, string>
   decision: DecisionData
   chosenTitle: string | null
   countermeasureText: string
   dissentText: string
   signed: boolean
+  nextSteps: readonly NextStepData[]
+  nextStepsCommitted: boolean
 }
 
 /** Section 4 of the export: every option's evaluation and ratings expanded (mirroring
@@ -26,11 +29,14 @@ export function DecisionSummarySection({
   options,
   properties,
   titleById,
+  displayIdById,
   decision,
   chosenTitle,
   countermeasureText,
   dissentText,
   signed,
+  nextSteps,
+  nextStepsCommitted,
 }: DecisionSummarySectionProps) {
   return (
     <Stack gap="lg">
@@ -43,7 +49,10 @@ export function DecisionSummarySection({
           options.map((option, index) => (
             <Stack key={option.id} gap="xs">
               <Group justify="space-between" wrap="nowrap">
-                <Text fw={700}>{titleById.get(option.id) ?? 'Untitled option'}</Text>
+                <Text fw={700}>
+                  {displayIdById.get(option.id) ?? '?'}:{' '}
+                  {titleById.get(option.id) ?? 'Untitled option'}
+                </Text>
                 <Text fw={700} c="dimmed">
                   {totalScore(option.scores, properties) ?? 0} points
                 </Text>
@@ -70,13 +79,27 @@ export function DecisionSummarySection({
       </Stack>
 
       <Stack gap={4}>
-        <Text fw={700} c="red.7">
-          Dissent / minority opinion
-        </Text>
-        <Text style={{ whiteSpace: 'pre-wrap' }} c={dissentText ? undefined : 'dimmed'}>
-          {dissentText || 'None recorded'}
+        <Text fw={700}>Agreement</Text>
+        <Text c={decision.agreement ? undefined : 'dimmed'}>
+          {decision.agreement
+            ? `This decision was agreed to ${
+                AGREEMENT_OPTIONS.find((option) => option.value === decision.agreement)?.label ??
+                decision.agreement
+              }.`
+            : 'Not yet recorded'}
         </Text>
       </Stack>
+
+      {decision.agreement && decision.agreement !== 'all' && (
+        <Stack gap={4}>
+          <Text fw={700} c="red.7">
+            Dissent / minority opinion
+          </Text>
+          <Text style={{ whiteSpace: 'pre-wrap' }} c={dissentText ? undefined : 'dimmed'}>
+            {dissentText || 'None recorded'}
+          </Text>
+        </Stack>
+      )}
 
       <Group grow align="flex-start">
         <Stack gap={2}>
@@ -91,27 +114,44 @@ export function DecisionSummarySection({
         </Stack>
       </Group>
 
-      <Stack gap={4}>
-        <Text fw={700}>Next step</Text>
-        <Text c={decision.nextStep ? undefined : 'dimmed'}>{decision.nextStep || '—'}</Text>
-      </Stack>
-
-      <Group grow align="flex-start">
-        <Stack gap={2}>
-          <Text fw={700}>Owner</Text>
-          <Text c={decision.owner ? undefined : 'dimmed'}>{decision.owner || '—'}</Text>
-        </Stack>
-        <Stack gap={2}>
-          <Text fw={700}>Deadline</Text>
-          <Text c={decision.deadline ? undefined : 'dimmed'}>
-            {decision.deadline ? dayjs(decision.deadline).format('D MMM YYYY') : '—'}
-          </Text>
-        </Stack>
-      </Group>
-
       <Badge color={signed ? 'green' : 'gray'} variant="light" style={{ alignSelf: 'flex-start' }}>
         {signed ? 'Signed' : 'Not signed'}
       </Badge>
+
+      <Divider />
+
+      <Stack gap={4}>
+        <Group justify="space-between" align="center">
+          <Text fw={700}>Next steps</Text>
+          <Badge color={nextStepsCommitted ? 'teal' : 'gray'} variant="light">
+            {nextStepsCommitted ? 'Committed' : 'Not yet committed'}
+          </Badge>
+        </Group>
+        {nextSteps.length === 0 ? (
+          <Text c="dimmed">None recorded</Text>
+        ) : (
+          <Table verticalSpacing="xs">
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>Action</Table.Th>
+                <Table.Th>Owner</Table.Th>
+                <Table.Th>Due date</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {nextSteps.map((step) => (
+                <Table.Tr key={step.id}>
+                  <Table.Td>{step.action || '—'}</Table.Td>
+                  <Table.Td>{step.owner || '—'}</Table.Td>
+                  <Table.Td>
+                    {step.dueDate ? dayjs(step.dueDate).format('D MMM YYYY') : '—'}
+                  </Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+        )}
+      </Stack>
     </Stack>
   )
 }

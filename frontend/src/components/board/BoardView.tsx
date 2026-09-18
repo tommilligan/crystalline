@@ -22,6 +22,8 @@ import {
   useBoardLifecycle,
   useBoardOptions,
   useBoardTitle,
+  useNextSteps,
+  useNextStepsCommitted,
   useRatingProperties,
 } from '../../hooks/useBoardState'
 import { useRegisterBoard } from '../../hooks/useBoardsRegistry'
@@ -122,7 +124,9 @@ export function BoardView() {
   const options = useBoardOptions()
   const ratingProperties = useRatingProperties()
   const decision = useBoardDecision()
-  const hasData = useColumnHasData(options, decision)
+  const nextSteps = useNextSteps()
+  const nextStepsCommitted = useNextStepsCommitted()
+  const hasData = useColumnHasData(options, decision, nextSteps)
   const setTitle = useSetTitle()
   const unsignBoard = useUnsignBoard()
   const registerBoard = useRegisterBoard()
@@ -214,6 +218,8 @@ export function BoardView() {
       <DecisionColumn
         options={options}
         decision={decision}
+        nextSteps={nextSteps}
+        nextStepsCommitted={nextStepsCommitted.committed}
         signed={signed}
         signedAt={lifecycle.signedAt}
         disabled={signed}

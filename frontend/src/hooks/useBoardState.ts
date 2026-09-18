@@ -1,6 +1,6 @@
 import { shallow } from '@liveblocks/react'
 import { useStorage } from '../liveblocks.config'
-import type { OptionData, RatingProperty } from '../types/board'
+import type { NextStepData, OptionData, RatingProperty } from '../types/board'
 import { totalScore } from '../types/board'
 
 export function useBoardTitle() {
@@ -25,6 +25,18 @@ export function useRatingProperties(): readonly RatingProperty[] {
 
 export function useBoardDecision() {
   return useStorage((root) => root.decision, shallow)
+}
+
+export function useNextSteps(): readonly NextStepData[] {
+  // See the cast comment in `useBoardOptions` above — same Liveblocks type-inference gap.
+  return useStorage((root) => root.nextSteps, shallow) as readonly NextStepData[]
+}
+
+export function useNextStepsCommitted() {
+  return useStorage(
+    (root) => ({ committed: root.nextStepsCommitted, committedAt: root.nextStepsCommittedAt }),
+    shallow,
+  )
 }
 
 export function useBoardTimer() {
