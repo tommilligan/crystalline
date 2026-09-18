@@ -11,10 +11,14 @@ export default defineConfig({
     dedupe: ['@mantine/core', '@mantine/hooks', 'react', 'react-dom'],
   },
   server: {
+    // Configurable via env so `scripts/run-app.sh` can run a verification instance on
+    // non-default ports without colliding with a developer's own already-running dev servers.
+    port: Number(process.env.FRONTEND_PORT) || 5173,
+    strictPort: true,
     // Forward auth calls to the backend in dev, so the frontend can call a same-origin
     // `/api/...` path (see `src/liveblocks.config.ts`) without needing CORS.
     proxy: {
-      '/api': 'http://localhost:4000',
+      '/api': `http://localhost:${Number(process.env.BACKEND_PORT) || 4000}`,
     },
   },
   test: {

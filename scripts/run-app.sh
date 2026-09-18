@@ -11,13 +11,19 @@
 #                                  # by hand at http://localhost:5173)
 #   scripts/run-app.sh --no-smoke # just start the servers and wait, no browser walk
 #
+# BACKEND_PORT / FRONTEND_PORT env vars override the default ports (4000 / 5173). Automated
+# verification (e.g. an agent checking a change) should always set these to something other than
+# the defaults a developer's own `npm run dev` would be using — this script's cleanup kills
+# whatever is listening on its target ports, not just what it started, so reusing a developer's
+# ports risks tearing down a session that isn't ours.
+#
 # Logs and screenshots land in scripts/.run-app.local/ (gitignored — see repo .gitignore's
 # `*.local` rule).
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
-BACKEND_PORT=4000
-FRONTEND_PORT=5173
+BACKEND_PORT="${BACKEND_PORT:-4000}"
+FRONTEND_PORT="${FRONTEND_PORT:-5173}"
 LOG_DIR="scripts/.run-app.local"
 mkdir -p "$LOG_DIR"
 
@@ -67,8 +73,8 @@ cleanup() {
 trap cleanup EXIT
 
 echo "Starting backend (:$BACKEND_PORT) and frontend (:$FRONTEND_PORT)..."
-npm run dev -w backend >"$LOG_DIR/backend.log" 2>&1 &
-npm run dev -w frontend >"$LOG_DIR/frontend.log" 2>&1 &
+PORT="$BACKEND_PORT" npm run dev -w backend >"$LOG_DIR/backend.log" 2>&1 &
+BACKEND_PORT="$BACKEND_PORT" FRONTEND_PORT="$FRONTEND_PORT" npm run dev -w frontend >"$LOG_DIR/frontend.log" 2>&1 &
 
 echo "Waiting for backend..."
 if ! timeout 30 bash -c "until curl -sf http://localhost:$BACKEND_PORT/healthz >/dev/null; do sleep 0.5; done"; then

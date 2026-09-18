@@ -33,6 +33,10 @@ assets/           Original physical-whiteboard example the tool is modeled on
   use it to verify a change against the actual running app, not just `tsc`/unit tests. Needs
   `backend/.env` (copy `backend/.env.example`, fill in a real `LIVEBLOCKS_SECRET_KEY`). See
   `docs/architecture.md`'s "Testing & dev workflow" section for flags and details.
+  Its cleanup kills whatever is listening on its target ports, not just what it started — an
+  agent verifying a change should always override `BACKEND_PORT`/`FRONTEND_PORT` to something
+  other than the defaults (e.g. `BACKEND_PORT=4100 FRONTEND_PORT=5273 scripts/run-app.sh`) so it
+  can't collide with a developer's own already-running `npm run dev`.
 
 ## Doc overview
 
