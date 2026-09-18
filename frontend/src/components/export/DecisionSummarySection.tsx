@@ -19,13 +19,13 @@ interface DecisionSummarySectionProps {
   nextStepsCommitted: boolean
 }
 
-/** The Options/Decision section of the export: every option's evaluation and ratings expanded
- * (mirroring `EvaluationColumn`'s read-only reference view, minus the accordion itself since a
- * printed page has no need to collapse anything) under "Options", followed by the recorded
- * decision fields under their own "Decision" heading. Reuses `EvaluationSummaryBody` — the same
- * plain read-only component `EvaluationColumn` renders once Decision is selected — so the live
- * reference view and this export stay visually and behaviourally in sync by construction rather
- * than by two hand-maintained copies. */
+/** The Decision/Options section of the export: the recorded decision fields under a "Decision"
+ * heading, followed by every option's evaluation and ratings expanded (mirroring
+ * `EvaluationColumn`'s read-only reference view, minus the accordion itself since a printed page
+ * has no need to collapse anything) under "Options discussed". Reuses `EvaluationSummaryBody` —
+ * the same plain read-only component `EvaluationColumn` renders once Decision is selected — so
+ * the live reference view and this export stay visually and behaviourally in sync by construction
+ * rather than by two hand-maintained copies. */
 export function DecisionSummarySection({
   options,
   properties,
@@ -45,32 +45,6 @@ export function DecisionSummarySection({
 
   return (
     <Stack gap="lg">
-      <Title order={2}>Options</Title>
-
-      <Stack gap="md">
-        {options.length === 0 ? (
-          <Text c="dimmed">No options recorded.</Text>
-        ) : (
-          options.map((option, index) => (
-            <Stack key={option.id} gap="xs">
-              <Group justify="space-between" wrap="nowrap">
-                <Text fw={700}>
-                  {displayIdById.get(option.id) ?? '?'}:{' '}
-                  {titleById.get(option.id) ?? 'Untitled option'}
-                </Text>
-                <Text fw={700} c="dimmed">
-                  {totalScore(option.scores, properties) ?? 0} points
-                </Text>
-              </Group>
-              <EvaluationSummaryBody option={option} properties={properties} />
-              {index < options.length - 1 && <Divider mt="xs" />}
-            </Stack>
-          ))
-        )}
-      </Stack>
-
-      <Divider />
-
       <Title order={2}>Decision</Title>
 
       <Stack gap={4}>
@@ -157,6 +131,32 @@ export function DecisionSummarySection({
               ))}
             </Table.Tbody>
           </Table>
+        )}
+      </Stack>
+
+      <Divider />
+
+      <Title order={2}>Options discussed</Title>
+
+      <Stack gap="md">
+        {options.length === 0 ? (
+          <Text c="dimmed">No options recorded.</Text>
+        ) : (
+          options.map((option, index) => (
+            <Stack key={option.id} gap="xs">
+              <Group justify="space-between" wrap="nowrap">
+                <Text fw={700}>
+                  {displayIdById.get(option.id) ?? '?'}:{' '}
+                  {titleById.get(option.id) ?? 'Untitled option'}
+                </Text>
+                <Text fw={700} c="dimmed">
+                  {totalScore(option.scores, properties) ?? 0} points
+                </Text>
+              </Group>
+              <EvaluationSummaryBody option={option} properties={properties} />
+              {index < options.length - 1 && <Divider mt="xs" />}
+            </Stack>
+          ))
         )}
       </Stack>
     </Stack>

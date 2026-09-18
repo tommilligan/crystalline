@@ -24,7 +24,7 @@ import classes from './ExportView.module.css'
 import { SituationSection } from './SituationSection'
 
 /** Assembles the printable export from the same live board data `BoardView` reads — the
- * Situation section and the Options/Decision section (every option expanded), see `ExportPage`
+ * Situation section and the Decision/Options section (every option expanded), see `ExportPage`
  * for why the ideation/evaluation phases are deliberately omitted. `window.print()` plus the
  * `@page`/`@media print` rules in `ExportView.module.css` is the whole PDF story for now:
  * Chrome's own "Save as PDF" print destination already respects the A4 `@page` size, so there's
