@@ -5,16 +5,22 @@ import {
   useFragmentPlainText,
   useFragmentPlainTexts,
 } from '../../../liveblocks-yjs/useFragmentPlainText'
-import type { OptionData } from '../../../types/board'
+import type { OptionData, RatingProperty } from '../../../types/board'
 import { optionBlockerField, optionEnablerField, optionTextField } from '../../../types/board'
 import { EmptyColumnState } from '../EmptyColumnState'
 import { NextButton } from '../NextButton'
-import { EvaluationFields } from './OptionSummaries'
+import { EvaluationBody, EvaluationSummaryBody } from './OptionSummaries'
+import { RatingPropertiesPicker } from './RatingPropertiesPicker'
 
 interface EvaluationColumnProps {
   options: readonly OptionData[]
+  properties: readonly RatingProperty[]
   disabled?: boolean
   active?: boolean
+  /** True while Decision (the next phase) is the one selected: this column stays expanded
+   * alongside it as a read-only reference (see `columnLayout.ts`) rather than collapsing to a
+   * sliver, showing every option's evaluation at once instead of the one-at-a-time walkthrough. */
+  reference?: boolean
   onAdvancePhase?: () => void
 }
 
@@ -39,37 +45,50 @@ function EvaluationAccordionControl({ option }: { option: OptionData }) {
 
 function EvaluationAccordionPanel({
   option,
+  properties,
   advance,
   disabled,
 }: {
   option: OptionData
+  properties: readonly RatingProperty[]
   advance?: () => void
   disabled?: boolean
 }) {
   return (
     <Stack gap="xs">
-      <EvaluationFields option={option} disabled={disabled} />
+      <EvaluationBody option={option} properties={properties} disabled={disabled} />
       {advance && <NextButton onClick={advance} />}
     </Stack>
   )
 }
 
-/** Enabler/blocker assessment, walked through one option at a time via an Accordion (mirroring
- * the phase-to-phase "Next >" flow one level down and matching `ScoringColumn`'s pattern): only
- * the active option's Good/Bad fields are expanded, the rest collapse to just their idea text,
- * and clicking into any option (or the "Next >" button) advances which one is focused. That
- * expand/collapse distinction — and its "Next >" button — is only shown while this column itself
- * is `active` (the selected phase) — otherwise every item stays collapsed and undecorated, since
- * the whole column is already dimmed as a unit by `BoardColumnShell`. The walkthrough position is
- * still tracked while inactive, just not displayed.
+/** Good/Bad plus numeric ratings, walked through one option at a time via an Accordion (mirroring
+ * the phase-to-phase "Next >" flow one level down): only the active option's fields are expanded,
+ * the rest collapse to just their idea text, and clicking into any option (or the "Next >"
+ * button) advances which one is focused. Each option's panel is laid out as two columns —
+ * Good/Bad stacked on the left, every configured rating property stacked on the right (see
+ * `EvaluationBody`) — with the rating properties themselves configured via
+ * `RatingPropertiesPicker` at the top of the column.
+ *
+ * That expand/collapse distinction, the properties picker, and the "Next >" button are only
+ * shown while this column itself is `active` (the selected phase) — otherwise every item stays
+ * collapsed and undecorated, since the whole column is already dimmed as a unit by
+ * `BoardColumnShell`. The walkthrough position is still tracked while inactive, just not
+ * displayed.
+ *
+ * Once Decision becomes the selected phase, this column switches to `reference` mode instead:
+ * every option's evaluation is shown at once, read-only, in the same two-column layout — see
+ * `EvaluationSummaryBody` — so `DecisionColumn` doesn't need to repeat any of this detail itself.
  *
  * The "Next >" button always lives in the same spot — the focused option's panel — regardless of
  * what it does: while there's a next option it advances the walkthrough, and on the last option
  * it advances the phase instead. Only its action changes, never its position. */
 export function EvaluationColumn({
   options,
+  properties,
   disabled,
   active,
+  reference,
   onAdvancePhase,
 }: EvaluationColumnProps) {
   const evaluationFields = useMemo(
@@ -79,7 +98,10 @@ export function EvaluationColumn({
   )
   const evaluationTexts = useFragmentPlainTexts(evaluationFields)
   const hasOptionData = options.map(
-    (_, index) => Boolean(evaluationTexts[2 * index]) || Boolean(evaluationTexts[2 * index + 1]),
+    (option, index) =>
+      Boolean(evaluationTexts[2 * index]) ||
+      Boolean(evaluationTexts[2 * index + 1]) ||
+      option.scores !== null,
   )
   const { activeOption, nextOption, focus } = useOptionWalkthrough(options, hasOptionData)
   const advance = nextOption ? () => focus(nextOption.id) : onAdvancePhase
@@ -93,27 +115,55 @@ export function EvaluationColumn({
     )
   }
 
+  if (reference) {
+    // Controlled (not `defaultValue`) and pinned open: this is a read-only reference view, every
+    // option should always show fully expanded, regardless of whatever accordion state happened
+    // to exist before this column switched into `reference` mode — `defaultValue` only applies on
+    // an accordion's first mount, which isn't reliably "now" (e.g. on a page reload landing
+    // directly on Decision, this column can render once already-collapsed before settling into
+    // `reference`, and an uncontrolled `defaultValue` would then never reopen it).
+    const allOptionIds = options.map((option) => option.id)
+    return (
+      <Accordion multiple value={allOptionIds} onChange={() => {}} variant="separated">
+        {options.map((option) => (
+          <Accordion.Item key={option.id} value={option.id}>
+            <Accordion.Control>
+              <EvaluationAccordionControl option={option} />
+            </Accordion.Control>
+            <Accordion.Panel>
+              <EvaluationSummaryBody option={option} properties={properties} />
+            </Accordion.Panel>
+          </Accordion.Item>
+        ))}
+      </Accordion>
+    )
+  }
+
   return (
-    <Accordion
-      value={active ? (activeOption?.id ?? null) : null}
-      onChange={(value) => value && focus(value)}
-      disableCollapse
-      variant="separated"
-    >
-      {options.map((option) => (
-        <Accordion.Item key={option.id} value={option.id}>
-          <Accordion.Control>
-            <EvaluationAccordionControl option={option} />
-          </Accordion.Control>
-          <Accordion.Panel>
-            <EvaluationAccordionPanel
-              option={option}
-              advance={active && option.id === activeOption?.id ? advance : undefined}
-              disabled={disabled}
-            />
-          </Accordion.Panel>
-        </Accordion.Item>
-      ))}
-    </Accordion>
+    <>
+      {active && <RatingPropertiesPicker properties={properties} disabled={disabled} />}
+      <Accordion
+        value={active ? (activeOption?.id ?? null) : null}
+        onChange={(value) => value && focus(value)}
+        disableCollapse
+        variant="separated"
+      >
+        {options.map((option) => (
+          <Accordion.Item key={option.id} value={option.id}>
+            <Accordion.Control>
+              <EvaluationAccordionControl option={option} />
+            </Accordion.Control>
+            <Accordion.Panel>
+              <EvaluationAccordionPanel
+                option={option}
+                properties={properties}
+                advance={active && option.id === activeOption?.id ? advance : undefined}
+                disabled={disabled}
+              />
+            </Accordion.Panel>
+          </Accordion.Item>
+        ))}
+      </Accordion>
+    </>
   )
 }

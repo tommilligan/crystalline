@@ -22,6 +22,7 @@ import {
   useBoardLifecycle,
   useBoardOptions,
   useBoardTitle,
+  useRatingProperties,
 } from '../../hooks/useBoardState'
 import { useRegisterBoard } from '../../hooks/useBoardsRegistry'
 import { useColumnHasData } from '../../hooks/useColumnHasData'
@@ -32,7 +33,6 @@ import { BoardLayout } from './BoardLayout'
 import { DecisionColumn } from './columns/DecisionColumn'
 import { EvaluationColumn } from './columns/EvaluationColumn'
 import { OptionsColumn } from './columns/OptionsColumn'
-import { ScoringColumn } from './columns/ScoringColumn'
 import { SituationColumn } from './columns/SituationColumn'
 import { PresenceAvatars } from './PresenceAvatars'
 
@@ -120,6 +120,7 @@ export function BoardView() {
   const [phase, setPhase] = useState<Phase>('situation')
   const lifecycle = useBoardLifecycle()
   const options = useBoardOptions()
+  const ratingProperties = useRatingProperties()
   const decision = useBoardDecision()
   const hasData = useColumnHasData(options, decision)
   const setTitle = useSetTitle()
@@ -160,20 +161,21 @@ export function BoardView() {
     return next ? () => focusPhase(next) : undefined
   }
 
-  // Scoring's header carries a "Skip >" escape hatch straight to Decision, for teams that want
-  // to decide without scoring every option — distinct from `NextButton`'s walkthrough, which
-  // requires each option to be scored first. Only shown while Scoring is the active column.
+  // Evaluation's header carries a "Skip >" escape hatch straight to Decision, for teams that
+  // want to decide without evaluating or scoring every option — distinct from `NextButton`'s
+  // walkthrough, which requires each option to be worked through first. Only shown while
+  // Evaluation is the active column.
   const headerActions: Partial<Record<Phase, ReactNode>> =
-    phase === 'scoring' && !signed
+    phase === 'evaluation' && !signed
       ? {
-          scoring: (
+          evaluation: (
             <Button
               variant="subtle"
               color="gray"
               size="xs"
               onClick={(event) => {
                 event.stopPropagation()
-                advanceFrom('scoring')?.()
+                advanceFrom('evaluation')?.()
               }}
             >
               Skip &gt;
@@ -201,17 +203,11 @@ export function BoardView() {
     evaluation: (
       <EvaluationColumn
         options={options}
+        properties={ratingProperties}
         disabled={signed}
         active={phase === 'evaluation'}
+        reference={phase === 'decision'}
         onAdvancePhase={advanceFrom('evaluation')}
-      />
-    ),
-    scoring: (
-      <ScoringColumn
-        options={options}
-        disabled={signed}
-        active={phase === 'scoring'}
-        onAdvancePhase={advanceFrom('scoring')}
       />
     ),
     decision: (
@@ -266,7 +262,13 @@ export function BoardView() {
 
         <Group justify="space-between" align="center" wrap="wrap">
           <Group gap="md" align="center" wrap="nowrap">
-            <Anchor component={Link} to="/" underline="never" c="inherit" aria-label="Crystal Ball home">
+            <Anchor
+              component={Link}
+              to="/"
+              underline="never"
+              c="inherit"
+              aria-label="Crystal Ball home"
+            >
               <ThemeIcon size={32} radius="xl" variant="light" color="blue">
                 <IconCrystalBall size={18} />
               </ThemeIcon>

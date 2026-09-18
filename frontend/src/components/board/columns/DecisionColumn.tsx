@@ -1,18 +1,7 @@
-import {
-  Accordion,
-  Badge,
-  Button,
-  Divider,
-  Group,
-  Select,
-  Stack,
-  Text,
-  TextInput,
-  Title,
-} from '@mantine/core'
+import { Badge, Button, Card, Divider, Group, Stack, Text, TextInput, Title } from '@mantine/core'
 import { DateInput } from '@mantine/dates'
 import { useDisclosure } from '@mantine/hooks'
-import { IconLock } from '@tabler/icons-react'
+import { IconCheck, IconLock } from '@tabler/icons-react'
 import dayjs from 'dayjs'
 import { useMemo } from 'react'
 import {
@@ -23,6 +12,7 @@ import {
   useSetOwner,
   useSignBoard,
 } from '../../../hooks/useBoardMutations'
+import { useRatingProperties } from '../../../hooks/useBoardState'
 import { useFragmentPlainTexts } from '../../../liveblocks-yjs/useFragmentPlainText'
 import type { DecisionData, OptionData } from '../../../types/board'
 import {
@@ -34,7 +24,6 @@ import {
 import { CollaborativeTextField } from '../../editor/CollaborativeTextField'
 import { LiveClock } from '../LiveClock'
 import { SignBoardModal } from '../SignBoardModal'
-import { EvaluationSummary, ScoringSummary } from './OptionSummaries'
 
 interface DecisionColumnProps {
   options: readonly OptionData[]
@@ -44,28 +33,66 @@ interface DecisionColumnProps {
   disabled?: boolean
 }
 
-function SummaryAccordionControl({ title, points }: { title: string; points: number }) {
+function LeaderboardRow({
+  rank,
+  title,
+  points,
+  chosen,
+  disabled,
+  onSelect,
+}: {
+  rank: number
+  title: string
+  points: number | null
+  chosen: boolean
+  disabled?: boolean
+  onSelect: () => void
+}) {
   return (
-    <Group justify="space-between" align="center" wrap="nowrap" gap="xs" style={{ flex: 1 }}>
-      <Title
-        order={4}
-        size="sm"
-        style={{
-          flex: 1,
-          minWidth: 0,
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-        }}
-      >
-        {title}
-      </Title>
-      {/* A plain number, not a `Badge` — Mantine's Badge is uppercase by default, which would
-       * shout "POINTS" rather than read as a simple total. */}
-      <Text size="sm" fw={600} c="dimmed" mr={4} style={{ flexShrink: 0 }}>
-        {points} points
-      </Text>
-    </Group>
+    <Card
+      withBorder
+      padding={6}
+      radius="sm"
+      role="button"
+      tabIndex={disabled ? -1 : 0}
+      aria-pressed={chosen}
+      aria-label={`Select ${title}`}
+      onClick={disabled ? undefined : onSelect}
+      onKeyDown={(event) => {
+        if (disabled) return
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          onSelect()
+        }
+      }}
+      style={{
+        cursor: disabled ? 'default' : 'pointer',
+        borderColor: chosen ? 'var(--mantine-color-green-6)' : undefined,
+        borderWidth: chosen ? 2 : 1,
+        background: chosen ? 'var(--mantine-color-green-0)' : undefined,
+      }}
+    >
+      <Group justify="space-between" wrap="nowrap" gap="xs">
+        <Group gap={6} wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
+          <Text size="xs" fw={700} c="dimmed" style={{ flexShrink: 0 }}>
+            {rank}.
+          </Text>
+          <Text size="sm" fw={chosen ? 700 : 500} truncate>
+            {title}
+          </Text>
+        </Group>
+        <Group gap={6} wrap="nowrap" style={{ flexShrink: 0 }}>
+          <Text size="xs" fw={700} c="dimmed">
+            {points ?? '–'} pts
+          </Text>
+          {chosen && (
+            <Badge color="green" variant="filled" leftSection={<IconCheck size={12} />}>
+              Selected
+            </Badge>
+          )}
+        </Group>
+      </Group>
+    </Card>
   )
 }
 
@@ -73,14 +100,12 @@ function SummaryAccordionControl({ title, points }: { title: string; points: num
  * MVP) sign-off action. See `docs/mvp-scope.md`: there is no "unsign" — Clone is the intended
  * flow for further changes after sign-off.
  *
- * Unlike Evaluation/Scoring's one-option-at-a-time walkthrough, every option's summary is open
- * at once here (an Accordion in `multiple` mode, all expanded by default) since deciding means
- * comparing every option side by side rather than focusing on one — each summary inlines a
- * read-only copy of that option's Evaluation (Good/Bad) and Scoring (cost/benefit) fields, the
- * same information `columnLayout.ts` collapses out of columns 3-4 once this column is reached,
- * ordered by total score (highest first) rather than entry order. Because titles are no longer
- * unique per position on screen once they're reorderable, choosing the decision is a dropdown
- * (keyed by option id, not array index) rather than clicking a card. */
+ * Picking the option is a ranked leaderboard, highest score first — clicking a row toggles it as
+ * the chosen option (clicking the chosen row again clears it) — rather than a dropdown, since
+ * comparing options by score is the point of this step. It deliberately doesn't repeat each
+ * option's Good/Bad or ratings detail: that's already visible alongside it in the Evaluation
+ * column, which stays expanded as a read-only reference once this phase is selected (see
+ * `columnLayout.ts` and `EvaluationColumn`'s `reference` prop) instead of being duplicated here. */
 export function DecisionColumn({
   options,
   decision,
@@ -94,6 +119,7 @@ export function DecisionColumn({
   const setOwner = useSetOwner()
   const setDeadline = useSetDeadline()
   const signBoard = useSignBoard()
+  const properties = useRatingProperties()
   const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false)
 
   const optionTextFields = useMemo(
@@ -110,18 +136,11 @@ export function DecisionColumn({
   const rankedOptions = useMemo(
     () =>
       [...options].sort(
-        (a, b) => (totalScore(b.scores) ?? -Infinity) - (totalScore(a.scores) ?? -Infinity),
+        (a, b) =>
+          (totalScore(b.scores, properties) ?? -Infinity) -
+          (totalScore(a.scores, properties) ?? -Infinity),
       ),
-    [options],
-  )
-
-  const selectData = useMemo(
-    () =>
-      options.map((option) => ({
-        value: option.id,
-        label: titleById.get(option.id) ?? 'Untitled option',
-      })),
-    [options, titleById],
+    [options, properties],
   )
 
   const canSign =
@@ -136,35 +155,28 @@ export function DecisionColumn({
     <>
       <Stack gap="xs">
         <Title order={3} size="h5">
-          Summary of options
+          Ranking leaderboard
         </Title>
         {options.length === 0 ? (
           <Text size="sm" c="dimmed">
             Add some options first, or jump in anyway.
           </Text>
         ) : (
-          <Accordion
-            multiple
-            defaultValue={rankedOptions.map((option) => option.id)}
-            variant="separated"
-          >
-            {rankedOptions.map((option) => (
-              <Accordion.Item key={option.id} value={option.id}>
-                <Accordion.Control>
-                  <SummaryAccordionControl
-                    title={titleById.get(option.id) ?? 'Untitled option'}
-                    points={totalScore(option.scores) ?? 0}
-                  />
-                </Accordion.Control>
-                <Accordion.Panel>
-                  <Stack gap="xs">
-                    <EvaluationSummary option={option} />
-                    <ScoringSummary option={option} />
-                  </Stack>
-                </Accordion.Panel>
-              </Accordion.Item>
+          <Stack gap={4} data-testid="decision-leaderboard">
+            {rankedOptions.map((option, index) => (
+              <LeaderboardRow
+                key={option.id}
+                rank={index + 1}
+                title={titleById.get(option.id) ?? 'Untitled option'}
+                points={totalScore(option.scores, properties)}
+                chosen={decision.chosenOptionId === option.id}
+                disabled={disabled}
+                onSelect={() =>
+                  setChosenOption(decision.chosenOptionId === option.id ? null : option.id)
+                }
+              />
             ))}
-          </Accordion>
+          </Stack>
         )}
       </Stack>
 
@@ -174,16 +186,6 @@ export function DecisionColumn({
         <Title order={3} size="h5">
           Decision
         </Title>
-
-        <Select
-          label="Chosen option"
-          placeholder="Select an option"
-          data={selectData}
-          value={decision.chosenOptionId}
-          onChange={(value) => setChosenOption(value)}
-          disabled={disabled || options.length === 0}
-          clearable
-        />
 
         <CollaborativeTextField
           field={COUNTERMEASURE_FIELD}

@@ -14,6 +14,10 @@ interface BoardColumnShellProps {
   // Optional control shown top-right of the header, alongside the phase title — e.g. Scoring's
   // "Skip >" button. Only rendered in the expanded (non-collapsed) header.
   headerAction?: ReactNode
+  // True for the Evaluation column specifically while it's shown secondary alongside Decision
+  // (see `BoardLayout`): it's a read-only reference there, not a "come back later" column, so it
+  // shouldn't look dimmed/deprioritised the way an ordinary secondary column does.
+  neverDim?: boolean
   children: ReactNode
 }
 
@@ -34,6 +38,7 @@ export function BoardColumnShell({
   isWide,
   onFocus,
   headerAction,
+  neverDim,
   children,
 }: BoardColumnShellProps) {
   const collapsed = layout === 'collapsed'
@@ -56,7 +61,7 @@ export function BoardColumnShell({
         flexDirection: 'column',
         height: '100%',
         minHeight: 0,
-        opacity: emphasized || collapsed || isSituation ? 1 : 0.55,
+        opacity: emphasized || collapsed || isSituation || neverDim ? 1 : 0.55,
         transition: 'opacity 0.2s ease, border-color 0.2s ease, flex 0.2s ease',
         cursor: collapsed ? 'pointer' : undefined,
       }}

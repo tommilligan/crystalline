@@ -2,8 +2,14 @@ import type { LiveblocksAuthRequest } from '@crystalline/shared'
 import { createClient, LiveList, LiveObject } from '@liveblocks/client'
 import { createRoomContext } from '@liveblocks/react'
 import { loadIdentity } from './lib/localIdentity'
-import type { DecisionData, LifecycleState, OptionData, TimerState } from './types/board'
-import { DEFAULT_TIMER_DURATION_MS } from './types/board'
+import type {
+  DecisionData,
+  LifecycleState,
+  OptionData,
+  RatingProperty,
+  TimerState,
+} from './types/board'
+import { DEFAULT_RATING_PROPERTIES, DEFAULT_TIMER_DURATION_MS } from './types/board'
 
 // Path to the backend's Liveblocks auth endpoint (see `backend/src/liveblocksAuth.ts`). Relative
 // by default so Vite's dev proxy (`vite.config.ts`) and a same-origin reverse proxy in prod both
@@ -51,6 +57,10 @@ export type Storage = {
   lifecycleState: LifecycleState
   signedAt: string | null
   options: LiveList<LiveObject<OptionData>>
+  /** The numeric properties every option is rated against in the Evaluation column, in display
+   * order — shared board configuration, editable via that column's properties picker. See
+   * `RatingProperty` in `types/board.ts`. */
+  ratingProperties: LiveList<LiveObject<RatingProperty>>
   decision: LiveObject<DecisionData>
   timer: LiveObject<TimerState>
   /** Whether the team has confirmed consensus on the situation phase's problem statement — the
@@ -75,6 +85,9 @@ export function initialStorage(title: string = 'Untitled board'): Storage {
     lifecycleState: 'active',
     signedAt: null,
     options: new LiveList([]),
+    ratingProperties: new LiveList(
+      DEFAULT_RATING_PROPERTIES.map((property) => new LiveObject(property)),
+    ),
     decision: new LiveObject({
       chosenOptionId: null,
       approvedBy: null,

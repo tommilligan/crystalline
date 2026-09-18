@@ -13,24 +13,24 @@ export type ColumnLayoutState = 'hidden' | 'collapsed' | 'primary' | 'secondary'
  * - A column is visible (collapsed or expanded — its existence is shown) once it is selected,
  *   or once any column at or after it has data: selecting/populating column N implies columns
  *   1..N exist, even if the user hasn't visited them.
- * - The options column (phase 2) collapses to a sliver whenever a later phase (3-5) is
+ * - The options column (phase 2) collapses to a sliver whenever a later phase (3-4) is
  *   selected — once the team has moved on, the option list is redundant (every later column
  *   echoes it), so it doesn't need space. Selecting it again re-expands it, since idea text is
  *   only editable there.
- * - Columns 3-4 expand once they hold data, or whenever they're the selected column; otherwise
- *   they stay hidden or collapsed. The Decision column (phase 5) is stricter: it only expands
- *   while selected — holding data alone isn't enough — since comparing/choosing between options
- *   is only relevant while that phase is actively in focus; once you move away from it, it
- *   collapses to a sliver like everything else, rather than lingering open.
- * - The Evaluation column (phase 3) collapses to a sliver whenever Scoring or Decision (4-5) is
- *   selected, and the Scoring column (phase 4) collapses to a sliver whenever Decision (5) is
- *   selected — regardless of whether either holds data — to keep focus on the column currently
- *   being worked in. Decision (5) inlines a read-only copy of both (see `DecisionColumn`), so
- *   nothing is lost by collapsing them there; Scoring's own column no longer repeats Evaluation's
- *   fields, so collapsing Evaluation while Scoring is selected just means re-selecting it to look
- *   back. Selecting a collapsed column again re-expands it, same as the options column.
+ * - The Evaluation column (phase 3, Good/Bad plus the numeric ratings) expands once it holds
+ *   data, or whenever it's the selected column; otherwise it stays hidden or collapsed. Unlike
+ *   the options column, it does *not* collapse once Decision (phase 4) is selected — Decision
+ *   only shows a ranked picker for the options, not their evaluation detail, so `DecisionColumn`
+ *   relies on the Evaluation column staying visible (as a read-only reference, see
+ *   `EvaluationColumn`'s `reference` prop) alongside it instead of repeating that detail itself.
+ * - The Decision column (phase 4) is stricter: it only expands while selected — holding data
+ *   alone isn't enough — since comparing/choosing between options is only relevant while that
+ *   phase is actively in focus; once you move away from it, it collapses to a sliver like
+ *   everything else, rather than lingering open.
  * - The selected column, if visible, is always "primary"; every other expanded column is
- *   "secondary".
+ *   "secondary". `BoardLayout` gives the Evaluation column primary-equivalent width, not the
+ *   usual smaller "secondary" share, specifically while it's shown secondary alongside Decision
+ *   — see the comment there.
  */
 export function computeColumnLayout(
   selectedPhase: Phase,
@@ -53,17 +53,11 @@ export function computeColumnLayout(
       continue
     }
 
-    // Once a column's content is inlined into a later, selected column, it collapses even if it
-    // has its own data — the data is still visible, just in the later column instead.
-    const inlinedElsewhere =
-      (number === 3 && selectedNumber >= 4) || (number === 4 && selectedNumber >= 5)
-
     const expanded =
-      !inlinedElsewhere &&
-      (number === 1 ||
-        isSelected ||
-        (number === 2 && selectedNumber <= 2) ||
-        (number >= 3 && number <= 4 && hasData[key]))
+      number === 1 ||
+      isSelected ||
+      (number === 2 && selectedNumber <= 2) ||
+      (number === 3 && hasData[key])
 
     layout[key] = !expanded ? 'collapsed' : isSelected ? 'primary' : 'secondary'
   }

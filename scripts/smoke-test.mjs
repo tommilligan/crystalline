@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// Drives Crystal Ball's full five-phase board flow (Situation -> Options -> Evaluation ->
-// Scoring -> Decision -> Sign) in a headless browser, end to end, against a running instance —
+// Drives Crystal Ball's full four-phase board flow (Situation -> Options -> Evaluation ->
+// Decision -> Sign) in a headless browser, end to end, against a running instance —
 // the "does the app actually work" check that unit tests and `tsc` can't give you. Run via
 // `scripts/run-app.sh`, which starts the dev servers first; or point it at any already-running
 // instance: `node scripts/smoke-test.mjs http://localhost:5173`.
@@ -96,58 +96,51 @@ async function main() {
       await page.getByRole('button', { name: 'Next >' }).click()
     })
 
-    await step('phase 3 — evaluation', async () => {
-      await fillEditor(0, 'Fast to set up')
-      await fillEditor(1, 'Costs overtime budget')
-      await page.getByRole('button', { name: 'Next >' }).click() // advance to option 2's walkthrough step
-      await fillEditor(0, 'Scales well')
-      await fillEditor(1, 'Slow to roll out')
-      await page.getByRole('button', { name: 'Next >' }).click() // advance to phase 4
-    })
-
     const scores = [
       [3, 3, 3, 4, 4, 4], // option 1: totals 21
       [5, 5, 5, 5, 5, 5], // option 2: totals 30
     ]
-    await step('phase 4 — scoring', async () => {
-      const body = await page.locator('body').innerText()
-      await assert(
-        !body.includes('Fast to set up') && !body.includes('Costs overtime budget'),
-        'Scoring column should not inline the (now-collapsed) Evaluation column\'s Good/Bad fields — just scoring',
-      )
-      for (const [optionIndex, values] of scores.entries()) {
-        for (const [dimIndex, dim] of SCORE_DIMENSIONS.entries()) {
-          await page
-            .getByRole('button', { name: `${dim}: ${values[dimIndex]}` })
-            .first()
-            .click()
-        }
-        if (optionIndex < scores.length - 1) {
-          await page.getByRole('button', { name: 'Next >' }).click() // advance walkthrough
-        }
+    await step('phase 3 — evaluation (good/bad + ratings, merged)', async () => {
+      // Option 1's walkthrough step: Good/Bad text plus every rating property, side by side —
+      // both now live in the same accordion panel (the columns 3+4 merge).
+      await fillEditor(0, 'Fast to set up')
+      await fillEditor(1, 'Costs overtime budget')
+      for (const [dimIndex, dim] of SCORE_DIMENSIONS.entries()) {
+        await page.getByRole('button', { name: `${dim}: ${scores[0][dimIndex]}` }).first().click()
       }
-      await page.getByRole('button', { name: 'Next >' }).click() // advance to phase 5
+      await page.getByRole('button', { name: 'Next >' }).click() // advance to option 2's walkthrough step
+
+      await fillEditor(0, 'Scales well')
+      await fillEditor(1, 'Slow to roll out')
+      for (const [dimIndex, dim] of SCORE_DIMENSIONS.entries()) {
+        await page.getByRole('button', { name: `${dim}: ${scores[1][dimIndex]}` }).first().click()
+      }
+      await page.getByRole('button', { name: 'Next >' }).click() // advance to phase 4
     })
 
-    await step('phase 5 — decision summary', async () => {
-      const body = await page.locator('body').innerText()
-      await assert(body.includes('Summary of options'), 'Decision column should show its summary section')
-      await assert(body.includes('30 points') && body.includes('21 points'), 'each option should show its total points')
-      const automateIndex = body.indexOf('Automate the OD test intake queue')
-      const hireIndex = body.indexOf('Hire a temp QC technician')
+    await step('phase 4 — decision leaderboard', async () => {
+      const leaderboard = page.getByTestId('decision-leaderboard')
+      await assert(await page.getByText('Ranking leaderboard').isVisible(), 'Decision column should show its ranking leaderboard')
+      const leaderboardText = await leaderboard.innerText()
+      await assert(
+        leaderboardText.includes('30 pts') && leaderboardText.includes('21 pts'),
+        'each option should show its total points',
+      )
+      const automateIndex = leaderboardText.indexOf('Automate the OD test intake queue')
+      const hireIndex = leaderboardText.indexOf('Hire a temp QC technician')
       await assert(
         automateIndex >= 0 && hireIndex >= 0 && automateIndex < hireIndex,
-        'higher-scoring option (30 points) should be listed above the lower-scoring one (21 points)',
+        'higher-scoring option (30 pts) should be listed above the lower-scoring one (21 pts)',
       )
+      const body = await page.locator('body').innerText()
       await assert(
         body.includes('Scales well') && body.includes('Fast to set up'),
-        'Decision summary should inline each option\'s Evaluation fields',
+        'the Evaluation column should stay visible as a read-only reference alongside Decision, showing each option\'s Good/Bad',
       )
     })
 
     await step('decision — choose, countermeasure, sign', async () => {
-      await page.getByRole('combobox', { name: 'Chosen option' }).click()
-      await page.getByRole('option', { name: 'Automate the OD test intake queue' }).click()
+      await page.getByRole('button', { name: 'Select Automate the OD test intake queue' }).click()
       await fillEditor(0, 'Provision the automation budget ahead of rollout.')
       await page.getByPlaceholder('e.g. Write an RFC').fill('Kick off automation pilot')
       await page.getByLabel('Owner').fill('Priya')

@@ -75,10 +75,22 @@ export function BoardLayout({
           <div style={{ display: 'flex', gap: 'var(--mantine-spacing-md)', alignItems: 'stretch' }}>
             {rowPhases.map((phase) => {
               const state = layout[phase.key] as Exclude<ColumnLayoutState, 'hidden'>
+              // The Evaluation column stays expanded (not collapsed to a sliver) once Decision
+              // is selected, as a read-only reference alongside it — see `columnLayout.ts`. It
+              // gets the same width as Decision there, not the usual smaller "secondary" share,
+              // since the two are meant to be compared side by side rather than one dominating.
+              const isEvaluationReference =
+                phase.key === 'evaluation' && currentPhase === 'decision'
+              const grow =
+                state === 'secondary' && isEvaluationReference
+                  ? FLEX_GROW.primary
+                  : state !== 'collapsed'
+                    ? FLEX_GROW[state]
+                    : undefined
               const style =
                 state === 'collapsed'
                   ? { flex: `0 0 ${COLLAPSED_WIDTH}px` }
-                  : { flex: `${FLEX_GROW[state]} 1 0%`, minWidth: 0 }
+                  : { flex: `${grow} 1 0%`, minWidth: 0 }
               return (
                 <div key={phase.key} style={style}>
                   <BoardColumnShell
@@ -87,6 +99,7 @@ export function BoardLayout({
                     isWide={isWide}
                     onFocus={() => onFocusPhase(phase.key)}
                     headerAction={headerActions?.[phase.key]}
+                    neverDim={isEvaluationReference}
                   >
                     {columns[phase.key]}
                   </BoardColumnShell>
@@ -112,6 +125,7 @@ export function BoardLayout({
               isWide={isWide}
               onFocus={() => onFocusPhase(phase.key)}
               headerAction={headerActions?.[phase.key]}
+              neverDim={phase.key === 'evaluation' && currentPhase === 'decision'}
             >
               {columns[phase.key]}
             </BoardColumnShell>

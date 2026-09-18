@@ -42,8 +42,7 @@ export function useColumnHasData(
   return {
     situation: situationText !== '',
     ideation: options.length > 0,
-    evaluation: hasEvaluationText,
-    scoring: hasScores,
+    evaluation: hasEvaluationText || hasScores,
     decision: hasDecisionFields || hasDecisionText,
   }
 }

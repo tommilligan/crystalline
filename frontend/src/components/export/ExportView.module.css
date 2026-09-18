@@ -1,0 +1,48 @@
+.page {
+  background: var(--mantine-color-gray-1);
+  min-height: 100vh;
+  padding: 24px 0 48px;
+}
+
+.toolbar {
+  width: 210mm;
+  max-width: 100%;
+  margin: 0 auto 16px;
+  padding: 0 16px;
+}
+
+.sheet {
+  background: white;
+  color: black;
+  width: 210mm;
+  max-width: 100%;
+  min-height: 297mm;
+  margin: 0 auto;
+  padding: 18mm;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.15);
+}
+
+@media print {
+  .page {
+    background: none;
+    padding: 0;
+    min-height: 0;
+  }
+
+  .noPrint {
+    display: none;
+  }
+
+  .sheet {
+    box-shadow: none;
+    width: auto;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+@page {
+  size: A4;
+  margin: 18mm;
+}

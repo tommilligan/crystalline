@@ -2,12 +2,10 @@ import { ActionIcon, Box, Group, Stack, Text, ThemeIcon, Title } from '@mantine/
 import { IconCheck, IconX } from '@tabler/icons-react'
 import { useSetScore } from '../../../hooks/useBoardMutations'
 import { useFragmentPlainText } from '../../../liveblocks-yjs/useFragmentPlainText'
-import type { OptionData, ScoreDimension } from '../../../types/board'
-import { optionBlockerField, optionEnablerField, SCORE_DIMENSIONS } from '../../../types/board'
+import type { OptionData, RatingProperty } from '../../../types/board'
+import { optionBlockerField, optionEnablerField } from '../../../types/board'
 import { CollaborativeTextField } from '../../editor/CollaborativeTextField'
 
-const COST_DIMENSIONS = SCORE_DIMENSIONS.slice(0, 3)
-const BENEFIT_DIMENSIONS = SCORE_DIMENSIONS.slice(3)
 const SCORE_VALUES = [1, 2, 3, 4, 5] as const
 const SCORE_BUTTON_SIZE = 20
 // Buttons overlap by 1px of shared border (split-button join, see Mantine's SplitButton
@@ -18,18 +16,11 @@ function ScoreButtons({
   value,
   dimensionLabel,
   disabled,
-  readOnly,
   onChange,
 }: {
   value: number | null
   dimensionLabel: string
   disabled?: boolean
-  /** Non-interactive but keeps the filled/default selected-vs-not styling intact — unlike
-   * Mantine's own `disabled` styling, which repaints every button the same flat grey and so
-   * hides which value was picked. For read-only reference views (the Decision column's summary,
-   * an inlined-elsewhere column) that visibility is the entire point of showing the buttons at
-   * all, so they use `readOnly` instead of `disabled`. */
-  readOnly?: boolean
   onChange: (value: number) => void
 }) {
   return (
@@ -47,8 +38,7 @@ function ScoreButtons({
             disabled={disabled}
             aria-label={`${dimensionLabel}: ${n}`}
             title={`${dimensionLabel}: ${n}`}
-            onClick={readOnly ? undefined : () => onChange(n)}
-            tabIndex={readOnly ? -1 : undefined}
+            onClick={() => onChange(n)}
             style={{
               borderTopLeftRadius: isFirst ? 'var(--mantine-radius-sm)' : 0,
               borderBottomLeftRadius: isFirst ? 'var(--mantine-radius-sm)' : 0,
@@ -57,8 +47,6 @@ function ScoreButtons({
               marginLeft: isFirst ? 0 : -1,
               position: 'relative',
               zIndex: isSelected ? 1 : 0,
-              cursor: readOnly ? 'default' : undefined,
-              pointerEvents: readOnly ? 'none' : undefined,
             }}
           >
             <Text size="xs" fw={700} style={{ fontSize: 10 }}>
@@ -71,98 +59,53 @@ function ScoreButtons({
   )
 }
 
-function ScaleHint({ lowLabel, highLabel }: { lowLabel: string; highLabel: string }) {
+function ScaleHint() {
   return (
     <Group justify="space-between" wrap="nowrap" style={{ width: SCORE_BUTTONS_WIDTH }}>
       <Text size="xs" c="dimmed" fw={700} tt="uppercase" style={{ fontSize: 9 }}>
-        {lowLabel}
+        Bad
       </Text>
       <Text size="xs" c="dimmed" fw={700} tt="uppercase" style={{ fontSize: 9 }}>
-        {highLabel}
+        Good
       </Text>
     </Group>
   )
 }
 
-function DimensionRow({
-  dimension,
+function RatingRow({
+  property,
   option,
   disabled,
-  readOnly,
   setScore,
 }: {
-  dimension: (typeof SCORE_DIMENSIONS)[number]
+  property: RatingProperty
   option: OptionData
   disabled?: boolean
-  readOnly?: boolean
   setScore: ReturnType<typeof useSetScore>
 }) {
-  const value = option.scores?.[dimension.key] ?? null
+  const value = option.scores?.[property.id] ?? null
   return (
     <Group justify="space-between" wrap="nowrap" gap="xs">
-      <Text size="xs" fw={600} style={{ flexShrink: 0 }}>
-        {dimension.label}
+      <Text size="xs" fw={600} truncate style={{ flex: 1, minWidth: 0 }}>
+        {property.label}
       </Text>
       <ScoreButtons
         value={value}
-        dimensionLabel={dimension.label}
+        dimensionLabel={property.label}
         disabled={disabled}
-        readOnly={readOnly}
-        onChange={(n) => setScore(option.id, dimension.key as ScoreDimension, n)}
+        onChange={(n) => setScore(option.id, property.id, n)}
       />
     </Group>
   )
 }
 
-function DimensionGroup({
-  groupLabel,
-  lowLabel,
-  highLabel,
-  dimensions,
-  option,
-  disabled,
-  readOnly,
-  setScore,
-}: {
-  groupLabel: string
-  lowLabel: string
-  highLabel: string
-  dimensions: readonly (typeof SCORE_DIMENSIONS)[number][]
-  option: OptionData
-  disabled?: boolean
-  readOnly?: boolean
-  setScore: ReturnType<typeof useSetScore>
-}) {
+/** A single option's Good/Bad enabler/blocker fields, stacked one above the other — this is
+ * "column one" of the Evaluation column's two-column per-option layout, "column two" being
+ * `RatingsFields`. Reused (always non-editable) wherever a later column inlines it instead of
+ * showing its own Evaluation column. */
+export function GoodBadFields({ option, disabled }: { option: OptionData; disabled?: boolean }) {
   return (
-    <div>
-      <Group justify="space-between" align="flex-end" wrap="nowrap" mb={4}>
-        <Title order={5} size="xs">
-          {groupLabel.toUpperCase()}
-        </Title>
-        <ScaleHint lowLabel={lowLabel} highLabel={highLabel} />
-      </Group>
-      <Stack gap={4}>
-        {dimensions.map((dimension) => (
-          <DimensionRow
-            key={dimension.key}
-            dimension={dimension}
-            option={option}
-            disabled={disabled}
-            readOnly={readOnly}
-            setScore={setScore}
-          />
-        ))}
-      </Stack>
-    </div>
-  )
-}
-
-/** A single option's Good/Bad enabler/blocker fields — the Evaluation column's own content,
- * reused (always non-editable) wherever a later column inlines it instead of showing its own
- * Evaluation column, per `columnLayout.ts`'s "collapse once inlined elsewhere" rule. */
-export function EvaluationFields({ option, disabled }: { option: OptionData; disabled?: boolean }) {
-  return (
-    <Group gap="xs" align="flex-start" grow wrap="nowrap">
+    <Stack gap="sm">
       <Box>
         <Group gap={6} mb={4}>
           <Title order={5} size="xs">
@@ -195,48 +138,44 @@ export function EvaluationFields({ option, disabled }: { option: OptionData; dis
           minRows={2}
         />
       </Box>
-    </Group>
+    </Stack>
   )
 }
 
-/** A single option's six-dimension cost/benefit scoring — the Scoring column's own content,
- * reused wherever a later column inlines it instead of showing its own Scoring column, per
- * `columnLayout.ts`'s "collapse once inlined elsewhere" rule. Pass `disabled` for the Scoring
- * column's own panel (genuinely un-editable, e.g. a signed board) and `readOnly` for a pure
- * reference view (the Decision column's summary) — see `ScoreButtons` for why they differ. */
-export function ScoringFields({
+/** A single option's numeric ratings, one row per configured property, stacked in a single
+ * column — "column two" of the Evaluation column's per-option layout, alongside `GoodBadFields`. */
+export function RatingsFields({
   option,
+  properties,
   disabled,
-  readOnly,
 }: {
   option: OptionData
+  properties: readonly RatingProperty[]
   disabled?: boolean
-  readOnly?: boolean
 }) {
   const setScore = useSetScore()
+  if (properties.length === 0) {
+    return (
+      <Text size="xs" c="dimmed">
+        No rating properties configured — add some above.
+      </Text>
+    )
+  }
   return (
-    <Group gap="lg" align="flex-start" grow wrap="wrap">
-      <DimensionGroup
-        groupLabel="Costs"
-        lowLabel="Expensive"
-        highLabel="Cheap"
-        dimensions={COST_DIMENSIONS}
-        option={option}
-        disabled={disabled}
-        readOnly={readOnly}
-        setScore={setScore}
-      />
-      <DimensionGroup
-        groupLabel="Benefits"
-        lowLabel="Poor"
-        highLabel="Good"
-        dimensions={BENEFIT_DIMENSIONS}
-        option={option}
-        disabled={disabled}
-        readOnly={readOnly}
-        setScore={setScore}
-      />
-    </Group>
+    <Stack gap={6}>
+      <Group justify="flex-end">
+        <ScaleHint />
+      </Group>
+      {properties.map((property) => (
+        <RatingRow
+          key={property.id}
+          property={property}
+          option={option}
+          disabled={disabled}
+          setScore={setScore}
+        />
+      ))}
+    </Stack>
   )
 }
 
@@ -261,17 +200,11 @@ function SummaryDots({ value }: { value: number | null }) {
   )
 }
 
-function SummaryDimensionRow({
-  dimension,
-  value,
-}: {
-  dimension: (typeof SCORE_DIMENSIONS)[number]
-  value: number | null
-}) {
+function RatingSummaryRow({ property, value }: { property: RatingProperty; value: number | null }) {
   return (
     <Group justify="space-between" wrap="nowrap" gap="xs">
-      <Text size="xs" fw={600} style={{ flexShrink: 0 }}>
-        {dimension.label}
+      <Text size="xs" fw={600} truncate style={{ flex: 1, minWidth: 0 }}>
+        {property.label}
       </Text>
       <Group gap={6} wrap="nowrap">
         <SummaryDots value={value} />
@@ -283,42 +216,16 @@ function SummaryDimensionRow({
   )
 }
 
-function SummaryDimensionGroup({
-  groupLabel,
-  dimensions,
-  option,
-}: {
-  groupLabel: string
-  dimensions: readonly (typeof SCORE_DIMENSIONS)[number][]
-  option: OptionData
-}) {
-  return (
-    <div>
-      <Title order={5} size="xs" mb={4}>
-        {groupLabel.toUpperCase()}
-      </Title>
-      <Stack gap={4}>
-        {dimensions.map((dimension) => (
-          <SummaryDimensionRow
-            key={dimension.key}
-            dimension={dimension}
-            value={option.scores?.[dimension.key] ?? null}
-          />
-        ))}
-      </Stack>
-    </div>
-  )
-}
-
 /** Plain, non-interactive readout of an option's Good/Bad evaluation — for pure reference views
- * (the Decision column's summary, the printable export) where there's nothing to edit and the
- * `CollaborativeTextField` editor chrome `EvaluationFields` renders would only get in the way.
- * Reads the same Yjs fragments `EvaluationFields` edits, just as plain text. */
-export function EvaluationSummary({ option }: { option: OptionData }) {
+ * (the Decision column's read-only reference copy of Evaluation, the printable export) where
+ * there's nothing to edit and the `CollaborativeTextField` editor chrome `GoodBadFields` renders
+ * would only get in the way. Reads the same Yjs fragments `GoodBadFields` edits, just as plain
+ * text. */
+export function GoodBadSummary({ option }: { option: OptionData }) {
   const enablerText = useFragmentPlainText(optionEnablerField(option.id))
   const blockerText = useFragmentPlainText(optionBlockerField(option.id))
   return (
-    <Group gap="xs" align="flex-start" grow wrap="nowrap">
+    <Stack gap="sm">
       <Box>
         <Group gap={6} mb={4}>
           <Title order={5} size="xs">
@@ -345,23 +252,75 @@ export function EvaluationSummary({ option }: { option: OptionData }) {
           {blockerText || 'Nothing noted'}
         </Text>
       </Box>
+    </Stack>
+  )
+}
+
+/** Plain, non-interactive readout of an option's numeric ratings — the counterpart to
+ * `GoodBadSummary` for the same pure-reference views. Dots give an at-a-glance shape without
+ * relying on color alone; the number is always printed alongside them too, so this also holds up
+ * in print/export where color may not render or be legible. */
+export function RatingsSummary({
+  option,
+  properties,
+}: {
+  option: OptionData
+  properties: readonly RatingProperty[]
+}) {
+  if (properties.length === 0) {
+    return (
+      <Text size="xs" c="dimmed">
+        No rating properties configured.
+      </Text>
+    )
+  }
+  return (
+    <Stack gap={6}>
+      {properties.map((property) => (
+        <RatingSummaryRow
+          key={property.id}
+          property={property}
+          value={option.scores?.[property.id] ?? null}
+        />
+      ))}
+    </Stack>
+  )
+}
+
+/** The Evaluation column's full per-option body: Good/Bad stacked in one column, all numeric
+ * ratings stacked in the other, side by side. Shared between the editable walkthrough
+ * (`EvaluationColumn`) and the read-only reference/export views below. */
+export function EvaluationBody({
+  option,
+  properties,
+  disabled,
+}: {
+  option: OptionData
+  properties: readonly RatingProperty[]
+  disabled?: boolean
+}) {
+  return (
+    <Group align="flex-start" gap="lg" grow wrap="wrap">
+      <GoodBadFields option={option} disabled={disabled} />
+      <RatingsFields option={option} properties={properties} disabled={disabled} />
     </Group>
   )
 }
 
-/** Plain, non-interactive readout of an option's six-dimension scoring — the counterpart to
- * `EvaluationSummary` for the same pure-reference views. Dots give an at-a-glance shape without
- * relying on color alone; the number is always printed alongside them too, so this also holds up
- * in print/export where color may not render or be legible. */
-export function ScoringSummary({ option }: { option: OptionData }) {
+/** The read-only counterpart to `EvaluationBody` — same two-column layout, plain text and dots
+ * instead of editable fields. Used by `EvaluationColumn`'s reference view (once Decision is
+ * selected) and by the printable export. */
+export function EvaluationSummaryBody({
+  option,
+  properties,
+}: {
+  option: OptionData
+  properties: readonly RatingProperty[]
+}) {
   return (
-    <Group gap="lg" align="flex-start" grow wrap="wrap">
-      <SummaryDimensionGroup groupLabel="Costs" dimensions={COST_DIMENSIONS} option={option} />
-      <SummaryDimensionGroup
-        groupLabel="Benefits"
-        dimensions={BENEFIT_DIMENSIONS}
-        option={option}
-      />
+    <Group align="flex-start" gap="lg" grow wrap="wrap">
+      <GoodBadSummary option={option} />
+      <RatingsSummary option={option} properties={properties} />
     </Group>
   )
 }

@@ -1,11 +1,9 @@
 import { Stack, Text, ThemeIcon } from '@mantine/core'
 import { IconQuestionMark } from '@tabler/icons-react'
 
-/** Shared empty state for Evaluation/Costs-Benefits when no options exist yet — nudges toward
+/** Shared empty state for the Evaluation column when no options exist yet — nudges toward
  * adding options first without blocking a facilitator who wants to jump in anyway (see
- * `docs/mvp-scope.md`: phases are never locked). Standardised across both columns: same icon,
- * same title, same action text, since there's nothing column-specific to say until options
- * exist. */
+ * `docs/mvp-scope.md`: phases are never locked). */
 export function EmptyColumnState() {
   return (
     <Stack align="center" gap="xs" py="md">

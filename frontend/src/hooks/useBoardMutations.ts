@@ -1,6 +1,6 @@
 import { LiveObject } from '@liveblocks/client'
 import { useMutation } from '../liveblocks.config'
-import type { ScoreDimension, ScoreSet } from '../types/board'
+import type { ScoreSet } from '../types/board'
 
 /**
  * These mutations mirror the event types in `docs/event-schema.md` (idea_added,
@@ -41,11 +41,40 @@ export function useRemoveIdea() {
 }
 
 export function useSetScore() {
-  return useMutation(({ storage }, optionId: string, dimension: ScoreDimension, value: number) => {
+  return useMutation(({ storage }, optionId: string, propertyId: string, value: number) => {
     const option = storage.get('options').find((item) => item.get('id') === optionId)
     if (!option) return
     const current: ScoreSet = option.get('scores') ?? {}
-    option.set('scores', { ...current, [dimension]: value })
+    option.set('scores', { ...current, [propertyId]: value })
+  }, [])
+}
+
+/** Adds a new rating property to the end of the board's shared property list — see
+ * `RatingPropertiesPicker`. */
+export function useAddRatingProperty() {
+  return useMutation(({ storage }, label: string) => {
+    const id = crypto.randomUUID()
+    storage.get('ratingProperties').push(new LiveObject({ id, label }))
+    return id
+  }, [])
+}
+
+/** Removes a rating property. Any scores already recorded against it are left in place on each
+ * option (see `ScoreSet`'s doc comment) — they simply stop counting once the property is gone. */
+export function useRemoveRatingProperty() {
+  return useMutation(({ storage }, propertyId: string) => {
+    const properties = storage.get('ratingProperties')
+    const index = properties.findIndex((property) => property.get('id') === propertyId)
+    if (index !== -1) {
+      properties.delete(index)
+    }
+  }, [])
+}
+
+export function useRenameRatingProperty() {
+  return useMutation(({ storage }, propertyId: string, label: string) => {
+    const property = storage.get('ratingProperties').find((item) => item.get('id') === propertyId)
+    property?.set('label', label)
   }, [])
 }
 
