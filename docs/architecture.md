@@ -2,7 +2,7 @@
 
 How Crystal Ball is actually built, as of the current codebase. This describes the
 **implementation** — for the original methodology and design rationale, see the docs linked
-from `README.md`. Several of those docs describe decisions that were later superseded during
+from `docs/README.md`. Several of those docs describe decisions that were later superseded during
 implementation; see "Divergences from the spec docs" at the end of this file.
 
 ## Repo shape
@@ -13,7 +13,7 @@ An npm workspaces monorepo:
 frontend/         React 19 + Vite SPA (Mantine UI) — the whole product surface
 backend/          Express API — room lifecycle + Liveblocks auth, nothing else
 packages/shared/  Types/validation shared across the frontend/backend boundary
-docs/             Spec + research docs (see README.md's reading order)
+docs/             Spec + research docs (see docs/README.md's reading order)
 design/           Early visual-design brief (Figma prompt + first-pass screenshot)
 scripts/          run-app.sh (dev servers + smoke test) and smoke-test.mjs (Playwright)
 assets/           The original physical-whiteboard example this tool is modeled on
@@ -124,7 +124,7 @@ per-browser id plus a display name/colour. What the backend actually guards:
 
 ## Divergences from the spec docs
 
-The docs linked from `README.md` capture the original design and its reasoning, and are still
+The docs linked from `docs/README.md` capture the original design and its reasoning, and are still
 the right place to understand *why* the tool works the way it does. But a few things were
 resolved differently once real implementation started, and those docs haven't been rewritten to
 match (each affected doc has a short status note added at the top pointing here):

@@ -1,13 +1,14 @@
 {
   "name": "@crystalline/backend",
   "private": true,
+  "license": "MIT",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "tsx watch --env-file-if-exists=.env src/index.ts",
-    "build": "tsc",
+    "build": "tsc -b",
     "start": "node --env-file-if-exists=.env dist/index.js",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc -b",
     "manage-rooms": "tsx --env-file-if-exists=.env src/scripts/manage-rooms.ts"
   },
   "dependencies": {

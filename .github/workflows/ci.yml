@@ -1,0 +1,30 @@
+name: CI
+
+# Runs the same checks CLAUDE.md documents for local dev (lint, typecheck, build, frontend unit
+# tests) against every push and pull request, so a broken build/lint/typecheck can't land.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run lint
+
+      - run: npm run typecheck
+
+      - run: npm run build
+
+      - run: npm run test -w frontend

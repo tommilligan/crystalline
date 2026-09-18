@@ -7,6 +7,7 @@ node_modules
 dist
 dist-ssr
 *.local
+*.tsbuildinfo
 coverage
 
 # Environment variables (Liveblocks keys, etc). Keep each .env.example checked in as the template.

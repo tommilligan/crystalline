@@ -1,30 +1,57 @@
-# Crystal Ball — Decision Making Framework
+# Crystal Ball
 
-A structured, single-page decision-making tool for teams, inspired by Dr. Edward de Bono's
-*Six Thinking Hats*. Crystal Ball enforces sequential, single-mode thinking — separating
-problem framing, idea generation, evaluation, scoring, and decision-making into distinct
-phases — so that judgment is never applied before a team has finished generating options.
+A structured, single-page decision-making tool for teams, based on Dr. Edward de Bono's *Six
+Thinking Hats*.
 
-This repository contains both the **design spec** for the tool and a working MVP web
-implementation (React/Vite frontend, Express backend, Liveblocks-backed multiplayer board),
-originally used as a physical whiteboard exercise (see `assets/original-whiteboard-example.png`
-for a real worked example: a pharma/QC team deciding what to do with OD test samples).
+[![CI](https://github.com/tommilligan/crystalline/actions/workflows/ci.yml/badge.svg)](https://github.com/tommilligan/crystalline/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-## Start here
+![The original physical whiteboard this tool is modeled on: a pharma/QC team's worked example deciding what to do with OD test samples](assets/original-whiteboard-example.png)
 
-1. [`docs/architecture.md`](docs/architecture.md) — how the current implementation is built, and
-   where it diverged from the spec docs below during development
-2. [`docs/concept.md`](docs/concept.md) — what the tool is and the methodology, for anyone unfamiliar with the original whiteboard exercise
-3. [`docs/personas.md`](docs/personas.md) — who uses this and what they each need
-4. [`docs/phases.md`](docs/phases.md) — the phase lifecycle and navigation model (original design)
-5. [`docs/data-model.md`](docs/data-model.md) — entities, board states, scoring (original design)
-6. [`docs/event-schema.md`](docs/event-schema.md) — the originally-planned event-sourced state model, since superseded — see `docs/architecture.md`
-7. [`docs/mvp-scope.md`](docs/mvp-scope.md) — original in/out scope for v1, and the resolved open design questions
-8. [`docs/ui-notes.md`](docs/ui-notes.md) — interaction points and layout notes from the original design
+## What is this
+
+Crystal Ball enforces sequential, single-mode thinking — separating problem framing, idea
+generation, evaluation, scoring, and decision-making into distinct phases — so that judgment is
+never applied before a team has finished generating options. It started life as a physical
+whiteboard exercise (see the worked example above) and this repo turns it into a real-time
+collaborative web app: a React/Vite frontend, an Express backend, and a Liveblocks-backed
+multiplayer board. See [`docs/concept.md`](docs/concept.md) for the full methodology.
 
 ## Origin
 
-Crystal Ball was developed by the tool's author over 10 years ago after reading *Six Thinking
-Hats* by Dr. de Bono. The core discipline it encodes: **develop the problem statement as a team
-first, generate ideas next while suspending all judgement, and only then move on to evaluating,
-scoring, and deciding.**
+The Crystal Ball exercise — this specific interpretation of Dr. de Bono's *Six Thinking Hats* —
+was created by **Bob Darius**, while at GSK/Sanofi, as a physical whiteboard exercise he ran with
+his own team. He wrote about it in a
+[LinkedIn post](https://www.linkedin.com/posts/activity-7305992104365678592-QWPq). That post,
+and the worked example above, are what directly inspired this project.
+
+The software implementation in this repository was built afterward, as an interpretation of that
+exercise into a real-time collaborative tool — it is not the original methodology, just a way to
+run it online.
+
+## Getting started
+
+```
+npm install
+```
+
+The backend needs a Liveblocks secret key. Copy `backend/.env.example` to `backend/.env` and
+fill in `LIVEBLOCKS_SECRET_KEY` with a real key from your
+[Liveblocks dashboard](https://liveblocks.io/dashboard/apiKeys).
+
+```
+npm run dev
+```
+
+This runs the frontend and backend dev servers concurrently. See
+[`docs/architecture.md`](docs/architecture.md)'s "Testing & dev workflow" section for other
+scripts (typecheck, build, lint, tests, and the full-browser smoke test).
+
+## Documentation
+
+[`docs/README.md`](docs/README.md) is the design-spec and architecture reading order — start
+there for how the tool works and how the implementation is put together.
+
+## License
+
+MIT — see [LICENSE](LICENSE).

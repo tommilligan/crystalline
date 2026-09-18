@@ -4,7 +4,7 @@
 de Bono's *Six Thinking Hats*: separate phases for framing, idea generation, evaluation, and
 deciding, so judgment never contaminates idea generation.
 
-This repo holds both the **design spec** (`docs/`, `README.md`'s reading order) and a **working
+This repo holds both the **design spec** (`docs/`, `docs/README.md`'s reading order) and a **working
 implementation** — an npm workspaces monorepo with a React/Vite frontend, an Express backend,
 and a Liveblocks-backed multiplayer board. Read `docs/architecture.md` first for how the code is
 actually built; it also lists where the implementation diverged from the original spec docs
@@ -16,7 +16,7 @@ during development.
 frontend/         React 19 + Vite + Mantine SPA — the whole product surface
 backend/          Express API — room lifecycle + Liveblocks auth token minting
 packages/shared/  Types/validation shared across the frontend/backend boundary
-docs/             Spec + architecture + research docs — see README.md
+docs/             Spec + architecture + research docs — see docs/README.md
 design/           Early visual-design brief (Figma prompt + screenshot)
 scripts/          run-app.sh (dev + smoke test), smoke-test.mjs (Playwright)
 assets/           Original physical-whiteboard example the tool is modeled on
@@ -76,7 +76,7 @@ client-routing fallback).
 - Full stack, not spec-only: there's a real build/test/lint setup now (see "Dev workflow"
   above) — use it rather than eyeballing changes.
 - When adding new research/investigation docs, follow the existing pattern: descriptive
-  kebab-case filename in `docs/`, linked from README's "Start here" list if it's core spec, or
+  kebab-case filename in `docs/`, linked from `docs/README.md`'s reading order if it's core spec, or
   left as a standalone research note otherwise.
 - The spec docs above describe the *original* design and its reasoning, and are still the right
   place for *why* — but several no longer describe what's shipped. Don't treat them as ground

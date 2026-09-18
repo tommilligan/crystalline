@@ -1,5 +1,12 @@
 {
   "name": "crystalline",
+  "description": "Crystal Ball — a real-time collaborative team decision-making tool based on de Bono's Six Thinking Hats.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tommilligan/crystalline.git"
+  },
+  "homepage": "https://github.com/tommilligan/crystalline#readme",
   "private": true,
   "type": "module",
   "workspaces": [
@@ -9,9 +16,9 @@
   ],
   "scripts": {
     "dev": "concurrently -n frontend,backend -c blue,green \"npm run dev -w frontend\" \"npm run dev -w backend\"",
-    "build": "npm run build -w packages/shared && npm run build -w backend && npm run build -w frontend",
-    "build:static": "npm run build -w packages/shared && npm run build -w frontend",
-    "typecheck": "npm run typecheck -w packages/shared && npm run typecheck -w backend && npm run typecheck -w frontend",
+    "build": "tsc -b && npm run build -w frontend",
+    "build:static": "tsc -b frontend && npm run build -w frontend",
+    "typecheck": "tsc -b",
     "lint": "biome check .",
     "format": "biome format --write ."
   },
