@@ -1,5 +1,9 @@
 # UI / Interaction Notes
 
+> **Status:** this describes the original design. Notably, export is an HTML/print route rather
+> than a PNG capture, and Evaluation/Scoring are one column, not two — see
+> `docs/architecture.md`.
+
 Visual design (colour, typography, spacing) is deferred to whichever UX framework is chosen for
 implementation. This doc covers **interaction points and layout structure only** — the things
 that would still be true regardless of which component library ends up rendering them.

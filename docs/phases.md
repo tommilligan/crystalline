@@ -1,5 +1,9 @@
 # Phase Lifecycle
 
+> **Status:** this describes the original 5-phase design. The implementation merges `evaluation`
+> and `scoring` into a single `evaluation` phase, and phase focus is plain per-viewer React
+> state rather than derived from an event log — see `docs/architecture.md`.
+
 ## Phases
 
 1. `situation`

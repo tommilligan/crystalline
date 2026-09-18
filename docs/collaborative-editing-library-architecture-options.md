@@ -1,5 +1,8 @@
 # Collaborative Editing — Library & Architecture Options
 
+> **Status:** this research led to the stack actually implemented — Liveblocks + Yjs + TipTap.
+> See `docs/architecture.md` for how it's wired up.
+
 A comparison of abstract libraries, managed services, and self-hosted backends for building a structured, real-time collaborative webapp. Written as a companion to the Excalidraw research notes — the goal is to identify what to adopt rather than reimplementing Excalidraw's hand-rolled approach.
 
 ---

@@ -1,5 +1,10 @@
 # Event Schema
 
+> **Status:** this describes the originally-planned design. The implementation mutates
+> Liveblocks Storage directly instead of an append-only event log — see `docs/architecture.md`'s
+> "Divergences from the spec docs" and the doc comment at the top of
+> `frontend/src/hooks/useBoardMutations.ts`.
+
 ## Why event-sourced, even for a single-user MVP
 
 The board's visible state is always a **fold/reduction over an append-only event log**, rather
