@@ -1,0 +1,86 @@
+name: Deploy static frontend to GitHub Pages
+
+# Crystal Ball's production deployment is just the compiled frontend static assets — see
+# docs/architecture.md and docs/local-first-mode-plan.md ("Sharable mode is dev-only for now,
+# not offered in production"). The build itself is entirely host-agnostic (`npm run
+# build:static`, parameterized by a CRYSTALLINE_BASE_PATH env var — see frontend/vite.config.ts);
+# this workflow is the thin GitHub-specific layer that hands that build to GitHub Pages.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  # actions/deploy-pages authenticates to GitHub Pages with a short-lived OIDC token it requests
+  # using this permission, instead of a long-lived secret — no PAT to create, rotate, or leak.
+  id-token: write
+
+# Only one Pages deployment at a time; let an in-flight one finish rather than cancelling it,
+# since cancelling mid-deploy can leave Pages serving a half-published site.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # Resolves the correct base URL for this Pages site (project page subpath, org/user root
+      # site, or a custom domain) — nothing here needs to know the repo name.
+      - name: Configure GitHub Pages
+        id: pages
+        uses: actions/configure-pages@v5
+
+      # `configure-pages`'s `base_url` output is the right origin+path for this site, but isn't
+      # guaranteed to end in `/` (e.g. a project page's is `https://user.github.io/repo`, no
+      # trailing slash) — CRYSTALLINE_BASE_PATH must always be a full absolute URL with a
+      # trailing slash (see frontend/vite.config.ts), so normalize it here rather than relying on
+      # every consumer to defend against a missing one.
+      - name: Resolve CRYSTALLINE_BASE_PATH
+        id: base_path
+        run: |
+          url="${{ steps.pages.outputs.base_url }}"
+          [[ "$url" == */ ]] || url="$url/"
+          echo "value=$url" >> "$GITHUB_OUTPUT"
+
+      - run: npm ci
+
+      - name: Build static site
+        run: npm run build:static
+        env:
+          CRYSTALLINE_BASE_PATH: ${{ steps.base_path.outputs.value }}
+
+      # GitHub Pages has no server-side rewrites, so a hard refresh/bookmark on a client-routed
+      # path (e.g. /board/abc123) would 404. Serving the same SPA shell as the 404 page lets
+      # BrowserRouter take over client-side once it loads. See rafgraph/spa-github-pages.
+      - name: Add SPA fallback for client-side routing
+        run: cp frontend/dist/index.html frontend/dist/404.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: frontend/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      # Not a circular reference: GitHub Actions special-cases `environment.url` on a deployment
+      # job to allow referencing that same job's own step outputs, evaluating it once the
+      # `deployment` step below has actually run and produced `page_url`. This is the standard
+      # pattern from GitHub's own actions/deploy-pages usage examples.
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

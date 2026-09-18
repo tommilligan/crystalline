@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "concurrently -n frontend,backend -c blue,green \"npm run dev -w frontend\" \"npm run dev -w backend\"",
     "build": "npm run build -w packages/shared && npm run build -w backend && npm run build -w frontend",
+    "build:static": "npm run build -w packages/shared && npm run build -w frontend",
     "typecheck": "npm run typecheck -w packages/shared && npm run typecheck -w backend && npm run typecheck -w frontend",
     "lint": "biome check .",
     "format": "biome format --write ."

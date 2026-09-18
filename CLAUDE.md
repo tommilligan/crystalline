@@ -38,6 +38,19 @@ assets/           Original physical-whiteboard example the tool is modeled on
   other than the defaults (e.g. `BACKEND_PORT=4100 FRONTEND_PORT=5273 scripts/run-app.sh`) so it
   can't collide with a developer's own already-running `npm run dev`.
 
+## Deployment
+
+Production is local-only mode (no backend involved — see `docs/local-first-mode-plan.md`), so
+deployment is just static frontend assets. `npm run build:static` (root) builds `packages/shared`
++ `frontend` only and is host-agnostic: set `CRYSTALLINE_BASE_PATH` to the full absolute URL
+(origin + path, trailing slash required) the build will be served from when it isn't the local dev
+server — it drives both Vite's asset `base` and `BrowserRouter`'s `basename`, see
+`frontend/vite.config.ts`. Defaults to `http://localhost:<FRONTEND_PORT>/`, so plain
+`npm run build:static` needs no env var at all. `.github/workflows/deploy-pages.yml` is the thin
+GitHub-specific layer that hands this build to GitHub Pages on push to `main` — see its comments
+for the SPA-on-Pages details (base URL resolution via `actions/configure-pages`, the `404.html`
+client-routing fallback).
+
 ## Doc overview
 
 - `docs/architecture.md` — **start here** for the current implementation: state model

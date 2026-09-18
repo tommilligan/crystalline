@@ -17,7 +17,7 @@ export function App({ queryClient = defaultQueryClient }: AppProps) {
     <MantineProvider theme={theme} defaultColorScheme="auto">
       <Notifications />
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
+        <BrowserRouter basename={import.meta.env.BASE_URL}>
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/board/:boardId" element={<BoardPage />} />
