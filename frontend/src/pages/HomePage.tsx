@@ -170,10 +170,7 @@ export function HomePage() {
           <Title order={2}>Your boards</Title>
           {isLoading && <Text c="dimmed">Loading…</Text>}
           {!isLoading && boards?.length === 0 && (
-            <Text c="dimmed">
-              No boards yet on this device. Boards opened elsewhere aren't listed here — share the
-              board link directly instead.
-            </Text>
+            <Text c="dimmed">No boards yet on this device.</Text>
           )}
           {boards && boards.length > 0 && (
             <Paper withBorder radius="md">
