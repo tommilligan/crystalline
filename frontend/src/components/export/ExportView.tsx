@@ -12,18 +12,13 @@ import {
   useNextStepsCommitted,
   useRankedOptions,
   useRatingProperties,
+  useSituationFragment,
 } from '../../hooks/useBoardState'
 import {
   useFragmentPlainText,
   useFragmentPlainTexts,
 } from '../../liveblocks-yjs/useFragmentPlainText'
-import {
-  COUNTERMEASURE_FIELD,
-  DISSENT_FIELD,
-  optionDisplayId,
-  optionTextField,
-  SITUATION_FIELD,
-} from '../../types/board'
+import { optionDisplayId } from '../../types/board'
 import { DecisionSummarySection } from './DecisionSummarySection'
 import classes from './ExportView.module.css'
 import { SituationSection } from './SituationSection'
@@ -36,7 +31,7 @@ import { SituationSection } from './SituationSection'
  * no PDF library or backend rendering step needed for a first cut. */
 export function ExportView({ boardId }: { boardId: string }) {
   const title = useBoardTitle()
-  const situationText = useFragmentPlainText(SITUATION_FIELD)
+  const situationText = useFragmentPlainText(useSituationFragment())
   const situationAgreed = useBoardSituationAgreed()
   const canonicalOptions = useBoardOptions()
   const rankedOptions = useRankedOptions()
@@ -45,14 +40,14 @@ export function ExportView({ boardId }: { boardId: string }) {
   const nextSteps = useNextSteps()
   const nextStepsCommitted = useNextStepsCommitted()
   const lifecycle = useBoardLifecycle()
-  const countermeasureText = useFragmentPlainText(COUNTERMEASURE_FIELD)
-  const dissentText = useFragmentPlainText(DISSENT_FIELD)
+  const countermeasureText = useFragmentPlainText(decision.countermeasureFragment)
+  const dissentText = useFragmentPlainText(decision.dissentFragment)
 
-  const optionTextFields = useMemo(
-    () => rankedOptions.map((option) => optionTextField(option.id)),
+  const optionTextFragments = useMemo(
+    () => rankedOptions.map((option) => option.ideaFragment),
     [rankedOptions],
   )
-  const optionTexts = useFragmentPlainTexts(optionTextFields)
+  const optionTexts = useFragmentPlainTexts(optionTextFragments)
   const titleById = useMemo(
     () =>
       new Map(

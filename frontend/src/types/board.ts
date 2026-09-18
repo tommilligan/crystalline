@@ -1,3 +1,6 @@
+import type * as Y from 'yjs'
+import { z } from 'zod'
+
 export type Phase = 'situation' | 'ideation' | 'evaluation' | 'decision'
 
 export const PHASES: ReadonlyArray<{
@@ -44,17 +47,18 @@ export function phaseNumber(phase: Phase): number {
   return PHASES.find((candidate) => candidate.key === phase)?.number ?? 1
 }
 
-export type LifecycleState = 'active' | 'signed'
+export const LifecycleStateSchema = z.enum(['active', 'signed'])
+export type LifecycleState = z.infer<typeof LifecycleStateSchema>
 
 /** A numeric rating property every option is scored against, 1 (bad) to 5 (good) — shared board
- * configuration (see `Storage.ratingProperties` in `liveblocks.config.ts`), not fixed dimensions:
- * teams can rename, add, or remove properties to fit what they're actually deciding between.
- * `id` is stable once created (used as the key into a `ScoreSet`) even if `label` is later
- * edited. */
-export type RatingProperty = {
-  id: string
-  label: string
-}
+ * configuration, not fixed dimensions: teams can rename, add, or remove properties to fit what
+ * they're actually deciding between. `id` is stable once created (used as the key into a
+ * `ScoreSet`) even if `label` is later edited. */
+export const RatingPropertySchema = z.object({
+  id: z.string(),
+  label: z.string(),
+})
+export type RatingProperty = z.infer<typeof RatingPropertySchema>
 
 /** Seeds a fresh board with the same six properties the tool originally shipped with — a
  * reasonable starting point that every team can freely edit or replace via the Evaluation
@@ -94,19 +98,30 @@ export function totalScore(
   return scored.reduce((sum, value) => sum + value, 0)
 }
 
-/** Non-text, structured fields for an Option. Text fields (idea, enabler, blocker) live in
- * the shared Yjs document as collaboratively-edited fragments, keyed by the option id.
- * A plain object type (not an interface) so it structurally satisfies Liveblocks' `LsonObject`
- * constraint when used as `LiveObject<OptionData>`. */
-export type OptionData = {
-  id: string
-  createdAt: number
-  scores: ScoreSet | null
+/** Non-text, structured fields for an Option, as persisted in Yjs and validated by Zod at the
+ * read-hook boundary. Text (idea/enabler/blocker) and scores live alongside these as sibling
+ * values in the same `Y.Map` — see `lib/boardDoc.ts` — but aren't part of this schema since a
+ * `Y.XmlFragment`/`Y.Map` is a live binding, not domain data with a shape to validate. */
+export const OptionFieldsSchema = z.object({
+  id: z.string(),
+  createdAt: z.number(),
+})
+export type OptionFields = z.infer<typeof OptionFieldsSchema>
+
+/** The full reactive shape read hooks return for an option: validated plain fields, the live
+ * `scores` map read out as a plain object, and the live text fragments themselves (for
+ * `CollaborativeTextField`/plain-text reads) — see `useBoardOptions` in `hooks/useBoardState.ts`. */
+export type OptionData = OptionFields & {
+  scores: ScoreSet
+  ideaFragment: Y.XmlFragment
+  enablerFragment: Y.XmlFragment
+  blockerFragment: Y.XmlFragment
 }
 
 /** How the team reached the chosen decision — drives whether the dissent field is shown (only
  * once a non-'all' agreement is recorded) in both the live board and the export. */
-export type Agreement = 'all' | 'majority' | 'minority' | 'unilateral'
+export const AgreementSchema = z.enum(['all', 'majority', 'minority', 'unilateral'])
+export type Agreement = z.infer<typeof AgreementSchema>
 
 /** Ordered so each `label` reads naturally as the tail of "This decision was agreed to …". */
 export const AGREEMENT_OPTIONS: ReadonlyArray<{ value: Agreement; label: string }> = [
@@ -116,23 +131,32 @@ export const AGREEMENT_OPTIONS: ReadonlyArray<{ value: Agreement; label: string 
   { value: 'unilateral', label: 'unilaterally' },
 ]
 
-/** Non-text fields for the Decision. `countermeasure` and `dissent` are Yjs text fragments. */
-export type DecisionData = {
-  chosenOptionId: string | null
-  approvedBy: string | null
-  date: string | null
-  agreement: Agreement | null
+/** Non-text, structured fields for the Decision — `countermeasure`/`dissent` are Yjs text
+ * fragments, added onto this by the read hook the same way `OptionData` extends
+ * `OptionFields`. */
+export const DecisionFieldsSchema = z.object({
+  chosenOptionId: z.string().nullable(),
+  approvedBy: z.string().nullable(),
+  date: z.string().nullable(),
+  agreement: AgreementSchema.nullable(),
+})
+export type DecisionFields = z.infer<typeof DecisionFieldsSchema>
+
+export type DecisionData = DecisionFields & {
+  countermeasureFragment: Y.XmlFragment
+  dissentFragment: Y.XmlFragment
 }
 
-/** A single row of the Next Steps plan, recorded once the decision itself is signed. A plain
- * object type (not an interface) so it structurally satisfies Liveblocks' `LsonObject`
- * constraint when used as `LiveObject<NextStepData>` — see `OptionData`'s doc comment. */
-export type NextStepData = {
-  id: string
-  action: string
-  owner: string
-  dueDate: string | null
-}
+/** A single row of the Next Steps plan, recorded once the decision itself is signed. No text
+ * fragments today — `action`/`owner` are plain inputs, not TipTap (see the plan doc for why a
+ * future rich-text field here would nest the same way `OptionData`'s do). */
+export const NextStepSchema = z.object({
+  id: z.string(),
+  action: z.string(),
+  owner: z.string(),
+  dueDate: z.string().nullable(),
+})
+export type NextStepData = z.infer<typeof NextStepSchema>
 
 /** Whether a Next Steps row holds any real user input. The table always keeps at least one blank
  * row present (`useEnsureFirstNextStep`), so this is what distinguishes a touched row from that
@@ -142,11 +166,30 @@ export function nextStepHasContent(step: NextStepData): boolean {
   return Boolean(step.action.trim() || step.owner.trim() || step.dueDate)
 }
 
+/** The board's non-text top-level fields, stored as sibling keys in the `meta` `Y.Map` alongside
+ * the `situation` text fragment (see `lib/boardDoc.ts`). */
+export const BoardMetaFieldsSchema = z.object({
+  title: z.string(),
+  lifecycleState: LifecycleStateSchema,
+  signedAt: z.string().nullable(),
+  nextStepsCommitted: z.boolean(),
+  nextStepsCommittedAt: z.string().nullable(),
+  situationAgreed: z.boolean(),
+})
+export type BoardMetaFields = z.infer<typeof BoardMetaFieldsSchema>
+
+/** Which storage/transport backend a board uses — chosen once at creation (see
+ * `docs/local-first-mode-plan.md`). Every mutation/read hook works identically in both; only the
+ * provider underneath the shared `Y.Doc` differs. */
+export const BoardModeSchema = z.enum(['local', 'shared'])
+export type BoardMode = z.infer<typeof BoardModeSchema>
+
 export interface BoardSummary {
   id: string
   title: string
   createdAt: number
   updatedAt: number
+  mode: BoardMode
 }
 
 /** Spreadsheet-style display label for an option's position in the canonical (creation) order —
@@ -165,33 +208,19 @@ export function optionDisplayId(index: number): string {
   return result
 }
 
-export function optionTextField(optionId: string): string {
-  return `option-text-${optionId}`
-}
-
-export function optionEnablerField(optionId: string): string {
-  return `option-enabler-${optionId}`
-}
-
-export function optionBlockerField(optionId: string): string {
-  return `option-blocker-${optionId}`
-}
-
-export type TimerStatus = 'idle' | 'running' | 'paused'
+export const TimerStatusSchema = z.enum(['idle', 'running', 'paused'])
+export type TimerStatus = z.infer<typeof TimerStatusSchema>
 
 /** Synced session-timer state (advisory time-box on the situation phase, `docs/ui-notes.md`).
- * Liveblocks Storage is the single source of truth: a running timer needs only `endsAt` (the
- * epoch ms it counts down to), so clients compute the displayed remaining time locally against
- * their own clock — ticking never causes a network write, only start/pause/reset do. */
-export type TimerState = {
-  status: TimerStatus
-  durationMs: number
-  remainingMs: number
-  endsAt: number | null
-}
+ * The `Y.Doc` is the single source of truth: a running timer needs only `endsAt` (the epoch ms
+ * it counts down to), so clients compute the displayed remaining time locally against their own
+ * clock — ticking never causes a write, only start/pause/reset do. */
+export const TimerStateSchema = z.object({
+  status: TimerStatusSchema,
+  durationMs: z.number(),
+  remainingMs: z.number(),
+  endsAt: z.number().nullable(),
+})
+export type TimerState = z.infer<typeof TimerStateSchema>
 
 export const DEFAULT_TIMER_DURATION_MS = 15 * 60 * 1000
-
-export const SITUATION_FIELD = 'situation'
-export const COUNTERMEASURE_FIELD = 'decision-countermeasure'
-export const DISSENT_FIELD = 'decision-dissent'

@@ -20,18 +20,20 @@ interface RoomSummary {
 }
 
 // Liveblocks doesn't expose a room's board title directly (`RoomData` has no such field — see
-// `getRooms`/`iterRooms` in `@liveblocks/node`); it lives inside the room's own Storage document,
-// alongside everything else in `liveblocks.config.ts`'s `Storage` type. A handful of storage
+// `getRooms`/`iterRooms` in `@liveblocks/node`); it lives inside the room's own Yjs document, in
+// the `meta` map alongside everything else in `lib/boardDoc.ts`'s doc shape. A handful of
 // fetches at a time keeps this responsive without hammering the API.
 const STORAGE_FETCH_CONCURRENCY = 5
 
 async function fetchTitle(roomId: string): Promise<string> {
   try {
-    const storage = await liveblocks.getStorageDocument(roomId, 'json')
-    const title = (storage as { title?: unknown }).title
+    // `type: 'ymap'` makes this equivalent to `doc.get('meta', Y.Map).toJSON()` server-side, so
+    // we get the `meta` map's fields back as plain JSON without needing the `yjs` package here.
+    const meta = await liveblocks.getYjsDocument(roomId, { key: 'meta', type: 'ymap' })
+    const title = (meta as { title?: unknown }).title
     return typeof title === 'string' && title.trim() ? title : '(untitled board)'
   } catch {
-    return '(storage unavailable)'
+    return '(document unavailable)'
   }
 }
 

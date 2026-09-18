@@ -6,12 +6,7 @@ import {
   useFragmentPlainTexts,
 } from '../../../liveblocks-yjs/useFragmentPlainText'
 import type { OptionData, RatingProperty } from '../../../types/board'
-import {
-  optionBlockerField,
-  optionDisplayId,
-  optionEnablerField,
-  optionTextField,
-} from '../../../types/board'
+import { optionDisplayId } from '../../../types/board'
 import { EmptyColumnState } from '../EmptyColumnState'
 import { NextButton } from '../NextButton'
 import { EvaluationBody, EvaluationSummaryBody } from './OptionSummaries'
@@ -42,7 +37,7 @@ function EvaluationAccordionControl({
   option: OptionData
   displayId: string
 }) {
-  const text = useFragmentPlainText(optionTextField(option.id))
+  const text = useFragmentPlainText(option.ideaFragment)
   return (
     <Title
       order={4}
@@ -119,17 +114,16 @@ export function EvaluationColumn({
     })
   }, [reference, chosenOptionId])
 
-  const evaluationFields = useMemo(
-    () =>
-      options.flatMap((option) => [optionEnablerField(option.id), optionBlockerField(option.id)]),
+  const evaluationFragments = useMemo(
+    () => options.flatMap((option) => [option.enablerFragment, option.blockerFragment]),
     [options],
   )
-  const evaluationTexts = useFragmentPlainTexts(evaluationFields)
+  const evaluationTexts = useFragmentPlainTexts(evaluationFragments)
   const hasOptionData = options.map(
     (option, index) =>
       Boolean(evaluationTexts[2 * index]) ||
       Boolean(evaluationTexts[2 * index + 1]) ||
-      option.scores !== null,
+      Object.keys(option.scores).length > 0,
   )
   const { activeOption, nextOption, focus } = useOptionWalkthrough(options, hasOptionData)
   const advance = nextOption ? () => focus(nextOption.id) : onAdvancePhase

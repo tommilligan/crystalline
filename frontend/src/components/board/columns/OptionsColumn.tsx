@@ -2,10 +2,7 @@ import { ActionIcon, Group, TextInput } from '@mantine/core'
 import { IconPlus, IconX } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useAddIdea, useRemoveIdea } from '../../../hooks/useBoardMutations'
-import { seedTextFragment } from '../../../liveblocks-yjs/seedTextFragment'
-import { useYjsDoc } from '../../../liveblocks-yjs/YjsRoomProvider'
 import type { OptionData } from '../../../types/board'
-import { optionTextField } from '../../../types/board'
 import { CollaborativeTextField } from '../../editor/CollaborativeTextField'
 import { NextButton } from '../NextButton'
 
@@ -22,14 +19,15 @@ interface OptionsColumnProps {
 export function OptionsColumn({ options, disabled, active, onAdvancePhase }: OptionsColumnProps) {
   const addIdea = useAddIdea()
   const removeIdea = useRemoveIdea()
-  const { doc } = useYjsDoc()
   const [draft, setDraft] = useState('')
 
   function handleAdd() {
     const text = draft.trim()
     if (!text || disabled) return
-    const id = addIdea()
-    seedTextFragment(doc, optionTextField(id), text)
+    // Seeded with the typed text at creation time (see `useAddIdea`) rather than created blank
+    // and seeded afterwards — the option's idea fragment isn't addressable from here until the
+    // record it lives inside is already in `options`.
+    addIdea(text)
     setDraft('')
   }
 
@@ -39,7 +37,7 @@ export function OptionsColumn({ options, disabled, active, onAdvancePhase }: Opt
         <Group key={option.id} align="center" wrap="nowrap" gap="xs">
           <div style={{ flex: 1, minWidth: 0 }}>
             <CollaborativeTextField
-              field={optionTextField(option.id)}
+              fragment={option.ideaFragment}
               placeholder="Describe this idea…"
               disabled={disabled}
             />

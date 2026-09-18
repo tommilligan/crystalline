@@ -17,6 +17,7 @@ import { useDisclosure } from '@mantine/hooks'
 import { IconLock, IconX } from '@tabler/icons-react'
 import dayjs from 'dayjs'
 import { type MouseEvent, useEffect, useMemo, useRef, useState } from 'react'
+import type * as Y from 'yjs'
 import {
   useAddNextStep,
   useCommitNextSteps,
@@ -37,11 +38,8 @@ import {
 import type { Agreement, DecisionData, NextStepData, OptionData } from '../../../types/board'
 import {
   AGREEMENT_OPTIONS,
-  COUNTERMEASURE_FIELD,
-  DISSENT_FIELD,
   nextStepHasContent,
   optionDisplayId,
-  optionTextField,
   totalScore,
 } from '../../../types/board'
 import { CollaborativeTextField } from '../../editor/CollaborativeTextField'
@@ -114,13 +112,13 @@ function LeaderboardRow({
  * `OptionSummaries.tsx`, just inline here since the countermeasure and dissent fields are the
  * only two decision fields shaped this way (plain free text, no other structure to represent). */
 function DecisionTextField({
-  field,
+  fragment,
   placeholder,
   text,
   signed,
   disabled,
 }: {
-  field: string
+  fragment: Y.XmlFragment
   placeholder: string
   text: string
   signed: boolean
@@ -135,7 +133,9 @@ function DecisionTextField({
       </Blockquote>
     )
   }
-  return <CollaborativeTextField field={field} placeholder={placeholder} disabled={disabled} />
+  return (
+    <CollaborativeTextField fragment={fragment} placeholder={placeholder} disabled={disabled} />
+  )
 }
 
 /** Records the chosen option, its countermeasure, any dissent, and drives the (irreversible in
@@ -174,8 +174,8 @@ export function DecisionColumn({
   const removeNextStep = useRemoveNextStep()
   const commitNextSteps = useCommitNextSteps()
   const properties = useRatingProperties()
-  const countermeasureText = useFragmentPlainText(COUNTERMEASURE_FIELD)
-  const dissentText = useFragmentPlainText(DISSENT_FIELD)
+  const countermeasureText = useFragmentPlainText(decision.countermeasureFragment)
+  const dissentText = useFragmentPlainText(decision.dissentFragment)
   const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false)
   const [signAttempted, setSignAttempted] = useState(false)
   const nextStepsSectionRef = useRef<HTMLDivElement>(null)
@@ -190,11 +190,8 @@ export function DecisionColumn({
     }
   }, [nextSteps.length, nextStepsCommitted, ensureFirstNextStep])
 
-  const optionTextFields = useMemo(
-    () => options.map((option) => optionTextField(option.id)),
-    [options],
-  )
-  const optionTexts = useFragmentPlainTexts(optionTextFields)
+  const optionTextFragments = useMemo(() => options.map((option) => option.ideaFragment), [options])
+  const optionTexts = useFragmentPlainTexts(optionTextFragments)
   const titleById = useMemo(
     () =>
       new Map(options.map((option, index) => [option.id, optionTexts[index] || 'Untitled option'])),
@@ -305,7 +302,7 @@ export function DecisionColumn({
 
         <Text size="sm">To mitigate the downsides of this option, we will:</Text>
         <DecisionTextField
-          field={COUNTERMEASURE_FIELD}
+          fragment={decision.countermeasureFragment}
           placeholder="Mitigation plan"
           text={countermeasureText}
           signed={signed}
@@ -343,7 +340,7 @@ export function DecisionColumn({
           <>
             <Text size="sm">For the record, the dissenting opinion states:</Text>
             <DecisionTextField
-              field={DISSENT_FIELD}
+              fragment={decision.dissentFragment}
               placeholder="We feel that…"
               text={dissentText}
               signed={signed}

@@ -33,10 +33,14 @@ export async function listBoards(): Promise<BoardSummary[]> {
  * Creates or touches a board's registry entry. `createdAt` only matters the first time a board
  * id is seen (a first-time create, or opening a board link on a device that's never seen it
  * before) — on every subsequent call the existing entry's `createdAt` is kept and `updatedAt` is
- * bumped to now, which is what drives the home page's "most recently updated" ordering.
+ * bumped to now, which is what drives the home page's "most recently updated" ordering. `mode` is
+ * fixed for a board's lifetime (chosen once at creation, see `hooks/useBoardsRegistry.ts`'s
+ * `useCreateBoard`) — an existing entry's `mode` always wins over whatever's passed here, so a
+ * later call (e.g. `BoardView`'s title-sync effect, which doesn't itself track mode) can't
+ * accidentally flip it.
  */
 export async function registerBoard(
-  summary: Pick<BoardSummary, 'id' | 'title' | 'createdAt'>,
+  summary: Pick<BoardSummary, 'id' | 'title' | 'createdAt' | 'mode'>,
 ): Promise<void> {
   const existing = readAll().find((board) => board.id === summary.id)
   const merged: BoardSummary = {
@@ -44,6 +48,7 @@ export async function registerBoard(
     title: summary.title,
     createdAt: existing?.createdAt ?? summary.createdAt,
     updatedAt: Date.now(),
+    mode: existing?.mode ?? summary.mode,
   }
   writeAll([merged, ...readAll().filter((board) => board.id !== summary.id)])
 }

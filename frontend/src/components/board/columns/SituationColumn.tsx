@@ -1,10 +1,9 @@
 import { Blockquote, SegmentedControl, Stack, Text } from '@mantine/core'
 import { useEffect, useRef } from 'react'
+import { useBoardSynced } from '../../../board-doc/BoardDocContext'
 import { useSetSituationAgreed } from '../../../hooks/useBoardMutations'
-import { useBoardSituationAgreed } from '../../../hooks/useBoardState'
+import { useBoardSituationAgreed, useSituationFragment } from '../../../hooks/useBoardState'
 import { useFragmentPlainText } from '../../../liveblocks-yjs/useFragmentPlainText'
-import { useYjsSynced } from '../../../liveblocks-yjs/YjsRoomProvider'
-import { SITUATION_FIELD } from '../../../types/board'
 import { CollaborativeTextField } from '../../editor/CollaborativeTextField'
 import { NextButton } from '../NextButton'
 
@@ -27,8 +26,9 @@ interface SituationColumnProps {
 export function SituationColumn({ disabled, active, onAdvancePhase }: SituationColumnProps) {
   const agreed = useBoardSituationAgreed()
   const setSituationAgreed = useSetSituationAgreed()
-  const situationText = useFragmentPlainText(SITUATION_FIELD)
-  const synced = useYjsSynced()
+  const situationFragment = useSituationFragment()
+  const situationText = useFragmentPlainText(situationFragment)
+  const synced = useBoardSynced()
   const previousTextRef = useRef(situationText)
   const wasSyncedRef = useRef(false)
 
@@ -70,7 +70,7 @@ export function SituationColumn({ disabled, active, onAdvancePhase }: SituationC
         Problem statement. Try to keep it to one or two sentences.
       </Text>
       <CollaborativeTextField
-        field={SITUATION_FIELD}
+        fragment={situationFragment}
         placeholder="Describe the problem. Aim for team consensus before moving on — this phase is usually time-boxed to 15–20 minutes."
         disabled={disabled}
       />

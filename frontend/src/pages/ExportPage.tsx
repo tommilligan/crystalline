@@ -3,10 +3,13 @@ import { Center, Loader, Stack, Text } from '@mantine/core'
 import { Navigate, useParams } from 'react-router-dom'
 import { BoardNotFound } from '../components/board/BoardNotFound'
 import { ExportView } from '../components/export/ExportView'
+import { useBoardsList } from '../hooks/useBoardsRegistry'
+import { useLocalBoardExists } from '../hooks/useLocalBoardExists'
 import { useRoomExists } from '../hooks/useRoomExists'
 import { loadIdentity } from '../lib/localIdentity'
-import { initialStorage, RoomProvider } from '../liveblocks.config'
-import { YjsRoomProvider } from '../liveblocks-yjs/YjsRoomProvider'
+import { RoomProvider } from '../liveblocks.config'
+import { BoardDocProvider } from '../liveblocks-yjs/BoardDocProvider'
+import { LocalBoardDocProvider } from '../local-board/LocalBoardDocProvider'
 
 /**
  * A standalone, printable read-out of a board — the Situation and the Options/Decision sections
@@ -17,8 +20,9 @@ import { YjsRoomProvider } from '../liveblocks-yjs/YjsRoomProvider'
  * opened in a new tab, bookmarked, or driven by a headless browser later without any of that
  * living inside the interactive board's render tree.
  *
- * Joins the same Liveblocks room as `BoardPage` (read-only from this view's perspective — it
- * never mutates storage), so it reflects live data with no separate fetch/sync path.
+ * Reads the same board data `BoardPage` does — a local board's `Y.Doc` via IndexedDB, or the same
+ * Liveblocks room via `@liveblocks/yjs` — chosen the same way `BoardPage` chooses it (see
+ * `BoardRoom` below); this view never mutates either.
  */
 export function ExportPage() {
   const { boardId } = useParams<{ boardId: string }>()
@@ -27,13 +31,45 @@ export function ExportPage() {
     return <Navigate to="/" replace />
   }
 
-  return <ExportRoom boardId={boardId} />
+  return <BoardRoom boardId={boardId} />
 }
 
-// Split out from `ExportPage` so `boardId` can be a plain required prop here — the existence
-// check below is a hook, and `ExportPage` needs to conditionally `<Navigate>` away first when
-// there's no id at all, before any hooks would run.
-function ExportRoom({ boardId }: { boardId: string }) {
+// Same registry-lookup routing as `pages/BoardPage.tsx`'s `BoardRoom` — see its comment.
+function BoardRoom({ boardId }: { boardId: string }) {
+  const { data: boards, isLoading: registryLoading } = useBoardsList()
+
+  if (registryLoading) {
+    return <ExportLoadingState />
+  }
+
+  const mode = boards?.find((board) => board.id === boardId)?.mode
+
+  if (mode === 'local') {
+    return <LocalExportRoom boardId={boardId} />
+  }
+
+  return <SharedExportRoom boardId={boardId} />
+}
+
+function LocalExportRoom({ boardId }: { boardId: string }) {
+  const { data: exists, isLoading } = useLocalBoardExists(boardId)
+
+  if (isLoading) {
+    return <ExportLoadingState />
+  }
+
+  if (!exists) {
+    return <BoardNotFound />
+  }
+
+  return (
+    <LocalBoardDocProvider boardId={boardId}>
+      <ExportView boardId={boardId} />
+    </LocalBoardDocProvider>
+  )
+}
+
+function SharedExportRoom({ boardId }: { boardId: string }) {
   const { data: exists, isLoading } = useRoomExists(boardId)
   const identity = loadIdentity()
 
@@ -46,15 +82,11 @@ function ExportRoom({ boardId }: { boardId: string }) {
   }
 
   return (
-    <RoomProvider
-      id={boardId}
-      initialStorage={() => initialStorage()}
-      initialPresence={{ name: identity.name, color: identity.color }}
-    >
+    <RoomProvider id={boardId} initialPresence={{ name: identity.name, color: identity.color }}>
       <ClientSideSuspense fallback={<ExportLoadingState />}>
-        <YjsRoomProvider>
+        <BoardDocProvider>
           <ExportView boardId={boardId} />
-        </YjsRoomProvider>
+        </BoardDocProvider>
       </ClientSideSuspense>
     </RoomProvider>
   )

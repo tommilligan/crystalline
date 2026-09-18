@@ -5,13 +5,18 @@ import Placeholder from '@tiptap/extension-placeholder'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import type { CSSProperties } from 'react'
-import { useSelf } from '../../liveblocks.config'
-import { useYjsDoc } from '../../liveblocks-yjs/YjsRoomProvider'
+import type * as Y from 'yjs'
+import { loadIdentity } from '../../lib/localIdentity'
+import { useOptionalLiveblocksYjsProvider } from '../../liveblocks-yjs/BoardDocProvider'
 import classes from './CollaborativeTextField.module.css'
 
 interface CollaborativeTextFieldProps {
-  /** Name of the Y.XmlFragment this field reads/writes within the room's shared Yjs doc. */
-  field: string
+  /** The live `Y.XmlFragment` this field reads/writes — a sibling value inside the record it
+   * belongs to (an option, the decision, `meta`), not a doc-scoped name: see
+   * `docs/local-first-mode-plan.md` on why fragments are nested rather than kept as a flat
+   * top-level namespace. Callers get it from the record they're already rendering (e.g. an
+   * `OptionCard` already has its `OptionData` in scope). */
+  fragment: Y.XmlFragment
   label?: string
   placeholder?: string
   disabled?: boolean
@@ -22,18 +27,22 @@ interface CollaborativeTextFieldProps {
 
 /**
  * A single collaboratively-edited text field (an idea, an enabler/blocker, the situation
- * statement, a countermeasure, ...). Backed by a Y.XmlFragment synced through Liveblocks, so
- * concurrent edits from multiple participants merge automatically instead of last-write-wins.
+ * statement, a countermeasure, ...). Backed directly by a `Y.XmlFragment`, so concurrent edits
+ * from multiple participants merge automatically instead of last-write-wins — in sharable mode
+ * that fragment is synced through Liveblocks; in local-only mode it's the same fragment type,
+ * just never transported anywhere. Collaboration cursors (`CollaborationCaret`) only make sense
+ * when there's an actual Liveblocks provider to source awareness from, so that extension is
+ * conditional on one existing; the `Collaboration` (TipTap <-> Yjs) binding itself is always on.
  */
 export function CollaborativeTextField({
-  field,
+  fragment,
   label,
   placeholder,
   disabled,
   minRows,
 }: CollaborativeTextFieldProps) {
-  const { doc, provider } = useYjsDoc()
-  const self = useSelf()
+  const provider = useOptionalLiveblocksYjsProvider()
+  const identity = loadIdentity()
 
   const editor = useEditor(
     {
@@ -43,14 +52,15 @@ export function CollaborativeTextField({
         // this field, so clearing the text and clicking away leaves it blank instead of showing
         // the placeholder again.
         Placeholder.configure({ placeholder, showOnlyCurrent: false }),
-        Collaboration.configure({ document: doc, field }),
-        CollaborationCaret.configure({
-          provider,
-          user: {
-            name: self?.presence.name ?? 'Anonymous',
-            color: self?.presence.color ?? '#868e96',
-          },
-        }),
+        Collaboration.configure({ fragment }),
+        ...(provider
+          ? [
+              CollaborationCaret.configure({
+                provider,
+                user: { name: identity.name, color: identity.color },
+              }),
+            ]
+          : []),
       ],
       editable: !disabled,
       editorProps: {
@@ -63,7 +73,7 @@ export function CollaborativeTextField({
       // the mount effect instead.
       immediatelyRender: false,
     },
-    [field, doc, provider, disabled],
+    [fragment, provider, disabled],
   )
 
   return (

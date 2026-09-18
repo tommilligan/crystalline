@@ -4,14 +4,8 @@ import {
   useFragmentPlainText,
 } from '../liveblocks-yjs/useFragmentPlainText'
 import type { DecisionData, NextStepData, OptionData, Phase } from '../types/board'
-import {
-  COUNTERMEASURE_FIELD,
-  DISSENT_FIELD,
-  nextStepHasContent,
-  optionBlockerField,
-  optionEnablerField,
-  SITUATION_FIELD,
-} from '../types/board'
+import { nextStepHasContent } from '../types/board'
+import { useSituationFragment } from './useBoardState'
 
 /**
  * Whether each column holds real user input yet, for the auto-collapse layout in
@@ -23,17 +17,19 @@ export function useColumnHasData(
   decision: DecisionData,
   nextSteps: readonly NextStepData[],
 ): Record<Phase, boolean> {
-  const situationText = useFragmentPlainText(SITUATION_FIELD)
+  const situationText = useFragmentPlainText(useSituationFragment())
 
-  const evaluationFields = useMemo(
-    () =>
-      options.flatMap((option) => [optionEnablerField(option.id), optionBlockerField(option.id)]),
+  const evaluationFragments = useMemo(
+    () => options.flatMap((option) => [option.enablerFragment, option.blockerFragment]),
     [options],
   )
-  const hasEvaluationText = useAnyFragmentsNonEmpty(evaluationFields)
-  const hasDecisionText = useAnyFragmentsNonEmpty([COUNTERMEASURE_FIELD, DISSENT_FIELD])
+  const hasEvaluationText = useAnyFragmentsNonEmpty(evaluationFragments)
+  const hasDecisionText = useAnyFragmentsNonEmpty([
+    decision.countermeasureFragment,
+    decision.dissentFragment,
+  ])
 
-  const hasScores = options.some((option) => option.scores !== null)
+  const hasScores = options.some((option) => Object.keys(option.scores).length > 0)
   const hasDecisionFields =
     Boolean(decision.chosenOptionId) ||
     Boolean(decision.approvedBy?.trim()) ||

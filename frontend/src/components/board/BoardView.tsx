@@ -30,8 +30,8 @@ import { useRegisterBoard } from '../../hooks/useBoardsRegistry'
 import { useColumnHasData } from '../../hooks/useColumnHasData'
 import { useLocalIdentity } from '../../hooks/useLocalIdentity'
 import { useResumableSelection } from '../../hooks/useResumableSelection'
-import { useRoom } from '../../liveblocks.config'
-import { PHASES, type Phase, nextPhase as phaseAfter, phaseNumber } from '../../types/board'
+import type { BoardMode, Phase } from '../../types/board'
+import { PHASES, nextPhase as phaseAfter, phaseNumber } from '../../types/board'
 import { BoardLayout } from './BoardLayout'
 import { DecisionColumn } from './columns/DecisionColumn'
 import { EvaluationColumn } from './columns/EvaluationColumn'
@@ -103,8 +103,29 @@ function BoardTitleEditor({
   )
 }
 
-export function BoardView() {
-  const room = useRoom()
+/** Presence avatars + this viewer's display-name input — sharable-mode only (there's no presence
+ * concept for a local-only board, see `docs/local-first-mode-plan.md`'s "Multiplayer-only UI,
+ * gated by mode"). Split out into its own component, mounted only when `mode === 'shared'`, since
+ * `useLocalIdentity` itself calls Liveblocks' `useUpdateMyPresence` — a hook that throws outside
+ * a `RoomProvider`, which a local-only board never mounts. */
+function SharedPresenceControls() {
+  const { identity, setName } = useLocalIdentity()
+  return (
+    <>
+      <PresenceAvatars />
+      <TextInput
+        size="xs"
+        w={140}
+        placeholder="Your name"
+        value={identity.name}
+        onChange={(event) => setName(event.currentTarget.value)}
+        aria-label="Your display name"
+      />
+    </>
+  )
+}
+
+export function BoardView({ boardId, mode }: { boardId: string; mode: BoardMode }) {
   const title = useBoardTitle()
   const lifecycle = useBoardLifecycle()
   const options = useBoardOptions()
@@ -116,13 +137,12 @@ export function BoardView() {
   const setTitle = useSetTitle()
   const unsignBoard = useUnsignBoard()
   const registerBoard = useRegisterBoard()
-  const { identity, setName } = useLocalIdentity()
 
   const signed = lifecycle.state === 'signed'
 
   // Which phase/column is emphasized is per-viewer UI state, not shared board data — each
   // participant can be looking at a different column without dragging everyone else's view
-  // along with them. See the comment on `Storage` in `liveblocks.config.ts`. Resuming a
+  // along with them (never persisted to the `Y.Doc` — see `lib/boardDoc.ts`). Resuming a
   // partially-worked board on whichever phase the team last left off at (rather than always
   // Situation), and sticking once the viewer picks a phase themselves, is `useResumableSelection`'s
   // job.
@@ -146,8 +166,8 @@ export function BoardView() {
   // Keep the home page's local board list in sync with the live title, so a rename here shows
   // up there too. This registry is a client-side pointer/cache only — see `lib/boardsRegistry.ts`.
   useEffect(() => {
-    registerBoard.mutate({ id: room.id, title, createdAt: Date.now() })
-  }, [room.id, title, registerBoard.mutate])
+    registerBoard.mutate({ id: boardId, title, createdAt: Date.now(), mode })
+  }, [boardId, title, mode, registerBoard.mutate])
 
   // Each column advances via a single "Next >" button that it owns and places itself (right
   // after its own next-option step, if it has one, else after its content) — see `NextButton`.
@@ -211,7 +231,7 @@ export function BoardView() {
               <Group gap="xs">
                 <Button
                   component={Link}
-                  to={`/board/${room.id}/export`}
+                  to={`/board/${boardId}/export`}
                   target="_blank"
                   rel="noopener noreferrer"
                   variant="default"
@@ -257,7 +277,7 @@ export function BoardView() {
           <Group gap="sm">
             <Button
               component={Link}
-              to={`/board/${room.id}/export`}
+              to={`/board/${boardId}/export`}
               target="_blank"
               rel="noopener noreferrer"
               variant="default"
@@ -266,15 +286,7 @@ export function BoardView() {
             >
               Export
             </Button>
-            <PresenceAvatars />
-            <TextInput
-              size="xs"
-              w={140}
-              placeholder="Your name"
-              value={identity.name}
-              onChange={(event) => setName(event.currentTarget.value)}
-              aria-label="Your display name"
-            />
+            {mode === 'shared' && <SharedPresenceControls />}
           </Group>
         </Group>
 

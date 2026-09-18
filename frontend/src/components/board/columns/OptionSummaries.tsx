@@ -3,7 +3,6 @@ import { IconQuestionMark } from '@tabler/icons-react'
 import { useSetScore } from '../../../hooks/useBoardMutations'
 import { useFragmentPlainText } from '../../../liveblocks-yjs/useFragmentPlainText'
 import type { OptionData, RatingProperty } from '../../../types/board'
-import { optionBlockerField, optionEnablerField } from '../../../types/board'
 import { CollaborativeTextField } from '../../editor/CollaborativeTextField'
 
 // Pros/Cons vs. rating-scores column widths within `EvaluationBody`/`EvaluationSummaryBody`,
@@ -139,7 +138,7 @@ export function GoodBadFields({ option, disabled }: { option: OptionData; disabl
           Pros
         </Title>
         <CollaborativeTextField
-          field={optionEnablerField(option.id)}
+          fragment={option.enablerFragment}
           placeholder="What helps or supports this option?"
           disabled={disabled}
           minRows={2}
@@ -150,7 +149,7 @@ export function GoodBadFields({ option, disabled }: { option: OptionData; disabl
           Cons
         </Title>
         <CollaborativeTextField
-          field={optionBlockerField(option.id)}
+          fragment={option.blockerFragment}
           placeholder="What limits or risks this option?"
           disabled={disabled}
           minRows={2}
@@ -240,8 +239,8 @@ function RatingSummaryRow({ property, value }: { property: RatingProperty; value
  * would only get in the way. Reads the same Yjs fragments `GoodBadFields` edits, just as plain
  * text. */
 export function GoodBadSummary({ option }: { option: OptionData }) {
-  const enablerText = useFragmentPlainText(optionEnablerField(option.id))
-  const blockerText = useFragmentPlainText(optionBlockerField(option.id))
+  const enablerText = useFragmentPlainText(option.enablerFragment)
+  const blockerText = useFragmentPlainText(option.blockerFragment)
   return (
     <Stack gap="sm">
       <Box>

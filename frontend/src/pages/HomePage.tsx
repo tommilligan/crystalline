@@ -1,6 +1,7 @@
 import {
   ActionIcon,
   Anchor,
+  Badge,
   Button,
   Center,
   Group,
@@ -28,9 +29,22 @@ import {
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useBoardsList, useCreateBoard, useDeleteBoard } from '../hooks/useBoardsRegistry'
-import type { BoardSummary } from '../types/board'
+import type { BoardMode, BoardSummary } from '../types/board'
 
 const TEMPLATES = [{ value: 'standard-five-phase', label: 'Standard Five-Phase Board' }]
+
+const MODE_OPTIONS: ReadonlyArray<{ value: BoardMode; label: string; description: string }> = [
+  {
+    value: 'local',
+    label: 'Local only',
+    description: 'Stored only on this device — no backend, nothing to share.',
+  },
+  {
+    value: 'shared',
+    label: 'Sharable',
+    description: 'Synced live via Liveblocks — anyone with the link can join.',
+  },
+]
 
 type SortKey = 'title' | 'updatedAt'
 
@@ -42,6 +56,10 @@ export function HomePage() {
   const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false)
   const [title, setTitle] = useState('')
   const [template, setTemplate] = useState<string | null>(TEMPLATES[0].value)
+  // Sharable mode is dev-only for now (not offered in production) — see
+  // `docs/local-first-mode-plan.md`. Hard-coded to 'local' outside dev, same gating pattern as
+  // `useUnsignBoard`'s dev-only "Unlock" button.
+  const [mode, setMode] = useState<BoardMode>('local')
   const [sortKey, setSortKey] = useState<SortKey>('updatedAt')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
   const [createError, setCreateError] = useState<string | null>(null)
@@ -71,10 +89,13 @@ export function HomePage() {
   function handleDeleteConfirm() {
     if (!deleteTarget) return
     setDeleteError(null)
-    deleteBoard.mutate(deleteTarget.id, {
-      onSuccess: () => setDeleteTarget(null),
-      onError: () => setDeleteError('Could not delete this board. Please try again.'),
-    })
+    deleteBoard.mutate(
+      { id: deleteTarget.id, mode: deleteTarget.mode },
+      {
+        onSuccess: () => setDeleteTarget(null),
+        onError: () => setDeleteError('Could not delete this board. Please try again.'),
+      },
+    )
   }
 
   function handleCreate(event: React.FormEvent) {
@@ -82,8 +103,9 @@ export function HomePage() {
     setCreateError(null)
     const id = crypto.randomUUID()
     const boardTitle = title.trim() || 'Untitled board'
+    const boardMode: BoardMode = import.meta.env.DEV ? mode : 'local'
     createBoard.mutate(
-      { id, title: boardTitle, createdAt: Date.now() },
+      { id, title: boardTitle, createdAt: Date.now(), mode: boardMode },
       {
         onSuccess: () => {
           closeModal()
@@ -151,9 +173,20 @@ export function HomePage() {
                   {sortedBoards.map((board) => (
                     <Table.Tr key={board.id}>
                       <Table.Td>
-                        <Anchor component={Link} to={`/board/${board.id}`} fw={500}>
-                          {board.title}
-                        </Anchor>
+                        <Group gap={6} wrap="nowrap">
+                          <Anchor component={Link} to={`/board/${board.id}`} fw={500}>
+                            {board.title}
+                          </Anchor>
+                          {import.meta.env.DEV && (
+                            <Badge
+                              size="xs"
+                              variant="light"
+                              color={board.mode === 'shared' ? 'blue' : 'gray'}
+                            >
+                              {board.mode}
+                            </Badge>
+                          )}
+                        </Group>
                       </Table.Td>
                       <Table.Td>
                         <Text size="sm" c="dimmed">
@@ -232,6 +265,19 @@ export function HomePage() {
               allowDeselect={false}
               styles={{ label: { width: '100%', textAlign: 'left' } }}
             />
+
+            {import.meta.env.DEV && (
+              <Select
+                w="100%"
+                label="Board mode (dev only)"
+                description={MODE_OPTIONS.find((option) => option.value === mode)?.description}
+                data={MODE_OPTIONS.map(({ value, label }) => ({ value, label }))}
+                value={mode}
+                onChange={(value) => value && setMode(value as BoardMode)}
+                allowDeselect={false}
+                styles={{ label: { width: '100%', textAlign: 'left' } }}
+              />
+            )}
 
             {createError && (
               <Text size="sm" c="red">

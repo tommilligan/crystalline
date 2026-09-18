@@ -37,7 +37,9 @@
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.4",
-    "yjs": "^13.6.32"
+    "y-indexeddb": "^9.0.12",
+    "yjs": "^13.6.32",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.14",
