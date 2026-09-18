@@ -129,6 +129,14 @@ export type NextStepData = {
   dueDate: string | null
 }
 
+/** Whether a Next Steps row holds any real user input. The table always keeps at least one blank
+ * row present (`useEnsureFirstNextStep`), so this is what distinguishes a touched row from that
+ * seed row — used both to decide whether the Decision column counts as "has data" and to hide
+ * untouched rows once the plan is committed. */
+export function nextStepHasContent(step: NextStepData): boolean {
+  return Boolean(step.action.trim() || step.owner.trim() || step.dueDate)
+}
+
 export interface BoardSummary {
   id: string
   title: string

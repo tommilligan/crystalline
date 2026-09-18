@@ -73,7 +73,6 @@ export function SituationColumn({ disabled, active, onAdvancePhase }: SituationC
         field={SITUATION_FIELD}
         placeholder="Describe the problem. Aim for team consensus before moving on — this phase is usually time-boxed to 15–20 minutes."
         disabled={disabled}
-        minRows={4}
       />
       <Stack gap={4}>
         <Text size="sm" fw={500}>

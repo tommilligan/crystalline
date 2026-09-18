@@ -11,9 +11,6 @@ interface BoardColumnShellProps {
   // stays full width and shrinks in height, with its label left horizontal (see `BoardLayout`).
   isWide: boolean
   onFocus: () => void
-  // Optional control shown top-right of the header, alongside the phase title — e.g. Scoring's
-  // "Skip >" button. Only rendered in the expanded (non-collapsed) header.
-  headerAction?: ReactNode
   // True for the Evaluation column specifically while it's shown secondary alongside Decision
   // (see `BoardLayout`): it's a read-only reference there, not a "come back later" column, so it
   // shouldn't look dimmed/deprioritised the way an ordinary secondary column does.
@@ -24,9 +21,10 @@ interface BoardColumnShellProps {
 /**
  * One of the five board columns. `layout` (from `computeColumnLayout`) drives how much space
  * and detail it gets:
- * - `primary` — the current phase. Full detail, most of the row's width.
- * - `secondary` — expanded (full detail) but not current, e.g. the problem statement staying
- *   readable once later phases are in progress.
+ * - `primary` — the current phase. Full detail, emphasized border, full opacity.
+ * - `secondary` — expanded (full detail, same width as primary) but not current, e.g. the
+ *   problem statement staying readable once later phases are in progress; dimmed unless
+ *   `neverDim`.
  * - `collapsed` — reduced to just the phase label, for columns whose content is redundant right
  *   now (see `columnLayout.ts`). Still clickable to re-expand.
  *
@@ -37,7 +35,6 @@ export function BoardColumnShell({
   layout,
   isWide,
   onFocus,
-  headerAction,
   neverDim,
   children,
 }: BoardColumnShellProps) {
@@ -101,7 +98,6 @@ export function BoardColumnShell({
                 {phase.subtitle}
               </Text>
             </Stack>
-            {headerAction}
           </Group>
           <Box style={{ overflowY: 'auto', overflowX: 'hidden', maxHeight: '70vh' }}>
             <Stack gap="sm" p="sm">

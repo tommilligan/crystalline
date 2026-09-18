@@ -39,6 +39,7 @@ import {
   AGREEMENT_OPTIONS,
   COUNTERMEASURE_FIELD,
   DISSENT_FIELD,
+  nextStepHasContent,
   optionDisplayId,
   optionTextField,
   totalScore,
@@ -106,6 +107,35 @@ function LeaderboardRow({
       </Group>
     </Card>
   )
+}
+
+/** A Yjs-backed decision field: editable while the board isn't signed, otherwise a plain prose
+ * readout — the same signed/unsigned split as `GoodBadSummary`/`GoodBadFields` in
+ * `OptionSummaries.tsx`, just inline here since the countermeasure and dissent fields are the
+ * only two decision fields shaped this way (plain free text, no other structure to represent). */
+function DecisionTextField({
+  field,
+  placeholder,
+  text,
+  signed,
+  disabled,
+}: {
+  field: string
+  placeholder: string
+  text: string
+  signed: boolean
+  disabled?: boolean
+}) {
+  if (signed) {
+    return (
+      <Blockquote color="gray" p="sm">
+        <Text size="sm" style={{ whiteSpace: 'pre-wrap' }} c={text ? undefined : 'dimmed'}>
+          {text || 'None recorded'}
+        </Text>
+      </Blockquote>
+    )
+  }
+  return <CollaborativeTextField field={field} placeholder={placeholder} disabled={disabled} />
 }
 
 /** Records the chosen option, its countermeasure, any dissent, and drives the (irreversible in
@@ -274,23 +304,13 @@ export function DecisionColumn({
         </Text>
 
         <Text size="sm">To mitigate the downsides of this option, we will:</Text>
-        {signed ? (
-          <Blockquote color="gray" p="sm">
-            <Text
-              size="sm"
-              style={{ whiteSpace: 'pre-wrap' }}
-              c={countermeasureText ? undefined : 'dimmed'}
-            >
-              {countermeasureText || 'None recorded'}
-            </Text>
-          </Blockquote>
-        ) : (
-          <CollaborativeTextField
-            field={COUNTERMEASURE_FIELD}
-            placeholder="Mitigation plan"
-            disabled={disabled}
-          />
-        )}
+        <DecisionTextField
+          field={COUNTERMEASURE_FIELD}
+          placeholder="Mitigation plan"
+          text={countermeasureText}
+          signed={signed}
+          disabled={disabled}
+        />
 
         {signed ? (
           <Text size="sm">
@@ -322,23 +342,13 @@ export function DecisionColumn({
         {showDissent && (
           <>
             <Text size="sm">For the record, the dissenting opinion states:</Text>
-            {signed ? (
-              <Blockquote color="gray" p="sm">
-                <Text
-                  size="sm"
-                  style={{ whiteSpace: 'pre-wrap' }}
-                  c={dissentText ? undefined : 'dimmed'}
-                >
-                  {dissentText || 'None recorded'}
-                </Text>
-              </Blockquote>
-            ) : (
-              <CollaborativeTextField
-                field={DISSENT_FIELD}
-                placeholder="We feel that…"
-                disabled={disabled}
-              />
-            )}
+            <DecisionTextField
+              field={DISSENT_FIELD}
+              placeholder="We feel that…"
+              text={dissentText}
+              signed={signed}
+              disabled={disabled}
+            />
           </>
         )}
 
@@ -417,17 +427,15 @@ export function DecisionColumn({
           </Table.Thead>
           <Table.Tbody>
             {nextStepsCommitted
-              ? nextSteps
-                  .filter((step) => step.action.trim() || step.owner.trim() || step.dueDate)
-                  .map((step) => (
-                    <Table.Tr key={step.id}>
-                      <Table.Td>{step.action || '—'}</Table.Td>
-                      <Table.Td>{step.owner || '—'}</Table.Td>
-                      <Table.Td>
-                        {step.dueDate ? dayjs(step.dueDate).format('D MMM YYYY') : '—'}
-                      </Table.Td>
-                    </Table.Tr>
-                  ))
+              ? nextSteps.filter(nextStepHasContent).map((step) => (
+                  <Table.Tr key={step.id}>
+                    <Table.Td>{step.action || '—'}</Table.Td>
+                    <Table.Td>{step.owner || '—'}</Table.Td>
+                    <Table.Td>
+                      {step.dueDate ? dayjs(step.dueDate).format('D MMM YYYY') : '—'}
+                    </Table.Td>
+                  </Table.Tr>
+                ))
               : nextSteps.map((step, index) => (
                   <Table.Tr key={step.id}>
                     <Table.Td>

@@ -29,6 +29,7 @@ import {
 import { useRegisterBoard } from '../../hooks/useBoardsRegistry'
 import { useColumnHasData } from '../../hooks/useColumnHasData'
 import { useLocalIdentity } from '../../hooks/useLocalIdentity'
+import { useResumableSelection } from '../../hooks/useResumableSelection'
 import { useRoom } from '../../liveblocks.config'
 import { PHASES, type Phase, nextPhase as phaseAfter } from '../../types/board'
 import { BoardLayout } from './BoardLayout'
@@ -37,17 +38,6 @@ import { EvaluationColumn } from './columns/EvaluationColumn'
 import { OptionsColumn } from './columns/OptionsColumn'
 import { SituationColumn } from './columns/SituationColumn'
 import { PresenceAvatars } from './PresenceAvatars'
-
-/** The last phase (in phase order) that already holds data, or `situation` if none does — what
- * a freshly loaded board should focus, so reopening a partially-worked board resumes where the
- * team left off instead of always landing back on the first phase. */
-function highestDataPhase(hasData: Record<Phase, boolean>): Phase {
-  let result: Phase = 'situation'
-  for (const { key } of PHASES) {
-    if (hasData[key]) result = key
-  }
-  return result
-}
 
 /** Click-to-edit board title: shows as plain text with a pencil affordance until clicked, then
  * becomes a focused input so it's obvious the name can be renamed without always looking like a
@@ -116,10 +106,6 @@ function BoardTitleEditor({
 export function BoardView() {
   const room = useRoom()
   const title = useBoardTitle()
-  // Which phase/column is emphasized is per-viewer UI state, not shared board data — each
-  // participant can be looking at a different column without dragging everyone else's view
-  // along with them. See the comment on `Storage` in `liveblocks.config.ts`.
-  const [phase, setPhase] = useState<Phase>('situation')
   const lifecycle = useBoardLifecycle()
   const options = useBoardOptions()
   const ratingProperties = useRatingProperties()
@@ -134,27 +120,24 @@ export function BoardView() {
 
   const signed = lifecycle.state === 'signed'
 
+  // Which phase/column is emphasized is per-viewer UI state, not shared board data — each
+  // participant can be looking at a different column without dragging everyone else's view
+  // along with them. See the comment on `Storage` in `liveblocks.config.ts`. Resuming a
+  // partially-worked board on whichever phase the team last left off at (rather than always
+  // Situation), and sticking once the viewer picks a phase themselves, is `useResumableSelection`'s
+  // job.
+  const { active: activePhase, focus: focusPhase } = useResumableSelection(
+    PHASES,
+    (candidate) => candidate.key,
+    PHASES.map((candidate) => hasData[candidate.key]),
+  )
+  const phase = activePhase?.key ?? 'situation'
+
   // Keep the home page's local board list in sync with the live title, so a rename here shows
   // up there too. This registry is a client-side pointer/cache only — see `lib/boardsRegistry.ts`.
   useEffect(() => {
     registerBoard.mutate({ id: room.id, title, createdAt: Date.now() })
   }, [room.id, title, registerBoard.mutate])
-
-  // On a fresh load, jump straight to whichever phase the team last left off at, rather than
-  // always opening on Situation — resuming a partially-worked board should show its progress.
-  // This keeps tracking `hasData` (self-correcting as slower-to-sync fields like Yjs text catch
-  // up) only until the viewer picks a phase themselves, at which point `focusPhase` freezes it so
-  // a teammate's later edits elsewhere don't yank the view out from under them.
-  const hasFocusedManually = useRef(false)
-  useEffect(() => {
-    if (hasFocusedManually.current) return
-    setPhase(highestDataPhase(hasData))
-  }, [hasData])
-
-  function focusPhase(next: Phase) {
-    hasFocusedManually.current = true
-    setPhase(next)
-  }
 
   // Each column advances via a single "Next >" button that it owns and places itself (right
   // after its own next-option step, if it has one, else after its content) — see `NextButton`.
@@ -164,29 +147,6 @@ export function BoardView() {
     const next = phaseAfter(phase)
     return next ? () => focusPhase(next) : undefined
   }
-
-  // Evaluation's header carries a "Skip >" escape hatch straight to Decision, for teams that
-  // want to decide without evaluating or scoring every option — distinct from `NextButton`'s
-  // walkthrough, which requires each option to be worked through first. Only shown while
-  // Evaluation is the active column.
-  const headerActions: Partial<Record<Phase, ReactNode>> =
-    phase === 'evaluation' && !signed
-      ? {
-          evaluation: (
-            <Button
-              variant="subtle"
-              color="gray"
-              size="xs"
-              onClick={(event) => {
-                event.stopPropagation()
-                advanceFrom('evaluation')?.()
-              }}
-            >
-              Skip &gt;
-            </Button>
-          ),
-        }
-      : {}
 
   const columns: Record<Phase, ReactNode> = {
     situation: (
@@ -319,7 +279,6 @@ export function BoardView() {
           onFocusPhase={focusPhase}
           hasData={hasData}
           columns={columns}
-          headerActions={headerActions}
         />
       </Stack>
     </Container>

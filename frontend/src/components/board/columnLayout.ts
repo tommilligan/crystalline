@@ -28,9 +28,8 @@ export type ColumnLayoutState = 'hidden' | 'collapsed' | 'primary' | 'secondary'
  *   phase is actively in focus; once you move away from it, it collapses to a sliver like
  *   everything else, rather than lingering open.
  * - The selected column, if visible, is always "primary"; every other expanded column is
- *   "secondary". `BoardLayout` gives the Evaluation column primary-equivalent width, not the
- *   usual smaller "secondary" share, specifically while it's shown secondary alongside Decision
- *   — see the comment there.
+ *   "secondary" — `BoardColumnShell` uses this distinction for border color/opacity emphasis
+ *   only; both get equal width (see `BoardLayout`).
  */
 export function computeColumnLayout(
   selectedPhase: Phase,

@@ -6,6 +6,11 @@ import type { OptionData, RatingProperty } from '../../../types/board'
 import { optionBlockerField, optionEnablerField } from '../../../types/board'
 import { CollaborativeTextField } from '../../editor/CollaborativeTextField'
 
+// Pros/Cons vs. rating-scores column widths within `EvaluationBody`/`EvaluationSummaryBody`,
+// as flex-grow shares (8:4, i.e. 2:1) — Pros/Cons is prose and wants the room, the rating rows
+// are a label plus a fixed-width button strip and don't.
+const EVALUATION_BODY_FLEX = { goodBad: 8, ratings: 4 }
+
 const SCORE_VALUES = [1, 2, 3, 4, 5] as const
 const SCORE_BUTTON_SIZE = 20
 // Buttons overlap by 1px of shared border (split-button join, see Mantine's SplitButton
@@ -303,9 +308,13 @@ export function EvaluationBody({
   disabled?: boolean
 }) {
   return (
-    <Group align="flex-start" gap="lg" grow wrap="wrap">
-      <GoodBadFields option={option} disabled={disabled} />
-      <RatingsFields option={option} properties={properties} disabled={disabled} />
+    <Group align="flex-start" gap="lg" wrap="wrap">
+      <Box style={{ flex: EVALUATION_BODY_FLEX.goodBad, minWidth: 0 }}>
+        <GoodBadFields option={option} disabled={disabled} />
+      </Box>
+      <Box style={{ flex: EVALUATION_BODY_FLEX.ratings, minWidth: 0 }}>
+        <RatingsFields option={option} properties={properties} disabled={disabled} />
+      </Box>
     </Group>
   )
 }
@@ -321,9 +330,13 @@ export function EvaluationSummaryBody({
   properties: readonly RatingProperty[]
 }) {
   return (
-    <Group align="flex-start" gap="lg" grow wrap="wrap">
-      <GoodBadSummary option={option} />
-      <RatingsSummary option={option} properties={properties} />
+    <Group align="flex-start" gap="lg" wrap="wrap">
+      <Box style={{ flex: EVALUATION_BODY_FLEX.goodBad, minWidth: 0 }}>
+        <GoodBadSummary option={option} />
+      </Box>
+      <Box style={{ flex: EVALUATION_BODY_FLEX.ratings, minWidth: 0 }}>
+        <RatingsSummary option={option} properties={properties} />
+      </Box>
     </Group>
   )
 }

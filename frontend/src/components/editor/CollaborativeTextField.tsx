@@ -15,7 +15,7 @@ interface CollaborativeTextFieldProps {
   label?: string
   placeholder?: string
   disabled?: boolean
-  /** Minimum visible rows, so the box is clearly a multiline area (e.g. the problem statement)
+  /** Minimum visible rows, so the box is clearly a multiline area (e.g. an option summary)
    * rather than a single-line input, before the user has typed enough to grow it. */
   minRows?: number
 }

@@ -7,6 +7,7 @@ import type { DecisionData, NextStepData, OptionData, Phase } from '../types/boa
 import {
   COUNTERMEASURE_FIELD,
   DISSENT_FIELD,
+  nextStepHasContent,
   optionBlockerField,
   optionEnablerField,
   SITUATION_FIELD,
@@ -39,7 +40,7 @@ export function useColumnHasData(
     Boolean(decision.agreement) ||
     // Not just `nextSteps.length > 0`: the Decision column always keeps at least one blank row
     // present (see `DecisionColumn`), so an untouched blank row shouldn't count as real data.
-    nextSteps.some((step) => step.action.trim() || step.owner.trim() || step.dueDate)
+    nextSteps.some(nextStepHasContent)
 
   return {
     situation: situationText !== '',
