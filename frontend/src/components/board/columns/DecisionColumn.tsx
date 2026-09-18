@@ -54,7 +54,6 @@ interface DecisionColumnProps {
 }
 
 function LeaderboardRow({
-  rank,
   displayId,
   title,
   points,
@@ -62,7 +61,6 @@ function LeaderboardRow({
   disabled,
   onSelect,
 }: {
-  rank: number
   displayId: string
   title: string
   points: number | null
@@ -95,14 +93,9 @@ function LeaderboardRow({
       }}
     >
       <Group justify="space-between" wrap="nowrap" gap="xs">
-        <Group gap={6} wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
-          <Text size="xs" fw={700} c="dimmed" style={{ flexShrink: 0 }}>
-            {rank}.
-          </Text>
-          <Text size="sm" fw={chosen ? 700 : 500} truncate>
-            {displayId}: {title}
-          </Text>
-        </Group>
+        <Text size="sm" fw={chosen ? 700 : 500} truncate style={{ flex: 1, minWidth: 0 }}>
+          {displayId}: {title}
+        </Text>
         <Text size="xs" fw={700} c="dimmed" style={{ flexShrink: 0 }}>
           {points ?? '–'} pts
         </Text>
@@ -236,10 +229,9 @@ export function DecisionColumn({
           </Text>
         ) : (
           <Stack gap={4} data-testid="decision-leaderboard">
-            {rankedOptions.map((option, index) => (
+            {rankedOptions.map((option) => (
               <LeaderboardRow
                 key={option.id}
-                rank={index + 1}
                 displayId={displayIdById.get(option.id) ?? '?'}
                 title={titleById.get(option.id) ?? 'Untitled option'}
                 points={totalScore(option.scores, properties)}
