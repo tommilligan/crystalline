@@ -31,8 +31,6 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useBoardsList, useCreateBoard, useDeleteBoard } from '../hooks/useBoardsRegistry'
 import type { BoardMode, BoardSummary } from '../types/board'
 
-const TEMPLATES = [{ value: 'standard-five-phase', label: 'Standard Five-Phase Board' }]
-
 const MODE_OPTIONS: ReadonlyArray<{ value: BoardMode; label: string; description: string }> = [
   {
     value: 'local',
@@ -55,7 +53,6 @@ export function HomePage() {
   const navigate = useNavigate()
   const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false)
   const [title, setTitle] = useState('')
-  const [template, setTemplate] = useState<string | null>(TEMPLATES[0].value)
   // Sharable mode is dev-only for now (not offered in production) — see
   // `docs/local-first-mode-plan.md`. Hard-coded to 'local' outside dev, same gating pattern as
   // `useUnsignBoard`'s dev-only "Unlock" button.
@@ -227,7 +224,7 @@ export function HomePage() {
             <Stack gap={0}>
               <Title order={3}>Crystal Ball</Title>
               <Text c="dimmed" size="sm">
-                New Board from Template
+                New Board
               </Text>
             </Stack>
 
@@ -237,16 +234,6 @@ export function HomePage() {
               placeholder="e.g. OD Test Sample Reintegration"
               value={title}
               onChange={(event) => setTitle(event.currentTarget.value)}
-              styles={{ label: { width: '100%', textAlign: 'left' } }}
-            />
-
-            <Select
-              w="100%"
-              label="Select template"
-              data={TEMPLATES}
-              value={template}
-              onChange={setTemplate}
-              allowDeselect={false}
               styles={{ label: { width: '100%', textAlign: 'left' } }}
             />
 

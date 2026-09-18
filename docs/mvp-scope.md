@@ -1,9 +1,10 @@
 # MVP Scope & Resolved Design Questions
 
 > **Status:** this is the original scoping doc. A few calls made here were resolved differently
-> once implementation started — most notably, multiplayer is built rather than deferred, and
-> Clone/PNG-export/un-signing don't (yet) exist as described below. See `docs/architecture.md`'s
-> "Divergences from the spec docs" for the current, accurate picture.
+> once implementation started — most notably, multiplayer is built rather than deferred,
+> Clone/PNG-export/un-signing don't (yet) exist as described below, and the "from template"
+> creation flow was dropped entirely rather than shipped with just one template. See
+> `docs/architecture.md`'s "Divergences from the spec docs" for the current, accurate picture.
 
 This doc exists so a developer picking this up doesn't have to re-derive decisions that were
 already made and reasoned through during design. Where relevant, the reasoning is included, not

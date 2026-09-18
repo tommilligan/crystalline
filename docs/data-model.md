@@ -1,8 +1,8 @@
 # Data Model
 
 > **Status:** this describes the original design. The implementation has 4 phases (not 5 —
-> `evaluation` absorbed `scoring`), no event log, and configurable rating properties instead of
-> a fixed six dimensions — see `docs/architecture.md`.
+> `evaluation` absorbed `scoring`), no event log, configurable rating properties instead of
+> a fixed six dimensions, and no template concept at all — see `docs/architecture.md`.
 
 ## Board
 

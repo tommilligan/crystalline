@@ -162,3 +162,9 @@ match (each affected doc has a short status note added at the top pointing here)
   can reuse one room across repeated manual test runs instead of creating a fresh one each time
   — it's gated behind `import.meta.env.DEV` and never exposed in production; see its doc
   comment in `useBoardMutations.ts`.
+- **No template concept.** `docs/data-model.md` and `docs/mvp-scope.md` frame board creation as
+  always "from template," with a single standard template in MVP and room for custom templates
+  later. The implementation dropped this framing entirely — "New board" just creates a board
+  directly (`HomePage.tsx`), with no template selection UI. The underlying idea may return later
+  as a narrower concept (e.g. a reusable set of rating properties), but there's no template
+  entity or picker today.
