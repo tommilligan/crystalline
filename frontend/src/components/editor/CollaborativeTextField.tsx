@@ -39,7 +39,10 @@ export function CollaborativeTextField({
     {
       extensions: [
         StarterKit.configure({ undoRedo: false }),
-        Placeholder.configure({ placeholder }),
+        // showOnlyCurrent: false — otherwise the placeholder only paints while the cursor is in
+        // this field, so clearing the text and clicking away leaves it blank instead of showing
+        // the placeholder again.
+        Placeholder.configure({ placeholder, showOnlyCurrent: false }),
         Collaboration.configure({ document: doc, field }),
         CollaborationCaret.configure({
           provider,

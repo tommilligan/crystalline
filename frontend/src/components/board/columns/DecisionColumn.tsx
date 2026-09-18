@@ -1,6 +1,5 @@
 import {
   ActionIcon,
-  Box,
   Button,
   Card,
   Divider,
@@ -16,7 +15,7 @@ import { DateInput } from '@mantine/dates'
 import { useDisclosure } from '@mantine/hooks'
 import { IconLock, IconX } from '@tabler/icons-react'
 import dayjs from 'dayjs'
-import { type MouseEvent, type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
+import { type MouseEvent, useEffect, useMemo, useRef, useState } from 'react'
 import {
   useAddNextStep,
   useCommitNextSteps,
@@ -112,17 +111,6 @@ function LeaderboardRow({
   )
 }
 
-/** Visually sets an input row apart from the surrounding prose sentences, echoing the indented
- * `>` blockquote convention used to spec this layout — a plain left border reads as "this is the
- * fillable part" without competing with the sentence text around it. */
-function ProseInput({ children }: { children: ReactNode }) {
-  return (
-    <Box pl="sm" py={2} style={{ borderLeft: '3px solid var(--mantine-color-gray-4)' }}>
-      {children}
-    </Box>
-  )
-}
-
 /** Records the chosen option, its countermeasure, any dissent, and drives the (irreversible in
  * MVP) sign-off action. See `docs/mvp-scope.md`: there is no "unsign" — Clone is the intended
  * flow for further changes after sign-off.
@@ -130,7 +118,7 @@ function ProseInput({ children }: { children: ReactNode }) {
  * Picking the option is a ranked leaderboard, highest score first — clicking a row toggles it as
  * the chosen option (clicking the chosen row again clears it) — rather than a dropdown, since
  * comparing options by score is the point of this step. It deliberately doesn't repeat each
- * option's Good/Bad or ratings detail: that's already visible alongside it in the Evaluation
+ * option's Pros/Cons or ratings detail: that's already visible alongside it in the Evaluation
  * column, which stays expanded as a read-only reference once this phase is selected (see
  * `columnLayout.ts` and `EvaluationColumn`'s `reference` prop) instead of being duplicated here.
  *
@@ -288,13 +276,11 @@ export function DecisionColumn({
         </Text>
 
         <Text size="sm">To mitigate the downsides of this option, we will:</Text>
-        <ProseInput>
-          <CollaborativeTextField
-            field={COUNTERMEASURE_FIELD}
-            placeholder="Mitigation plan"
-            disabled={disabled}
-          />
-        </ProseInput>
+        <CollaborativeTextField
+          field={COUNTERMEASURE_FIELD}
+          placeholder="Mitigation plan"
+          disabled={disabled}
+        />
 
         <Group gap={6} wrap="wrap" align="center">
           <Text size="sm">This decision was agreed to</Text>
@@ -315,13 +301,11 @@ export function DecisionColumn({
         {showDissent && (
           <>
             <Text size="sm">For the record, the dissenting opinion states:</Text>
-            <ProseInput>
-              <CollaborativeTextField
-                field={DISSENT_FIELD}
-                placeholder="We feel that…"
-                disabled={disabled}
-              />
-            </ProseInput>
+            <CollaborativeTextField
+              field={DISSENT_FIELD}
+              placeholder="We feel that…"
+              disabled={disabled}
+            />
           </>
         )}
 
@@ -336,15 +320,13 @@ export function DecisionColumn({
           )}
           <Text size="sm">by:</Text>
         </Group>
-        <ProseInput>
-          <TextInput
-            placeholder="Name of the approver"
-            value={decision.approvedBy ?? ''}
-            disabled={disabled}
-            error={signAttempted && !approvedByValid}
-            onChange={(event) => setApprovedBy(event.currentTarget.value)}
-          />
-        </ProseInput>
+        <TextInput
+          placeholder="Name of the approver"
+          value={decision.approvedBy ?? ''}
+          disabled={disabled}
+          error={signAttempted && !approvedByValid}
+          onChange={(event) => setApprovedBy(event.currentTarget.value)}
+        />
 
         {signed ? (
           <Button

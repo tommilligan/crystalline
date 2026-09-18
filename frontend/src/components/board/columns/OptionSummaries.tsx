@@ -1,5 +1,4 @@
-import { ActionIcon, Box, Group, Stack, Text, ThemeIcon, Title } from '@mantine/core'
-import { IconCheck, IconX } from '@tabler/icons-react'
+import { ActionIcon, Box, Group, Stack, Text, Title } from '@mantine/core'
 import { useSetScore } from '../../../hooks/useBoardMutations'
 import { useFragmentPlainText } from '../../../liveblocks-yjs/useFragmentPlainText'
 import type { OptionData, RatingProperty } from '../../../types/board'
@@ -99,7 +98,7 @@ function RatingRow({
   )
 }
 
-/** A single option's Good/Bad enabler/blocker fields, stacked one above the other — this is
+/** A single option's Pros/Cons enabler/blocker fields, stacked one above the other — this is
  * "column one" of the Evaluation column's two-column per-option layout, "column two" being
  * `RatingsFields`. Reused (always non-editable) wherever a later column inlines it instead of
  * showing its own Evaluation column. */
@@ -107,14 +106,9 @@ export function GoodBadFields({ option, disabled }: { option: OptionData; disabl
   return (
     <Stack gap="sm">
       <Box>
-        <Group gap={6} mb={4}>
-          <Title order={5} size="xs">
-            Good
-          </Title>
-          <ThemeIcon size={16} radius="xl" color="teal" variant="filled">
-            <IconCheck size={11} />
-          </ThemeIcon>
-        </Group>
+        <Title order={5} size="xs" mb={4}>
+          Pros
+        </Title>
         <CollaborativeTextField
           field={optionEnablerField(option.id)}
           placeholder="What helps or supports this option?"
@@ -123,14 +117,9 @@ export function GoodBadFields({ option, disabled }: { option: OptionData; disabl
         />
       </Box>
       <Box>
-        <Group gap={6} mb={4}>
-          <Title order={5} size="xs">
-            Bad
-          </Title>
-          <ThemeIcon size={16} radius="xl" color="red" variant="filled">
-            <IconX size={11} />
-          </ThemeIcon>
-        </Group>
+        <Title order={5} size="xs" mb={4}>
+          Cons
+        </Title>
         <CollaborativeTextField
           field={optionBlockerField(option.id)}
           placeholder="What limits or risks this option?"
@@ -216,7 +205,7 @@ function RatingSummaryRow({ property, value }: { property: RatingProperty; value
   )
 }
 
-/** Plain, non-interactive readout of an option's Good/Bad evaluation — for pure reference views
+/** Plain, non-interactive readout of an option's Pros/Cons evaluation — for pure reference views
  * (the Decision column's read-only reference copy of Evaluation, the printable export) where
  * there's nothing to edit and the `CollaborativeTextField` editor chrome `GoodBadFields` renders
  * would only get in the way. Reads the same Yjs fragments `GoodBadFields` edits, just as plain
@@ -227,27 +216,17 @@ export function GoodBadSummary({ option }: { option: OptionData }) {
   return (
     <Stack gap="sm">
       <Box>
-        <Group gap={6} mb={4}>
-          <Title order={5} size="xs">
-            Good
-          </Title>
-          <ThemeIcon size={16} radius="xl" color="teal" variant="filled">
-            <IconCheck size={11} />
-          </ThemeIcon>
-        </Group>
+        <Title order={5} size="xs" mb={4}>
+          Pros
+        </Title>
         <Text size="sm" c={enablerText ? undefined : 'dimmed'} style={{ whiteSpace: 'pre-wrap' }}>
           {enablerText || 'Nothing noted'}
         </Text>
       </Box>
       <Box>
-        <Group gap={6} mb={4}>
-          <Title order={5} size="xs">
-            Bad
-          </Title>
-          <ThemeIcon size={16} radius="xl" color="red" variant="filled">
-            <IconX size={11} />
-          </ThemeIcon>
-        </Group>
+        <Title order={5} size="xs" mb={4}>
+          Cons
+        </Title>
         <Text size="sm" c={blockerText ? undefined : 'dimmed'} style={{ whiteSpace: 'pre-wrap' }}>
           {blockerText || 'Nothing noted'}
         </Text>
@@ -287,7 +266,7 @@ export function RatingsSummary({
   )
 }
 
-/** The Evaluation column's full per-option body: Good/Bad stacked in one column, all numeric
+/** The Evaluation column's full per-option body: Pros/Cons stacked in one column, all numeric
  * ratings stacked in the other, side by side. Shared between the editable walkthrough
  * (`EvaluationColumn`) and the read-only reference/export views below. */
 export function EvaluationBody({

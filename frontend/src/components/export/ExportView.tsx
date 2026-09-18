@@ -28,13 +28,13 @@ import { DecisionSummarySection } from './DecisionSummarySection'
 import classes from './ExportView.module.css'
 import { SituationSection } from './SituationSection'
 
-/** Assembles the printable export from the same live board data `BoardView` reads — Section 1
- * (Situation) and Section 4 (Decision, every option expanded), see `ExportPage` for why sections
- * 2-3 are deliberately omitted. `window.print()` plus the `@page`/`@media print` rules in
- * `ExportView.module.css` is the whole PDF story for now: Chrome's own "Save as PDF" print
- * destination already respects the A4 `@page` size, so there's no PDF library or backend
- * rendering step needed for a first cut. */
-export function ExportView() {
+/** Assembles the printable export from the same live board data `BoardView` reads — the
+ * Situation section and the Options/Decision section (every option expanded), see `ExportPage`
+ * for why the ideation/evaluation phases are deliberately omitted. `window.print()` plus the
+ * `@page`/`@media print` rules in `ExportView.module.css` is the whole PDF story for now:
+ * Chrome's own "Save as PDF" print destination already respects the A4 `@page` size, so there's
+ * no PDF library or backend rendering step needed for a first cut. */
+export function ExportView({ boardId }: { boardId: string }) {
   const title = useBoardTitle()
   const situationText = useFragmentPlainText(SITUATION_FIELD)
   const situationAgreed = useBoardSituationAgreed()
@@ -70,6 +70,8 @@ export function ExportView() {
     [canonicalOptions],
   )
 
+  const boardUrl = `${window.location.origin}/board/${boardId}`
+
   return (
     <div className={classes.page}>
       <Group justify="space-between" className={`${classes.toolbar} ${classes.noPrint}`}>
@@ -83,12 +85,7 @@ export function ExportView() {
 
       <div className={classes.sheet}>
         <Stack gap="xl">
-          <Stack gap={2}>
-            <Title order={1}>{title}</Title>
-            <Text size="sm" c="dimmed">
-              Exported {dayjs().format('D MMM YYYY, HH:mm')}
-            </Text>
-          </Stack>
+          <Title order={1}>{title}</Title>
 
           <SituationSection text={situationText} agreed={situationAgreed} />
 
@@ -105,6 +102,10 @@ export function ExportView() {
             nextSteps={nextSteps}
             nextStepsCommitted={nextStepsCommitted.committed}
           />
+
+          <Text size="xs" c="dimmed" className={classes.footer}>
+            Exported {dayjs().format('D MMM YYYY, HH:mm')} from <a href={boardUrl}>{boardUrl}</a>
+          </Text>
         </Stack>
       </div>
     </div>

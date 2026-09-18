@@ -11,7 +11,7 @@ interface SituationSectionProps {
 export function SituationSection({ text, agreed }: SituationSectionProps) {
   return (
     <Stack gap="xs" mb="xl">
-      <Title order={2}>1. Situation</Title>
+      <Title order={2}>Situation</Title>
       <Text style={{ whiteSpace: 'pre-wrap' }} c={text ? undefined : 'dimmed'}>
         {text || 'No problem statement recorded.'}
       </Text>

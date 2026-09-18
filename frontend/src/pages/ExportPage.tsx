@@ -9,9 +9,9 @@ import { initialStorage, RoomProvider } from '../liveblocks.config'
 import { YjsRoomProvider } from '../liveblocks-yjs/YjsRoomProvider'
 
 /**
- * A standalone, printable read-out of a board — Section 1 (Situation) and Section 4 (Decision,
- * every option expanded) only, since every other phase's inputs are already summarised into
- * Section 4 by the time a board is worth exporting (`docs/phases.md`). Deliberately its own
+ * A standalone, printable read-out of a board — the Situation and the Options/Decision sections
+ * (every option expanded) only, since every other phase's inputs are already summarised into the
+ * latter by the time a board is worth exporting (`docs/phases.md`). Deliberately its own
  * route rather than a view toggled within `BoardPage`: it needs its own clean document (no board
  * chrome, no presence/collaboration UI) and its own print stylesheet, and a route means it can be
  * opened in a new tab, bookmarked, or driven by a headless browser later without any of that
@@ -53,7 +53,7 @@ function ExportRoom({ boardId }: { boardId: string }) {
     >
       <ClientSideSuspense fallback={<ExportLoadingState />}>
         <YjsRoomProvider>
-          <ExportView />
+          <ExportView boardId={boardId} />
         </YjsRoomProvider>
       </ClientSideSuspense>
     </RoomProvider>

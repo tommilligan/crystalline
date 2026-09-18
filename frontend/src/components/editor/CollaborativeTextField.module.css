@@ -26,7 +26,15 @@
   margin: 0;
 }
 
-.editor p.is-editor-empty:first-child::before {
+/* `is-empty` is added by Tiptap's Placeholder extension itself (unscoped), so it needs :global()
+ * like the collaboration-caret classes below — without it, CSS Modules hashes it into a local
+ * name that never matches the class Tiptap actually puts on the DOM, and the placeholder never
+ * renders. (Tiptap's own `is-editor-empty` — "the whole editor is empty" — is unreliable right
+ * after clearing a field's only paragraph, since showOnlyCurrent: false in CollaborativeTextField
+ * computes it from stale pre-edit state; each field here is always a single paragraph, so
+ * `is-empty`, which Tiptap always sets correctly on the empty node itself, already means the same
+ * thing for our purposes.) */
+.editor p:global(.is-empty):first-child::before {
   content: attr(data-placeholder);
   float: left;
   height: 0;

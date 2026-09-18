@@ -73,11 +73,11 @@ function EvaluationAccordionPanel({
   )
 }
 
-/** Good/Bad plus numeric ratings, walked through one option at a time via an Accordion (mirroring
+/** Pros/Cons plus numeric ratings, walked through one option at a time via an Accordion (mirroring
  * the phase-to-phase "Next >" flow one level down): only the active option's fields are expanded,
  * the rest collapse to just their idea text, and clicking into any option (or the "Next >"
  * button) advances which one is focused. Each option's panel is laid out as two columns —
- * Good/Bad stacked on the left, every configured rating property stacked on the right (see
+ * Pros/Cons stacked on the left, every configured rating property stacked on the right (see
  * `EvaluationBody`) — with the rating properties themselves configured via
  * `RatingPropertiesPicker` at the top of the column.
  *

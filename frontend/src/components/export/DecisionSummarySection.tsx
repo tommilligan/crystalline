@@ -19,12 +19,13 @@ interface DecisionSummarySectionProps {
   nextStepsCommitted: boolean
 }
 
-/** Section 4 of the export: every option's evaluation and ratings expanded (mirroring
- * `EvaluationColumn`'s read-only reference view, minus the accordion itself since a printed page
- * has no need to collapse anything), followed by the recorded decision fields. Reuses
- * `EvaluationSummaryBody` — the same plain read-only component `EvaluationColumn` renders once
- * Decision is selected — so the live reference view and this export stay visually and
- * behaviourally in sync by construction rather than by two hand-maintained copies. */
+/** The Options/Decision section of the export: every option's evaluation and ratings expanded
+ * (mirroring `EvaluationColumn`'s read-only reference view, minus the accordion itself since a
+ * printed page has no need to collapse anything) under "Options", followed by the recorded
+ * decision fields under their own "Decision" heading. Reuses `EvaluationSummaryBody` — the same
+ * plain read-only component `EvaluationColumn` renders once Decision is selected — so the live
+ * reference view and this export stay visually and behaviourally in sync by construction rather
+ * than by two hand-maintained copies. */
 export function DecisionSummarySection({
   options,
   properties,
@@ -44,7 +45,7 @@ export function DecisionSummarySection({
 
   return (
     <Stack gap="lg">
-      <Title order={2}>4. Decision</Title>
+      <Title order={2}>Options</Title>
 
       <Stack gap="md">
         {options.length === 0 ? (
@@ -69,6 +70,8 @@ export function DecisionSummarySection({
       </Stack>
 
       <Divider />
+
+      <Title order={2}>Decision</Title>
 
       <Stack gap={4}>
         <Text fw={700}>Chosen option</Text>
