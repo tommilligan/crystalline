@@ -28,9 +28,9 @@ jobs:
   build:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: npm
@@ -39,7 +39,7 @@ jobs:
       # site, or a custom domain) — nothing here needs to know the repo name.
       - name: Configure GitHub Pages
         id: pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       # `configure-pages`'s `base_url` output is the right origin+path for this site, but isn't
       # guaranteed to end in `/` (e.g. a project page's is `https://user.github.io/repo`, no
@@ -66,7 +66,7 @@ jobs:
       - name: Add SPA fallback for client-side routing
         run: cp frontend/dist/index.html frontend/dist/404.html
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: frontend/dist
 
@@ -83,4 +83,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
