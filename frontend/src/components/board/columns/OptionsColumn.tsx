@@ -67,6 +67,7 @@ export function OptionsColumn({ options, disabled, active, onAdvancePhase }: Opt
             handleAdd()
           }
         }}
+        onBlur={handleAdd}
       />
       {active && onAdvancePhase && <NextButton onClick={onAdvancePhase} />}
     </>

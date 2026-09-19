@@ -90,9 +90,9 @@ function LeaderboardRow({
       }}
       style={{
         cursor: disabled ? 'default' : 'pointer',
-        borderColor: chosen ? 'var(--mantine-color-green-6)' : undefined,
+        borderColor: chosen ? 'var(--mantine-color-green-light-color)' : undefined,
         borderWidth: chosen ? 2 : 1,
-        background: chosen ? 'var(--mantine-color-green-0)' : undefined,
+        background: chosen ? 'var(--mantine-color-green-light)' : undefined,
       }}
     >
       <Group justify="space-between" wrap="nowrap" gap="xs">
@@ -261,7 +261,7 @@ export function DecisionColumn({
     <>
       <Stack gap="xs">
         <Title order={3} size="h5">
-          Option ranking after evaluation
+          Leaderboard
         </Title>
         {options.length === 0 ? (
           <Text size="sm" c="dimmed">

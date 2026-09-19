@@ -1,4 +1,5 @@
 import { Accordion, Stack, Title } from '@mantine/core'
+import { useMediaQuery } from '@mantine/hooks'
 import { useEffect, useMemo, useRef } from 'react'
 import { useOptionWalkthrough } from '../../../hooks/useOptionWalkthrough'
 import {
@@ -105,14 +106,15 @@ export function EvaluationColumn({
   onAdvancePhase,
 }: EvaluationColumnProps) {
   const chosenItemRefs = useRef(new Map<string, HTMLDivElement>())
+  const isWide = useMediaQuery('(min-width: 1100px)', true)
 
   useEffect(() => {
-    if (!reference || !chosenOptionId) return
+    if (!reference || !chosenOptionId || !isWide) return
     chosenItemRefs.current.get(chosenOptionId)?.scrollIntoView({
       behavior: 'smooth',
       block: 'nearest',
     })
-  }, [reference, chosenOptionId])
+  }, [reference, chosenOptionId, isWide])
 
   const evaluationFragments = useMemo(
     () => options.flatMap((option) => [option.enablerFragment, option.blockerFragment]),
@@ -158,9 +160,9 @@ export function EvaluationColumn({
                 else chosenItemRefs.current.delete(option.id)
               }}
               style={{
-                borderColor: chosen ? 'var(--mantine-color-green-6)' : undefined,
+                borderColor: chosen ? 'var(--mantine-color-green-light-color)' : undefined,
                 borderWidth: chosen ? 2 : undefined,
-                background: chosen ? 'var(--mantine-color-green-0)' : undefined,
+                background: chosen ? 'var(--mantine-color-green-light)' : undefined,
               }}
             >
               <Accordion.Control>

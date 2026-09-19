@@ -153,8 +153,8 @@ export function HomePage() {
   }
 
   return (
-    <Center mih="100vh" bg="gray.0">
-      <Stack gap="xl" w={560} py="xl">
+    <Center mih="100vh">
+      <Stack gap="xl" w={560} px="md" py="xl">
         <Stack gap={4} align="center" ta="center">
           <Title order={1}>Crystal Ball</Title>
           <Text c="dimmed">Make good decisions efficiently.</Text>

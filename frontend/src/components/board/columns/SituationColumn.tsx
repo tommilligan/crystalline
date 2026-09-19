@@ -67,12 +67,9 @@ export function SituationColumn({ disabled, active, onAdvancePhase }: SituationC
 
   return (
     <Stack gap="sm">
-      <Text size="xs" fw={500} c="dimmed">
-        Problem statement. Try to keep it to one or two sentences.
-      </Text>
       <CollaborativeTextField
         fragment={situationFragment}
-        placeholder="Describe the problem. Aim for team consensus before moving on — this phase is usually time-boxed to 15–20 minutes."
+        placeholder="Describe the problem"
         disabled={disabled}
         ariaLabel="Problem statement"
       />

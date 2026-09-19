@@ -56,18 +56,13 @@ export function BoardColumnShell({
     >
       {collapsed && isWide ? (
         <Stack align="center" justify="flex-start" gap="xs" p="xs" h="100%">
-          <Title
-            order={2}
-            size="h5"
-            c="dark.7"
-            style={{ writingMode: 'vertical-rl', whiteSpace: 'nowrap' }}
-          >
+          <Title order={2} size="h5" style={{ writingMode: 'vertical-rl', whiteSpace: 'nowrap' }}>
             {phase.number}. {phase.label}
           </Title>
         </Stack>
       ) : collapsed ? (
-        <Group justify="space-between" align="center" wrap="nowrap" p="sm" bg="white">
-          <Title order={2} size="h5" c="dark.7">
+        <Group justify="space-between" align="center" wrap="nowrap" p="sm">
+          <Title order={2} size="h5">
             {phase.number}. {phase.label}
           </Title>
         </Group>
@@ -78,11 +73,10 @@ export function BoardColumnShell({
             align="flex-start"
             wrap="nowrap"
             p="sm"
-            bg="white"
-            style={{ borderBottom: '1px solid var(--mantine-color-gray-2)' }}
+            style={{ borderBottom: '1px solid var(--mantine-color-default-border)' }}
           >
             <Stack gap={0}>
-              <Title order={2} size="h5" c="dark.7">
+              <Title order={2} size="h5">
                 {phase.number}. {phase.label}
               </Title>
               <Text size="xs" c="dimmed">
