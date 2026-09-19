@@ -114,12 +114,14 @@ function LeaderboardRow({
 function DecisionTextField({
   fragment,
   placeholder,
+  ariaLabel,
   text,
   signed,
   disabled,
 }: {
   fragment: Y.XmlFragment
   placeholder: string
+  ariaLabel: string
   text: string
   signed: boolean
   disabled?: boolean
@@ -134,7 +136,12 @@ function DecisionTextField({
     )
   }
   return (
-    <CollaborativeTextField fragment={fragment} placeholder={placeholder} disabled={disabled} />
+    <CollaborativeTextField
+      fragment={fragment}
+      placeholder={placeholder}
+      disabled={disabled}
+      ariaLabel={ariaLabel}
+    />
   )
 }
 
@@ -304,6 +311,7 @@ export function DecisionColumn({
         <DecisionTextField
           fragment={decision.countermeasureFragment}
           placeholder="Mitigation plan"
+          ariaLabel="Mitigation plan"
           text={countermeasureText}
           signed={signed}
           disabled={disabled}
@@ -322,6 +330,7 @@ export function DecisionColumn({
           <Group gap={6} wrap="wrap" align="center">
             <Text size="sm">This decision was agreed to</Text>
             <Select
+              aria-label="How this decision was agreed to"
               data={AGREEMENT_OPTIONS}
               value={decision.agreement}
               onChange={(value) => setAgreement((value as Agreement | null) ?? null)}
@@ -342,6 +351,7 @@ export function DecisionColumn({
             <DecisionTextField
               fragment={decision.dissentFragment}
               placeholder="We feel that…"
+              ariaLabel="Dissenting opinion"
               text={dissentText}
               signed={signed}
               disabled={disabled}
@@ -369,6 +379,7 @@ export function DecisionColumn({
               <Text size="sm">by:</Text>
             </Group>
             <TextInput
+              aria-label="Approver name"
               placeholder="Name of the approver"
               value={decision.approvedBy ?? ''}
               disabled={disabled}
@@ -438,6 +449,7 @@ export function DecisionColumn({
                     <Table.Td>
                       <TextInput
                         ref={index === 0 ? firstActionInputRef : undefined}
+                        aria-label={`Action for next step ${index + 1}`}
                         placeholder="e.g. Write an RFC"
                         value={step.action}
                         onChange={(event) =>
@@ -447,6 +459,7 @@ export function DecisionColumn({
                     </Table.Td>
                     <Table.Td>
                       <TextInput
+                        aria-label={`Owner for next step ${index + 1}`}
                         placeholder="Who's driving this"
                         value={step.owner}
                         onChange={(event) =>
@@ -456,6 +469,7 @@ export function DecisionColumn({
                     </Table.Td>
                     <Table.Td>
                       <DateInput
+                        aria-label={`Due date for next step ${index + 1}`}
                         placeholder="Pick a date"
                         value={step.dueDate}
                         onChange={(value) => updateNextStep(step.id, { dueDate: value })}

@@ -52,6 +52,7 @@ export function RatingPropertiesPicker({ properties, disabled }: RatingPropertie
           ))}
           <PillsInput.Field
             ref={inputRef}
+            aria-label="Add a rating property"
             placeholder="Add a rating property, press Enter"
             value={draft}
             disabled={disabled}

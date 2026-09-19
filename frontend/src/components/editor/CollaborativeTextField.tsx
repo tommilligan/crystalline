@@ -4,7 +4,7 @@ import CollaborationCaret from '@tiptap/extension-collaboration-caret'
 import Placeholder from '@tiptap/extension-placeholder'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import type { CSSProperties } from 'react'
+import { type CSSProperties, useId } from 'react'
 import type * as Y from 'yjs'
 import { loadIdentity } from '../../lib/localIdentity'
 import { useOptionalLiveblocksYjsProvider } from '../../liveblocks-yjs/BoardDocProvider'
@@ -23,6 +23,16 @@ interface CollaborativeTextFieldProps {
   /** Minimum visible rows, so the box is clearly a multiline area (e.g. an option summary)
    * rather than a single-line input, before the user has typed enough to grow it. */
   minRows?: number
+  /** Accessible name for the editable region. TipTap's `Placeholder` extension paints via a CSS
+   * `::before` on a `data-placeholder` attribute (see its source), not the native `placeholder`
+   * attribute — screen readers never see it, so unlike a Mantine `TextInput` this field's
+   * `placeholder` alone gives assistive tech nothing to announce. Every caller must supply one of
+   * `ariaLabel` (when there's no adjacent visible label) or `ariaLabelledBy` (the id of a visible
+   * heading/text already serving as this field's label) so the field has a name at all. `label`
+   * alone (the visible caption this component renders itself) already covers it and needs no
+   * extra prop. */
+  ariaLabel?: string
+  ariaLabelledBy?: string
 }
 
 /**
@@ -40,9 +50,14 @@ export function CollaborativeTextField({
   placeholder,
   disabled,
   minRows,
+  ariaLabel,
+  ariaLabelledBy,
 }: CollaborativeTextFieldProps) {
   const provider = useOptionalLiveblocksYjsProvider()
   const identity = loadIdentity()
+  const generatedLabelId = useId()
+  const labelId = label ? generatedLabelId : undefined
+  const labelledBy = ariaLabelledBy ?? labelId
 
   const editor = useEditor(
     {
@@ -64,7 +79,12 @@ export function CollaborativeTextField({
       ],
       editable: !disabled,
       editorProps: {
-        attributes: { class: classes.editor },
+        attributes: {
+          class: classes.editor,
+          'aria-multiline': 'true',
+          ...(ariaLabel ? { 'aria-label': ariaLabel } : {}),
+          ...(labelledBy ? { 'aria-labelledby': labelledBy } : {}),
+        },
       },
       // Collaboration/CollaborationCaret set Yjs awareness state synchronously during editor
       // construction, which notifies other components' presence subscriptions (e.g.
@@ -73,7 +93,7 @@ export function CollaborativeTextField({
       // the mount effect instead.
       immediatelyRender: false,
     },
-    [fragment, provider, disabled],
+    [fragment, provider, disabled, ariaLabel, labelledBy],
   )
 
   return (
@@ -83,7 +103,7 @@ export function CollaborativeTextField({
       style={minRows ? ({ '--cbf-min-height': `${minRows * 1.4}em` } as CSSProperties) : undefined}
     >
       {label && (
-        <Text size="xs" fw={500} c="dimmed" mb={4}>
+        <Text id={labelId} size="xs" fw={500} c="dimmed" mb={4}>
           {label}
         </Text>
       )}

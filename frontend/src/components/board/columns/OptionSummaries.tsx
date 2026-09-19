@@ -1,5 +1,6 @@
 import { ActionIcon, Box, Group, Stack, Text, Title, Tooltip } from '@mantine/core'
 import { IconQuestionMark } from '@tabler/icons-react'
+import { useId } from 'react'
 import { useSetScore } from '../../../hooks/useBoardMutations'
 import { useFragmentPlainText } from '../../../liveblocks-yjs/useFragmentPlainText'
 import type { OptionData, RatingProperty } from '../../../types/board'
@@ -131,10 +132,12 @@ function RatingRow({
  * `RatingsFields`. Reused (always non-editable) wherever a later column inlines it instead of
  * showing its own Evaluation column. */
 export function GoodBadFields({ option, disabled }: { option: OptionData; disabled?: boolean }) {
+  const prosId = useId()
+  const consId = useId()
   return (
     <Stack gap="sm">
       <Box>
-        <Title order={5} size="xs" mb={4}>
+        <Title id={prosId} order={5} size="xs" mb={4}>
           Pros
         </Title>
         <CollaborativeTextField
@@ -142,10 +145,11 @@ export function GoodBadFields({ option, disabled }: { option: OptionData; disabl
           placeholder="What helps or supports this option?"
           disabled={disabled}
           minRows={2}
+          ariaLabelledBy={prosId}
         />
       </Box>
       <Box>
-        <Title order={5} size="xs" mb={4}>
+        <Title id={consId} order={5} size="xs" mb={4}>
           Cons
         </Title>
         <CollaborativeTextField
@@ -153,6 +157,7 @@ export function GoodBadFields({ option, disabled }: { option: OptionData; disabl
           placeholder="What limits or risks this option?"
           disabled={disabled}
           minRows={2}
+          ariaLabelledBy={consId}
         />
       </Box>
     </Stack>

@@ -1,5 +1,5 @@
 import { Blockquote, SegmentedControl, Stack, Text } from '@mantine/core'
-import { useEffect, useRef } from 'react'
+import { useEffect, useId, useRef } from 'react'
 import { useBoardSynced } from '../../../board-doc/BoardDocContext'
 import { useSetSituationAgreed } from '../../../hooks/useBoardMutations'
 import { useBoardSituationAgreed, useSituationFragment } from '../../../hooks/useBoardState'
@@ -31,6 +31,7 @@ export function SituationColumn({ disabled, active, onAdvancePhase }: SituationC
   const synced = useBoardSynced()
   const previousTextRef = useRef(situationText)
   const wasSyncedRef = useRef(false)
+  const agreeLabelId = useId()
 
   useEffect(() => {
     // While the Yjs doc isn't synced, its fragment can read as stale or empty (initial load, or
@@ -73,14 +74,16 @@ export function SituationColumn({ disabled, active, onAdvancePhase }: SituationC
         fragment={situationFragment}
         placeholder="Describe the problem. Aim for team consensus before moving on — this phase is usually time-boxed to 15–20 minutes."
         disabled={disabled}
+        ariaLabel="Problem statement"
       />
       <Stack gap={4}>
-        <Text size="sm" fw={500}>
+        <Text id={agreeLabelId} size="sm" fw={500}>
           Does everyone agree with this problem statement?
         </Text>
         <SegmentedControl
           size="xs"
           disabled={disabled}
+          aria-labelledby={agreeLabelId}
           data={[
             { label: 'No', value: 'no' },
             { label: 'Yes', value: 'yes' },

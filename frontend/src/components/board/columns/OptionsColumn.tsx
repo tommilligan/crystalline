@@ -33,13 +33,14 @@ export function OptionsColumn({ options, disabled, active, onAdvancePhase }: Opt
 
   return (
     <>
-      {options.map((option) => (
+      {options.map((option, index) => (
         <Group key={option.id} align="center" wrap="nowrap" gap="xs">
           <div style={{ flex: 1, minWidth: 0 }}>
             <CollaborativeTextField
               fragment={option.ideaFragment}
               placeholder="Describe this idea…"
               disabled={disabled}
+              ariaLabel={`Idea ${index + 1}`}
             />
           </div>
           <ActionIcon
@@ -56,6 +57,7 @@ export function OptionsColumn({ options, disabled, active, onAdvancePhase }: Opt
       <TextInput
         rightSection={<IconPlus size={16} />}
         placeholder="Type an option, press Enter"
+        aria-label="New idea"
         value={draft}
         disabled={disabled}
         onChange={(event) => setDraft(event.currentTarget.value)}
