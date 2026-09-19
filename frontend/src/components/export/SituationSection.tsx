@@ -10,7 +10,7 @@ interface SituationSectionProps {
  * by the time a board is worth exporting. */
 export function SituationSection({ text, agreed }: SituationSectionProps) {
   return (
-    <Stack gap="xs" mb="xl">
+    <Stack gap="xs">
       <Title order={2}>Situation</Title>
       <Text style={{ whiteSpace: 'pre-wrap' }} c={text ? undefined : 'dimmed'}>
         {text || 'No problem statement recorded.'}
