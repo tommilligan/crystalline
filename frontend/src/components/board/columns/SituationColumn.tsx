@@ -1,4 +1,4 @@
-import { Blockquote, SegmentedControl, Stack, Text } from '@mantine/core'
+import { Badge, SegmentedControl, Stack, Text } from '@mantine/core'
 import { useEffect, useId, useRef } from 'react'
 import { useBoardSynced } from '../../../board-doc/BoardDocContext'
 import { useSetSituationAgreed } from '../../../hooks/useBoardMutations'
@@ -20,8 +20,9 @@ interface SituationColumnProps {
  *
  * Once this column isn't the active one, it doesn't dim like the others (see the situation
  * special-case in `BoardColumnShell`) — instead the editable field itself transforms into a
- * yellow blockquote read-out of the agreed statement, since the team has moved on from
- * editing it. Selecting the column again reverses this back to the edit view.
+ * plain read-out of the agreed statement plus an agreement badge (mirroring `SituationSection`
+ * on the export page), since the team has moved on from editing it. Selecting the column again
+ * reverses this back to the edit view.
  */
 export function SituationColumn({ disabled, active, onAdvancePhase }: SituationColumnProps) {
   const agreed = useBoardSituationAgreed()
@@ -57,11 +58,14 @@ export function SituationColumn({ disabled, active, onAdvancePhase }: SituationC
 
   if (!active) {
     return (
-      <Blockquote color="yellow">
-        <Text size="xl" fw={700}>
+      <Stack gap="xs">
+        <Text style={{ whiteSpace: 'pre-wrap' }} c={situationText ? undefined : 'dimmed'}>
           {situationText || 'No problem statement yet.'}
         </Text>
-      </Blockquote>
+        <Badge color={agreed ? 'teal' : 'gray'} variant="light" style={{ alignSelf: 'flex-start' }}>
+          {agreed ? 'Agreed' : 'Not Agreed'}
+        </Badge>
+      </Stack>
     )
   }
 
