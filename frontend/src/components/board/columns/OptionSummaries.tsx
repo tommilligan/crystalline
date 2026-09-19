@@ -1,5 +1,7 @@
 import { ActionIcon, Box, Group, Stack, Text, Title, Tooltip } from '@mantine/core'
+import { useMediaQuery } from '@mantine/hooks'
 import { IconQuestionMark } from '@tabler/icons-react'
+import type { ReactNode } from 'react'
 import { useId } from 'react'
 import { useSetScore } from '../../../hooks/useBoardMutations'
 import { useFragmentPlainText } from '../../../liveblocks-yjs/useFragmentPlainText'
@@ -10,6 +12,13 @@ import { CollaborativeTextField } from '../../editor/CollaborativeTextField'
 // as flex-grow shares (8:4, i.e. 2:1) — Pros/Cons is prose and wants the room, the rating rows
 // are a label plus a fixed-width button strip and don't.
 const EVALUATION_BODY_FLEX = { goodBad: 8, ratings: 4 }
+
+// Below this, the two-column layout leaves the ratings column too narrow to show its property
+// labels alongside the fixed-width score-button strip (`SCORE_BUTTONS_WIDTH`) — the labels
+// truncate to nothing while the buttons, which can't shrink, stay visible. Stack the two columns
+// instead so ratings get the full card width, same idea as the board's row/stacked breakpoint in
+// `BoardLayout.tsx` (that one's at 1100px, for the column row vs. column stack).
+const EVALUATION_NARROW_QUERY = '(max-width: 600px)'
 
 const SCORE_VALUES = [1, 2, 3, 4, 5] as const
 const SCORE_BUTTON_SIZE = 20
@@ -299,6 +308,46 @@ export function RatingsSummary({
   )
 }
 
+/** The two-column (Pros/Cons, then ratings) layout shared by `EvaluationBody` and
+ * `EvaluationSummaryBody` — side by side above `EVALUATION_NARROW_QUERY`, stacked full-width
+ * below it (see that constant for why). */
+function EvaluationTwoColumnLayout({
+  goodBad,
+  ratings,
+}: {
+  goodBad: ReactNode
+  ratings: ReactNode
+}) {
+  const isNarrow = useMediaQuery(EVALUATION_NARROW_QUERY, false)
+  return (
+    <Group
+      align="flex-start"
+      gap="lg"
+      wrap="wrap"
+      style={isNarrow ? { flexDirection: 'column' } : undefined}
+    >
+      <Box
+        style={{
+          flex: EVALUATION_BODY_FLEX.goodBad,
+          minWidth: 0,
+          width: isNarrow ? '100%' : undefined,
+        }}
+      >
+        {goodBad}
+      </Box>
+      <Box
+        style={{
+          flex: EVALUATION_BODY_FLEX.ratings,
+          minWidth: 0,
+          width: isNarrow ? '100%' : undefined,
+        }}
+      >
+        {ratings}
+      </Box>
+    </Group>
+  )
+}
+
 /** The Evaluation column's full per-option body: Pros/Cons stacked in one column, all numeric
  * ratings stacked in the other, side by side. Shared between the editable walkthrough
  * (`EvaluationColumn`) and the read-only reference/export views below. */
@@ -312,14 +361,10 @@ export function EvaluationBody({
   disabled?: boolean
 }) {
   return (
-    <Group align="flex-start" gap="lg" wrap="wrap">
-      <Box style={{ flex: EVALUATION_BODY_FLEX.goodBad, minWidth: 0 }}>
-        <GoodBadFields option={option} disabled={disabled} />
-      </Box>
-      <Box style={{ flex: EVALUATION_BODY_FLEX.ratings, minWidth: 0 }}>
-        <RatingsFields option={option} properties={properties} disabled={disabled} />
-      </Box>
-    </Group>
+    <EvaluationTwoColumnLayout
+      goodBad={<GoodBadFields option={option} disabled={disabled} />}
+      ratings={<RatingsFields option={option} properties={properties} disabled={disabled} />}
+    />
   )
 }
 
@@ -334,13 +379,9 @@ export function EvaluationSummaryBody({
   properties: readonly RatingProperty[]
 }) {
   return (
-    <Group align="flex-start" gap="lg" wrap="wrap">
-      <Box style={{ flex: EVALUATION_BODY_FLEX.goodBad, minWidth: 0 }}>
-        <GoodBadSummary option={option} />
-      </Box>
-      <Box style={{ flex: EVALUATION_BODY_FLEX.ratings, minWidth: 0 }}>
-        <RatingsSummary option={option} properties={properties} />
-      </Box>
-    </Group>
+    <EvaluationTwoColumnLayout
+      goodBad={<GoodBadSummary option={option} />}
+      ratings={<RatingsSummary option={option} properties={properties} />}
+    />
   )
 }
