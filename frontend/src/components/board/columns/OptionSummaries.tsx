@@ -222,8 +222,8 @@ function SummaryDots({ value }: { value: number | null }) {
             borderRadius: '50%',
             backgroundColor:
               value !== null && n <= value
-                ? 'var(--mantine-color-blue-6)'
-                : 'var(--mantine-color-gray-3)',
+                ? 'var(--mantine-color-blue-filled)'
+                : 'var(--mantine-color-default-border)',
           }}
         />
       ))}

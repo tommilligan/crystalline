@@ -46,12 +46,14 @@ export function SessionTimer({ disabled }: SessionTimerProps) {
       withBorder
       radius="sm"
       p="sm"
-      bg="yellow.0"
-      style={{ borderColor: 'var(--mantine-color-yellow-3)' }}
+      style={{
+        backgroundColor: 'var(--mantine-color-yellow-light)',
+        borderColor: 'var(--mantine-color-yellow-light-color)',
+      }}
     >
       <Group justify="space-between" align="flex-start" wrap="nowrap">
         <Stack gap={0}>
-          <Text size="xs" fw={700} c="yellow.9">
+          <Text size="xs" fw={700} style={{ color: 'var(--mantine-color-yellow-light-color)' }}>
             SESSION TIMER
           </Text>
           <Text size="xl" fw={700} ff="monospace">
@@ -65,7 +67,7 @@ export function SessionTimer({ disabled }: SessionTimerProps) {
           <Group gap={4}>
             <ActionIcon
               variant="subtle"
-              color="yellow.9"
+              color="yellow"
               aria-label={running ? 'Pause timer' : 'Start timer'}
               disabled={disabled}
               onClick={() => (running ? pause() : start())}
@@ -74,7 +76,7 @@ export function SessionTimer({ disabled }: SessionTimerProps) {
             </ActionIcon>
             <ActionIcon
               variant="subtle"
-              color="yellow.9"
+              color="yellow"
               aria-label="Reset timer"
               disabled={disabled}
               onClick={() => reset()}

@@ -224,7 +224,7 @@ export function BoardView({ boardId, mode }: { boardId: string; mode: BoardMode 
         {signed && lifecycle.signedAt && (
           <Alert color="green" radius="sm" icon={<IconLock size={18} />} p="xs">
             <Group justify="space-between" wrap="wrap" gap="xs">
-              <Text size="sm" fw={600} c="green.9">
+              <Text size="sm" fw={600}>
                 Decision signed by {decision.approvedBy || 'an approver'} on{' '}
                 {dayjs(lifecycle.signedAt).format('YYYY-MM-DD')} — Board locked.
               </Text>

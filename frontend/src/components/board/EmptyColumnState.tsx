@@ -7,8 +7,8 @@ import { IconQuestionMark } from '@tabler/icons-react'
 export function EmptyColumnState() {
   return (
     <Stack align="center" gap="xs" py="md">
-      <ThemeIcon size={40} radius="xl" color="gray.3" variant="light">
-        <IconQuestionMark size={20} color="var(--mantine-color-gray-6)" />
+      <ThemeIcon size={40} radius="xl" color="gray" variant="light">
+        <IconQuestionMark size={20} />
       </ThemeIcon>
       <Text fw={700} size="sm" ta="center">
         No Options Yet

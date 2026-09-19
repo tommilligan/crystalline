@@ -1,4 +1,17 @@
+/* This whole view simulates a printed A4 sheet on a neutral backdrop — deliberately not
+ * theme-aware, since a printout has no dark mode. `data-mantine-color-scheme='light'` plus the
+ * `--mantine-color-*` overrides below pin every Mantine component under here (Text `c="dimmed"`,
+ * Table/Divider borders, Badge `variant="light"`, the export-link anchor colour) to their light
+ * values, so they read correctly regardless of the viewer's OS/app colour scheme. */
 .page {
+  --mantine-color-dimmed: var(--mantine-color-gray-6);
+  --mantine-color-anchor: var(--mantine-color-blue-6);
+  --mantine-color-gray-light: var(--mantine-color-gray-1);
+  --mantine-color-gray-light-color: var(--mantine-color-gray-9);
+  --mantine-color-teal-light: var(--mantine-color-teal-1);
+  --mantine-color-teal-light-color: var(--mantine-color-teal-9);
+  --mantine-color-green-light: var(--mantine-color-green-1);
+  --mantine-color-green-light-color: var(--mantine-color-green-9);
   background: var(--mantine-color-gray-1);
   min-height: 100vh;
   padding: 24px 0 48px;

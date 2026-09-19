@@ -1,5 +1,5 @@
 .wrapper {
-  border: 1px solid var(--mantine-color-gray-4);
+  border: 1px solid var(--mantine-color-default-border);
   border-radius: var(--mantine-radius-sm);
   padding: 6px 10px;
   background: var(--mantine-color-body);
@@ -11,7 +11,7 @@
 }
 
 .wrapper[data-disabled] {
-  background: var(--mantine-color-gray-0);
+  background: var(--mantine-color-disabled);
   opacity: 0.75;
 }
 

@@ -43,7 +43,9 @@ export function BoardColumnShell({
       radius="md"
       onClickCapture={onFocus}
       style={{
-        borderColor: emphasized ? 'var(--mantine-color-blue-5)' : 'var(--mantine-color-gray-3)',
+        borderColor: emphasized
+          ? 'var(--mantine-color-blue-5)'
+          : 'var(--mantine-color-default-border)',
         borderWidth: 2,
         overflow: 'hidden',
         display: 'flex',

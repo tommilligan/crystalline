@@ -68,7 +68,7 @@ export function ExportView({ boardId }: { boardId: string }) {
   const boardUrl = `${window.location.origin}/board/${boardId}`
 
   return (
-    <div className={classes.page}>
+    <div className={classes.page} data-mantine-color-scheme="light">
       <Group justify="space-between" className={`${classes.toolbar} ${classes.noPrint}`}>
         <Text size="sm" c="dimmed">
           This is a read-only export. Close this tab to return to the board.
