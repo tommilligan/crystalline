@@ -10,6 +10,14 @@
 #   scripts/run-app.sh --keep     # leave both servers running afterward (e.g. to poke around
 #                                  # by hand at http://localhost:5173)
 #   scripts/run-app.sh --no-smoke # just start the servers and wait, no browser walk
+#   scripts/run-app.sh --mobile   # run the smoke walk in a phone-sized viewport (Playwright's
+#                                  # "iPhone 13" profile) instead of desktop, so mobile-only
+#                                  # layout changes get accurate screenshots — see
+#                                  # scripts/smoke-test.mjs. Screenshots land in
+#                                  # scripts/.run-app.local/screenshots-mobile/.
+#   scripts/run-app.sh --dark     # emulate a dark-mode browser (the app has no in-app theme
+#                                  # toggle, it just follows the OS/browser preference). Combine
+#                                  # with --mobile for mobile+dark screenshots.
 #
 # BACKEND_PORT / FRONTEND_PORT env vars override the default ports (4000 / 5173). Automated
 # verification (e.g. an agent checking a change) should always set these to something other than
@@ -29,12 +37,16 @@ mkdir -p "$LOG_DIR"
 
 KEEP=false
 RUN_SMOKE=true
+MOBILE=false
+DARK=false
 for arg in "$@"; do
   case "$arg" in
     --keep) KEEP=true ;;
     --no-smoke) RUN_SMOKE=false ;;
+    --mobile) MOBILE=true ;;
+    --dark) DARK=true ;;
     *)
-      echo "Unknown argument: $arg (expected --keep and/or --no-smoke)" >&2
+      echo "Unknown argument: $arg (expected --keep, --no-smoke, --mobile, and/or --dark)" >&2
       exit 1
       ;;
   esac
@@ -91,8 +103,24 @@ fi
 echo "Both servers are up."
 
 if [ "$RUN_SMOKE" = true ]; then
-  echo "Running the browser smoke walk..."
-  node scripts/smoke-test.mjs "http://localhost:$FRONTEND_PORT"
+  SMOKE_ARGS=("http://localhost:$FRONTEND_PORT")
+  DESCRIPTORS=()
+  if [ "$MOBILE" = true ]; then
+    SMOKE_ARGS+=("--mobile")
+    DESCRIPTORS+=("mobile viewport")
+  fi
+  if [ "$DARK" = true ]; then
+    SMOKE_ARGS+=("--dark")
+    DESCRIPTORS+=("dark mode")
+  fi
+  if [ "${#DESCRIPTORS[@]}" -gt 0 ]; then
+    IFS=', '
+    echo "Running the browser smoke walk (${DESCRIPTORS[*]})..."
+    unset IFS
+  else
+    echo "Running the browser smoke walk..."
+  fi
+  node scripts/smoke-test.mjs "${SMOKE_ARGS[@]}"
 else
   echo "Skipping the smoke walk (--no-smoke). App is at http://localhost:$FRONTEND_PORT"
   if [ "$KEEP" = false ]; then

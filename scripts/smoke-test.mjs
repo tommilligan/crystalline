@@ -15,20 +15,39 @@
 // SMOKE_SCREENSHOT_DIR and SMOKE_BOARD_TITLE below so the doc images land in a committed
 // directory with a clean, stable board title instead of the ephemeral local debug output. That
 // way the doc screenshots can never drift from what's actually verified to work here.
+//
+// Pass --mobile (anywhere in argv) to walk the board in a phone-sized viewport instead of the
+// default desktop one, via Playwright's "iPhone 13" device profile (390x844, mobile UA, touch) —
+// for checking a responsive/mobile-only change actually renders like a phone, not just a narrow
+// desktop window.
+//
+// Pass --dark to emulate a `prefers-color-scheme: dark` browser — the app has no in-app theme
+// toggle (see `App.tsx`'s `defaultColorScheme="auto"`), it just follows the OS/browser
+// preference via Mantine, so this is the only way to drive it into dark mode from here.
+//
+// Both flags can be combined. Screenshots land in a dir named after whichever of
+// `screenshots[-mobile][-dark]` applies, so no combination of runs overwrites another (custom
+// SMOKE_SCREENSHOT_DIR is used as-is regardless).
 
 import { mkdir, rm } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { chromium } from 'playwright'
+import { chromium, devices } from 'playwright'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const repoRoot = path.join(here, '..')
 const outDir = path.join(here, '.run-app.local')
+const cliArgs = process.argv.slice(2)
+const mobile = cliArgs.includes('--mobile')
+const dark = cliArgs.includes('--dark')
+const isCustomScreenshotDir = Boolean(process.env.SMOKE_SCREENSHOT_DIR)
+const screenshotDirName = ['screenshots', mobile && 'mobile', dark && 'dark']
+  .filter(Boolean)
+  .join('-')
 const screenshotDir = process.env.SMOKE_SCREENSHOT_DIR
   ? path.resolve(repoRoot, process.env.SMOKE_SCREENSHOT_DIR)
-  : path.join(outDir, 'screenshots')
-const isCustomScreenshotDir = Boolean(process.env.SMOKE_SCREENSHOT_DIR)
-const baseUrl = process.argv[2] ?? 'http://localhost:5173'
+  : path.join(outDir, screenshotDirName)
+const baseUrl = cliArgs.find((arg) => !arg.startsWith('--')) ?? 'http://localhost:5173'
 
 const SCORE_DIMENSIONS = ['People', 'Time', 'Money', 'Quality', 'Service', 'Price']
 
@@ -41,7 +60,10 @@ async function main() {
   await mkdir(screenshotDir, { recursive: true })
 
   const browser = await chromium.launch()
-  const page = await browser.newPage({ viewport: { width: 1400, height: 1100 } })
+  const page = await browser.newPage({
+    ...(mobile ? devices['iPhone 13'] : { viewport: { width: 1400, height: 1100 } }),
+    ...(dark ? { colorScheme: 'dark' } : {}),
+  })
 
   const consoleErrors = []
   page.on('console', (msg) => {
@@ -90,7 +112,7 @@ async function main() {
       await page.getByLabel('Board title').fill(boardTitle)
       await page.getByRole('button', { name: 'Create Board' }).click()
       await page.waitForURL(/\/board\//)
-      await page.getByText('Problem statement. Try to keep it').waitFor()
+      await page.getByText('What is the problem?').waitFor()
     })
 
     await step('phase 1 — situation', async () => {
@@ -146,7 +168,7 @@ async function main() {
     await step('phase 4 — decision leaderboard', async () => {
       const leaderboard = page.getByTestId('decision-leaderboard')
       await assert(
-        await page.getByText('Option ranking after evaluation').isVisible(),
+        await page.getByText('Leaderboard').isVisible(),
         'Decision column should show its ranking leaderboard',
       )
       const leaderboardText = await leaderboard.innerText()
