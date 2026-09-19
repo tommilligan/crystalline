@@ -3,21 +3,23 @@ import { PHASES, type Phase, phaseNumber } from '../../types/board'
 export type ColumnLayoutState = 'hidden' | 'collapsed' | 'primary' | 'secondary'
 
 /**
- * Decides, per column, whether to hide it entirely, collapse it to a rotated-text sliver, or
+ * Decides, per column, whether to hide it entirely, collapse it down to just its header, or
  * show it expanded — and if expanded, whether it's the "primary" column (the current phase) or
  * merely "secondary" (expanded but not current, e.g. the problem statement staying visible once
  * later phases are in progress). Primary vs. secondary is purely a border-color distinction (see
- * `BoardColumnShell`) — both get the same width and full opacity, no dimming.
+ * `BoardColumnShell`) — both get the same width and full opacity, no dimming. How a `collapsed`
+ * column actually renders (a rotated-text sliver vs. a full-width row with a horizontal label) is
+ * a presentation decision made by `BoardLayout`/`BoardColumnShell`, not this module.
  *
  * Rules, from narrowest to broadest:
  * - The problem column (phase 1) is always visible and never collapses.
  * - A column is visible (collapsed or expanded — its existence is shown) once it is selected,
  *   or once any column at or after it has data: selecting/populating column N implies columns
  *   1..N exist, even if the user hasn't visited them.
- * - The options column (phase 2) collapses to a sliver whenever a later phase (3-4) is
- *   selected — once the team has moved on, the option list is redundant (every later column
- *   echoes it), so it doesn't need space. Selecting it again re-expands it (since idea text is
- *   only editable there), but only for as long as it's selected — move on again and it collapses
+ * - The options column (phase 2) collapses whenever a later phase (3-4) is selected — once the
+ *   team has moved on, the option list is redundant (every later column echoes it), so it
+ *   doesn't need space. Selecting it again re-expands it (since idea text is only editable
+ *   there), but only for as long as it's selected — move on again and it collapses
  *   right back, it doesn't stay pinned open the way Evaluation/Decision do below.
  * - Evaluation (phase 3) and Decision (phase 4) both expand once the *highest phase reached this
  *   session* (`maxVisitedPhase`, tracked per-viewer in `BoardView` — not board data, see the

@@ -6,10 +6,12 @@ import type { ColumnLayoutState } from './columnLayout'
 interface BoardColumnShellProps {
   phase: (typeof PHASES)[number]
   layout: Exclude<ColumnLayoutState, 'hidden'>
-  // Wide screens lay collapsed columns out side-by-side, so they shrink to a narrow sliver with
-  // rotated text; narrow screens stack columns as full-width rows, so a collapsed column instead
-  // stays full width and shrinks in height, with its label left horizontal (see `BoardLayout`).
-  isWide: boolean
+  // True only for columns `BoardLayout` lays out side-by-side on wide screens (Evaluation,
+  // Decision) — those shrink to a narrow sliver with rotated text when collapsed. Stacked
+  // columns (Situation, Options — always full-width rows — and every column on narrow screens,
+  // which stack too) instead stay full width and shrink to just their header row, label left
+  // horizontal, since there's no room to rotate it without wasting more height than it saves.
+  rotateWhenCollapsed: boolean
   onFocus: () => void
   children: ReactNode
 }
@@ -29,7 +31,7 @@ interface BoardColumnShellProps {
 export function BoardColumnShell({
   phase,
   layout,
-  isWide,
+  rotateWhenCollapsed,
   onFocus,
   children,
 }: BoardColumnShellProps) {
@@ -56,7 +58,7 @@ export function BoardColumnShell({
         cursor: collapsed ? 'pointer' : undefined,
       }}
     >
-      {collapsed && isWide ? (
+      {collapsed && rotateWhenCollapsed ? (
         <Stack align="center" justify="flex-start" gap="xs" p="xs" h="100%">
           <Title order={2} size="h5" style={{ writingMode: 'vertical-rl', whiteSpace: 'nowrap' }}>
             {phase.number}. {phase.label}

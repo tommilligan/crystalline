@@ -25,19 +25,21 @@ const COLLAPSED_WIDTH = 56
 const ROW_COLUMN_MAX_WIDTH = 800
 
 /**
- * The situation column (the problem statement) always sits in its own full-width row at the
- * top, since it must stay visible at all times — every other column, however it's arranged,
- * only ever echoes or builds on it.
+ * The situation and options columns each always sit in their own full-width row, stacked one
+ * above the other at the top, since the situation must stay visible at all times and options
+ * should read the same way right underneath it — every other column, however it's arranged, only
+ * ever echoes or builds on those two.
  *
- * Wide screens (projector/laptop, the primary MVP scenario per `docs/ui-notes.md`) lay the
- * remaining columns out in a single row below whose widths follow `computeColumnLayout`: hidden
- * columns aren't rendered, collapsed ones shrink to a fixed-width rotated-text sliver, and
+ * Wide screens (projector/laptop, the primary MVP scenario per `docs/ui-notes.md`) lay Evaluation
+ * and Decision out in a single row below those two, with widths following `computeColumnLayout`:
+ * hidden columns aren't rendered, collapsed ones shrink to a fixed-width rotated-text sliver, and
  * expanded ones (primary or secondary alike) share the rest of the row equally — emphasis comes
- * from `BoardColumnShell`'s border color alone, not width or opacity. Narrower screens stack the
- * same columns as full-width rows instead; a collapsed column there stays full width like its
- * siblings but shrinks to just its header row, with the label left horizontal (see
- * `BoardColumnShell`) since there's no room to rotate it without wasting more height than it
- * saves.
+ * from `BoardColumnShell`'s border color alone, not width or opacity. Narrower screens stack
+ * every column (including Evaluation/Decision) as full-width rows instead; a collapsed column
+ * there stays full width like its siblings but shrinks to just its header row, with the label
+ * left horizontal (see `BoardColumnShell`) since there's no room to rotate it without wasting
+ * more height than it saves — Situation and Options use that same full-width/horizontal-label
+ * presentation on every screen size, never the rotated sliver.
  */
 export function BoardLayout({
   currentPhase,
@@ -59,18 +61,26 @@ export function BoardLayout({
   }, [currentPhase, isWide])
 
   if (isWide) {
-    const situationPhase = PHASES[0]
-    const rowPhases = visiblePhases.filter((phase) => phase.key !== situationPhase.key)
+    const [situationPhase, optionsPhase] = PHASES
+    const stackedPhases = visiblePhases.filter(
+      (phase) => phase.key === situationPhase.key || phase.key === optionsPhase.key,
+    )
+    const rowPhases = visiblePhases.filter(
+      (phase) => phase.key !== situationPhase.key && phase.key !== optionsPhase.key,
+    )
     return (
       <Stack gap="md">
-        <BoardColumnShell
-          phase={situationPhase}
-          layout={layout[situationPhase.key] as Exclude<ColumnLayoutState, 'hidden'>}
-          isWide={isWide}
-          onFocus={() => onFocusPhase(situationPhase.key)}
-        >
-          {columns[situationPhase.key]}
-        </BoardColumnShell>
+        {stackedPhases.map((phase) => (
+          <BoardColumnShell
+            key={phase.key}
+            phase={phase}
+            layout={layout[phase.key] as Exclude<ColumnLayoutState, 'hidden'>}
+            rotateWhenCollapsed={false}
+            onFocus={() => onFocusPhase(phase.key)}
+          >
+            {columns[phase.key]}
+          </BoardColumnShell>
+        ))}
         {rowPhases.length > 0 && (
           <div style={{ display: 'flex', gap: 'var(--mantine-spacing-md)', alignItems: 'stretch' }}>
             {rowPhases.map((phase) => {
@@ -84,7 +94,7 @@ export function BoardLayout({
                   <BoardColumnShell
                     phase={phase}
                     layout={state}
-                    isWide={isWide}
+                    rotateWhenCollapsed={true}
                     onFocus={() => onFocusPhase(phase.key)}
                   >
                     {columns[phase.key]}
@@ -108,7 +118,7 @@ export function BoardLayout({
             <BoardColumnShell
               phase={phase}
               layout={state}
-              isWide={isWide}
+              rotateWhenCollapsed={false}
               onFocus={() => onFocusPhase(phase.key)}
             >
               {columns[phase.key]}
