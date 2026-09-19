@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Drives Crystal Ball's full four-phase board flow (Situation -> Options -> Evaluation ->
-// Decision -> Sign) in a headless browser, end to end, against a running instance —
+// Decision -> Sign), plus a look at the read-only export view it links to, in a headless
+// browser, end to end, against a running instance —
 // the "does the app actually work" check that unit tests and `tsc` can't give you. Run via
 // `scripts/run-app.sh`, which starts the dev servers first; or point it at any already-running
 // instance: `node scripts/smoke-test.mjs http://localhost:5173`.
@@ -77,8 +78,10 @@ async function main() {
     stepIndex += 1
     currentStep = name
     console.log(`[${stepIndex}] ${name}`)
-    await fn()
-    await page.screenshot({
+    // A step normally screenshots the main `page`; `fn` can instead return a different Page (e.g.
+    // a tab opened via target="_blank") to screenshot that one instead.
+    const screenshotTarget = (await fn()) ?? page
+    await screenshotTarget.screenshot({
       path: path.join(screenshotDir, `${String(stepIndex).padStart(2, '0')}-${slug(name)}.png`),
       fullPage: true,
     })
@@ -233,6 +236,20 @@ async function main() {
       )
       await commitButton.click()
       await page.getByText('Actions committed ✅').waitFor({ timeout: 5000 })
+    })
+
+    await step('export view', async () => {
+      // Signed boards surface an "Export" link (also present unsigned, in the header) — follow
+      // it rather than constructing the /export URL by hand, so this step also covers the link
+      // actually being wired up. Opens in a new tab (target="_blank" in `BoardView`), so hand
+      // that page back to `step` to screenshot instead of the original one (left as-is, still on
+      // the board). Left open rather than closed — `browser.close()` at the end sweeps it up.
+      const [exportPage] = await Promise.all([
+        page.context().waitForEvent('page'),
+        page.getByRole('link', { name: 'Export' }).first().click(),
+      ])
+      await exportPage.getByText('This is a read-only export.').waitFor()
+      return exportPage
     })
 
     await assert(
