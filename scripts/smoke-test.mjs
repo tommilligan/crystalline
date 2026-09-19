@@ -49,7 +49,7 @@ const screenshotDir = process.env.SMOKE_SCREENSHOT_DIR
   : path.join(outDir, screenshotDirName)
 const baseUrl = cliArgs.find((arg) => !arg.startsWith('--')) ?? 'http://localhost:5173'
 
-const SCORE_DIMENSIONS = ['People', 'Time', 'Money', 'Quality', 'Service', 'Price']
+const SCORE_DIMENSIONS = ['Time', 'Money', 'Quality']
 
 async function main() {
   if (isCustomScreenshotDir) {
@@ -138,8 +138,8 @@ async function main() {
     })
 
     const scores = [
-      [3, 3, 3, 4, 4, 4], // option 1: totals 21
-      [5, 5, 5, 5, 5, 5], // option 2: totals 30
+      [3, 3, 4], // option 1: totals 10
+      [5, 5, 5], // option 2: totals 15
     ]
     await step('phase 3 — evaluation (good/bad + ratings, merged)', async () => {
       // Option 1's walkthrough step: Good/Bad text plus every rating property, side by side —
@@ -173,14 +173,14 @@ async function main() {
       )
       const leaderboardText = await leaderboard.innerText()
       await assert(
-        leaderboardText.includes('30 pts') && leaderboardText.includes('21 pts'),
+        leaderboardText.includes('15 pts') && leaderboardText.includes('10 pts'),
         'each option should show its total points',
       )
       const automateIndex = leaderboardText.indexOf('Automate the OD test intake queue')
       const hireIndex = leaderboardText.indexOf('Hire a temp QC technician')
       await assert(
         automateIndex >= 0 && hireIndex >= 0 && automateIndex < hireIndex,
-        'higher-scoring option (30 pts) should be listed above the lower-scoring one (21 pts)',
+        'higher-scoring option (15 pts) should be listed above the lower-scoring one (10 pts)',
       )
       const body = await page.locator('body').innerText()
       await assert(
