@@ -25,13 +25,13 @@ export const PHASES: ReadonlyArray<{
     key: 'evaluation',
     label: 'Evaluation',
     number: 3,
-    subtitle: 'Is this a good option, and how does it score?',
+    subtitle: 'Is this a good option?',
   },
   {
     key: 'decision',
     label: 'Decision',
     number: 4,
-    subtitle: 'Which option are we going to take forward?',
+    subtitle: 'What are we going to do?',
   },
 ]
 
@@ -60,16 +60,12 @@ export const RatingPropertySchema = z.object({
 })
 export type RatingProperty = z.infer<typeof RatingPropertySchema>
 
-/** Seeds a fresh board with the same six properties the tool originally shipped with — a
- * reasonable starting point that every team can freely edit or replace via the Evaluation
- * column's properties picker. */
+/** Seeds a fresh board with a reasonable starting point that every team can freely edit or
+ * replace via the Evaluation column's properties picker. */
 export const DEFAULT_RATING_PROPERTIES: ReadonlyArray<RatingProperty> = [
-  { id: 'people', label: 'People' },
   { id: 'time', label: 'Time' },
   { id: 'money', label: 'Money' },
   { id: 'quality', label: 'Quality' },
-  { id: 'service', label: 'Service' },
-  { id: 'price', label: 'Price' },
 ]
 
 /** Each property is scored independently, keyed by `RatingProperty.id` — a property with no

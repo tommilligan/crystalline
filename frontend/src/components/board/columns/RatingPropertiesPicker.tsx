@@ -35,8 +35,7 @@ export function RatingPropertiesPicker({ properties, disabled }: RatingPropertie
           Scoring
         </Title>
         <Text size="xs" c="dimmed">
-          Use these to rank similar-sounding choices. We've prefilled some common ones — edit them
-          to fit your problem.
+          Change which properties you care about here.
         </Text>
       </Stack>
       <PillsInput size="xs" disabled={disabled} onClick={() => inputRef.current?.focus()}>
