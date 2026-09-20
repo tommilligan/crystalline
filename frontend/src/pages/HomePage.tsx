@@ -32,6 +32,7 @@ import {
 } from '@tabler/icons-react'
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { ShimmerText } from '../components/ShimmerText'
 import { useBoardsList, useCreateBoard, useDeleteBoard } from '../hooks/useBoardsRegistry'
 import { formatRelativeTime } from '../lib/date'
 import type { BoardMode, BoardSummary } from '../types/board'
@@ -154,7 +155,9 @@ export function HomePage() {
     <Center mih="100vh">
       <Stack gap="xl" w={560} px="md" py="xl">
         <Stack gap={4} align="center" ta="center">
-          <Title order={1}>Crystal Ball</Title>
+          <Title order={1}>
+            <ShimmerText>Crystal Ball</ShimmerText>
+          </Title>
           <Text c="dimmed">Make good decisions efficiently.</Text>
         </Stack>
 

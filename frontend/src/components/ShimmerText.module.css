@@ -1,0 +1,42 @@
+.shimmer {
+  display: inline-block;
+  background-image: linear-gradient(
+    100deg,
+    var(--mantine-color-text) 40%,
+    light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-3)) 50%,
+    var(--mantine-color-text) 60%
+  );
+  background-size: 250% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  /* Increase the duration in seconds to increase both the sweep time and delay time.
+   * At current values:
+   * - 8s * 75% = 6s sweep
+   * - 8s * 25% = 2s delay
+   */
+  animation: shimmer 8s infinite linear;
+}
+
+@keyframes shimmer {
+  /* Increase the background-position percentage to delay entry of shimmer. */
+  0% {
+    /* At 100%, shimmer gradient is at left edge of text. */
+    background-position: 100% 0;
+  }
+  /* Decrease the percentage keyframe value here to make the shimmer happen faster,
+   * and also to increase the delay time between shimmers. */
+  75% {
+    /* At 0%, shimmer gradient is at right edge of text. */
+    background-position: 0% 0;
+  }
+  100% {
+    background-position: 0% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer {
+    animation: none;
+  }
+}
