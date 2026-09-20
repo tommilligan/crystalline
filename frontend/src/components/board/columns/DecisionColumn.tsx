@@ -420,8 +420,7 @@ export function DecisionColumn({
           Next steps
         </Title>
         <Text size="xs" c="dimmed">
-          Action items for carrying out this decision. Each needs an owner and, ideally, a due date.
-          Add as many as the plan needs, then commit to lock them in.
+          Action items for carrying out this decision.
         </Text>
 
         <Table verticalSpacing="xs">
