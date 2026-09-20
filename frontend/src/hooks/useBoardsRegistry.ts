@@ -1,11 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createBoardRoom, deleteBoardRoom } from '../lib/boardsApi'
-import {
-  forgetBoardEntry,
-  listBoards,
-  registerBoard,
-  renameBoardEntry,
-} from '../lib/boardsRegistry'
+import { forgetBoardEntry, listBoards, registerBoard } from '../lib/boardsRegistry'
 import { createLocalBoardDoc, deleteLocalBoardData } from '../local-board/localBoardStore'
 import type { BoardSummary } from '../types/board'
 
@@ -40,14 +35,6 @@ export function useRegisterBoard() {
   return useMutation({
     mutationFn: (summary: Pick<BoardSummary, 'id' | 'title' | 'createdAt' | 'mode'>) =>
       registerBoard(summary),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: BOARDS_QUERY_KEY }),
-  })
-}
-
-export function useRenameBoardEntry() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: ({ id, title }: { id: string; title: string }) => renameBoardEntry(id, title),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: BOARDS_QUERY_KEY }),
   })
 }

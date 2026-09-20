@@ -47,8 +47,7 @@ export function phaseNumber(phase: Phase): number {
   return PHASES.find((candidate) => candidate.key === phase)?.number ?? 1
 }
 
-export const LifecycleStateSchema = z.enum(['active', 'signed'])
-export type LifecycleState = z.infer<typeof LifecycleStateSchema>
+const LifecycleStateSchema = z.enum(['active', 'signed'])
 
 /** A numeric rating property every option is scored against, 1 (bad) to 5 (good) — shared board
  * configuration, not fixed dimensions: teams can rename, add, or remove properties to fit what
@@ -116,7 +115,7 @@ export type OptionData = OptionFields & {
 
 /** How the team reached the chosen decision — drives whether the dissent field is shown (only
  * once a non-'all' agreement is recorded) in both the live board and the export. */
-export const AgreementSchema = z.enum(['all', 'majority', 'minority', 'unilateral'])
+const AgreementSchema = z.enum(['all', 'majority', 'minority', 'unilateral'])
 export type Agreement = z.infer<typeof AgreementSchema>
 
 /** Ordered so each `label` reads naturally as the tail of "This decision was agreed to …". */
@@ -177,7 +176,7 @@ export type BoardMetaFields = z.infer<typeof BoardMetaFieldsSchema>
 /** Which storage/transport backend a board uses — chosen once at creation (see
  * `docs/local-first-mode-plan.md`). Every mutation/read hook works identically in both; only the
  * provider underneath the shared `Y.Doc` differs. */
-export const BoardModeSchema = z.enum(['local', 'shared'])
+const BoardModeSchema = z.enum(['local', 'shared'])
 export type BoardMode = z.infer<typeof BoardModeSchema>
 
 export interface BoardSummary {

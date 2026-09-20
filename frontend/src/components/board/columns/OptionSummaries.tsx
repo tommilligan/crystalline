@@ -140,7 +140,7 @@ function RatingRow({
  * "column one" of the Evaluation column's two-column per-option layout, "column two" being
  * `RatingsFields`. Reused (always non-editable) wherever a later column inlines it instead of
  * showing its own Evaluation column. */
-export function GoodBadFields({ option, disabled }: { option: OptionData; disabled?: boolean }) {
+function GoodBadFields({ option, disabled }: { option: OptionData; disabled?: boolean }) {
   const prosId = useId()
   const consId = useId()
   return (
@@ -175,7 +175,7 @@ export function GoodBadFields({ option, disabled }: { option: OptionData; disabl
 
 /** A single option's numeric ratings, one row per configured property, stacked in a single
  * column — "column two" of the Evaluation column's per-option layout, alongside `GoodBadFields`. */
-export function RatingsFields({
+function RatingsFields({
   option,
   properties,
   disabled,
@@ -252,7 +252,7 @@ function RatingSummaryRow({ property, value }: { property: RatingProperty; value
  * there's nothing to edit and the `CollaborativeTextField` editor chrome `GoodBadFields` renders
  * would only get in the way. Reads the same Yjs fragments `GoodBadFields` edits, just as plain
  * text. */
-export function GoodBadSummary({ option }: { option: OptionData }) {
+function GoodBadSummary({ option }: { option: OptionData }) {
   const enablerText = useFragmentPlainText(option.enablerFragment)
   const blockerText = useFragmentPlainText(option.blockerFragment)
   return (
@@ -281,7 +281,7 @@ export function GoodBadSummary({ option }: { option: OptionData }) {
  * `GoodBadSummary` for the same pure-reference views. Dots give an at-a-glance shape without
  * relying on color alone; the number is always printed alongside them too, so this also holds up
  * in print/export where color may not render or be legible. */
-export function RatingsSummary({
+function RatingsSummary({
   option,
   properties,
 }: {

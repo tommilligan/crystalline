@@ -36,14 +36,14 @@ const client = createClient({
  * free text alike) now lives in the one `Y.Doc` described in `lib/boardDoc.ts`, synced purely as
  * an opaque Yjs binary via `liveblocks-yjs/BoardDocProvider.tsx` — Liveblocks Storage APIs
  * (`LiveObject`/`LiveList`/`useMutation`/`useStorage`) aren't used at all going forward. */
-export type Presence = {
+type Presence = {
   name: string
   color: string
 }
 
 const context = createRoomContext<Presence>(client)
 
-export const { RoomProvider, useRoom, useOthers, useUpdateMyPresence, useStatus } = context
+export const { RoomProvider, useRoom, useOthers, useUpdateMyPresence } = context
 
 // `useSelf` is taken from the suspense bundle: every board is rendered inside a
 // `ClientSideSuspense` (see `pages/BoardPage.tsx`), so it can be relied on to never return null

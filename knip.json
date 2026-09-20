@@ -2,9 +2,7 @@
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "workspaces": {
     ".": {
-      "entry": [
-        "scripts/smoke-test.mjs"
-      ]
+      "entry": ["scripts/smoke-test.mjs"]
     }
   }
 }

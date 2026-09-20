@@ -1,7 +1,8 @@
 name: CI
 
-# Runs the same checks CLAUDE.md documents for local dev (lint, typecheck, build, frontend unit
-# tests) against every push and pull request, so a broken build/lint/typecheck can't land.
+# Runs the same checks CLAUDE.md documents for local dev (lint, typecheck, knip, build, frontend
+# unit tests) against every push and pull request, so a broken build/lint/typecheck/unused-code
+# check can't land.
 
 on:
   push:
@@ -24,6 +25,8 @@ jobs:
       - run: npm run lint
 
       - run: npm run typecheck
+
+      - run: npm run knip
 
       - run: npm run build
 

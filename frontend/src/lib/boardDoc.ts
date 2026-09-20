@@ -143,11 +143,11 @@ export function createBoardDoc(doc: Y.Doc, title = 'Untitled board'): void {
 // the plan doc's "Zod schemas as the typed domain layer") — a corrupted single record throws
 // only when that specific record is read, not the whole board.
 
-export function readOptionFields(map: AnyMap): OptionFields {
+function readOptionFields(map: AnyMap): OptionFields {
   return OptionFieldsSchema.parse({ id: map.get('id'), createdAt: map.get('createdAt') })
 }
 
-export function readOptionScores(map: AnyMap): ScoreSet {
+function readOptionScores(map: AnyMap): ScoreSet {
   const scores = map.get('scores') as Y.Map<number>
   return Object.fromEntries(scores.entries())
 }
@@ -175,7 +175,7 @@ export function readNextStep(map: AnyMap): NextStepData {
   })
 }
 
-export function readDecisionFields(map: AnyMap): DecisionFields {
+function readDecisionFields(map: AnyMap): DecisionFields {
   return DecisionFieldsSchema.parse({
     chosenOptionId: map.get('chosenOptionId'),
     approvedBy: map.get('approvedBy'),

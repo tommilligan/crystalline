@@ -27,6 +27,8 @@ assets/           Original physical-whiteboard example the tool is modeled on
 - `npm run dev` — frontend + backend dev servers, concurrently.
 - `npm run typecheck` / `npm run build` / `npm run lint` / `npm run format` — root scripts, run
   across all workspaces (Biome for lint/format; `tsc -b` per workspace for typecheck/build).
+- `npm run knip` — root script, flags unused files/dependencies/exports across all workspaces.
+  Run it after removing or moving code, not just after adding it.
 - `npm run test -w frontend` — Vitest unit tests.
 - **`scripts/run-app.sh`** — starts both dev servers and drives the full board flow through a
   real headless browser (`scripts/smoke-test.mjs`). This is the "run it and look at it" check —

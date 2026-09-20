@@ -53,10 +53,6 @@ export async function registerBoard(
   writeAll([merged, ...readAll().filter((board) => board.id !== summary.id)])
 }
 
-export async function renameBoardEntry(id: string, title: string): Promise<void> {
-  writeAll(readAll().map((board) => (board.id === id ? { ...board, title } : board)))
-}
-
 export async function forgetBoardEntry(id: string): Promise<void> {
   writeAll(readAll().filter((board) => board.id !== id))
 }
