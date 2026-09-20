@@ -1,5 +1,6 @@
 import {
   ActionIcon,
+  Anchor,
   Blockquote,
   Button,
   Card,
@@ -17,6 +18,7 @@ import { useDisclosure } from '@mantine/hooks'
 import { IconLock, IconX } from '@tabler/icons-react'
 import dayjs from 'dayjs'
 import { type MouseEvent, useEffect, useMemo, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import type * as Y from 'yjs'
 import {
   useAddNextStep,
@@ -47,6 +49,7 @@ import { LiveClock } from '../LiveClock'
 import { SignBoardModal } from '../SignBoardModal'
 
 interface DecisionColumnProps {
+  boardId: string
   options: readonly OptionData[]
   decision: DecisionData
   nextSteps: readonly NextStepData[]
@@ -54,6 +57,27 @@ interface DecisionColumnProps {
   signed: boolean
   signedAt: string | null
   disabled?: boolean
+}
+
+/** Small, grey, right-aligned nudge toward the export page shown once an action that unlocks it
+ * (signing, committing next steps) has been taken — deliberately understated since it's a
+ * secondary, always-available action rather than a next required step. */
+function PrintableVersionHint({ boardId }: { boardId: string }) {
+  return (
+    <Text size="xs" c="dimmed" ta="right">
+      when you're ready, you can{' '}
+      <Anchor
+        component={Link}
+        to={`/board/${boardId}/export`}
+        target="_blank"
+        rel="noopener noreferrer"
+        size="xs"
+        fw={600}
+      >
+        export this decision
+      </Anchor>
+    </Text>
+  )
 }
 
 function LeaderboardRow({
@@ -163,6 +187,7 @@ function DecisionTextField({
  * state, since filling in the plan is the thing signing is meant to prompt, not something signing
  * should block. */
 export function DecisionColumn({
+  boardId,
   options,
   decision,
   nextSteps,
@@ -390,16 +415,19 @@ export function DecisionColumn({
         )}
 
         {signed ? (
-          <Button
-            color="dark"
-            variant="outline"
-            fullWidth
-            aria-disabled="true"
-            tabIndex={-1}
-            style={{ cursor: 'default', pointerEvents: 'none' }}
-          >
-            Decision Signed ✅
-          </Button>
+          <Stack gap={4}>
+            <Button
+              color="dark"
+              variant="outline"
+              fullWidth
+              aria-disabled="true"
+              tabIndex={-1}
+              style={{ cursor: 'default', pointerEvents: 'none' }}
+            >
+              Decision Signed ✅
+            </Button>
+            <PrintableVersionHint boardId={boardId} />
+          </Stack>
         ) : (
           <Button
             onClick={handleSignClick}
@@ -502,16 +530,19 @@ export function DecisionColumn({
         )}
 
         {nextStepsCommitted ? (
-          <Button
-            color="dark"
-            variant="outline"
-            fullWidth
-            aria-disabled="true"
-            tabIndex={-1}
-            style={{ cursor: 'default', pointerEvents: 'none' }}
-          >
-            Actions committed ✅
-          </Button>
+          <Stack gap={4}>
+            <Button
+              color="dark"
+              variant="outline"
+              fullWidth
+              aria-disabled="true"
+              tabIndex={-1}
+              style={{ cursor: 'default', pointerEvents: 'none' }}
+            >
+              Actions committed ✅
+            </Button>
+            <PrintableVersionHint boardId={boardId} />
+          </Stack>
         ) : (
           <Button
             onClick={() => commitNextSteps()}

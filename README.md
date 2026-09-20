@@ -5,6 +5,8 @@
 
 Make good decisions efficiently.
 
+Try the [live demo](https://tommilligan.github.io/crystalline).
+
 This tool guides you (or a team) through making decisions in a set, sequential process:
 
 - Problem clarification

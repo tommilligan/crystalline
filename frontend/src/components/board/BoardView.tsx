@@ -207,6 +207,7 @@ export function BoardView({ boardId, mode }: { boardId: string; mode: BoardMode 
     ),
     decision: (
       <DecisionColumn
+        boardId={boardId}
         options={options}
         decision={decision}
         nextSteps={nextSteps}

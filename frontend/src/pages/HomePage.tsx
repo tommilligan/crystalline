@@ -96,9 +96,6 @@ export function HomePage() {
   const [createError, setCreateError] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<BoardSummary | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
-  const [deleteConfirmText, setDeleteConfirmText] = useState('')
-
-  const DELETE_CONFIRM_PHRASE = 'delete board'
 
   const selectedModeOption = MODE_OPTIONS.find((option) => option.value === mode) ?? MODE_OPTIONS[0]
   const SelectedModeIcon = selectedModeOption.icon
@@ -233,7 +230,6 @@ export function HomePage() {
                               leftSection={<IconTrash size={14} />}
                               onClick={() => {
                                 setDeleteError(null)
-                                setDeleteConfirmText('')
                                 setDeleteTarget(board)
                               }}
                             >
@@ -267,7 +263,7 @@ export function HomePage() {
             <TextInput
               w="100%"
               label="Board title"
-              placeholder="e.g. OD Test Sample Reintegration"
+              placeholder="e.g. next work social"
               value={title}
               onChange={(event) => setTitle(event.currentTarget.value)}
               styles={{ label: { width: '100%', textAlign: 'left' } }}
@@ -316,13 +312,6 @@ export function HomePage() {
             <br />
           </Text>
           <Text size="sm">This action cannot be undone.</Text>
-          <TextInput
-            label={`Type "${DELETE_CONFIRM_PHRASE}" to confirm`}
-            placeholder={DELETE_CONFIRM_PHRASE}
-            value={deleteConfirmText}
-            onChange={(event) => setDeleteConfirmText(event.currentTarget.value)}
-            autoComplete="off"
-          />
           {deleteError && (
             <Text size="sm" c="red">
               {deleteError}
@@ -332,12 +321,7 @@ export function HomePage() {
             <Button variant="default" onClick={() => setDeleteTarget(null)}>
               Cancel
             </Button>
-            <Button
-              color="red"
-              loading={deleteBoard.isPending}
-              disabled={deleteConfirmText.trim().toLowerCase() !== DELETE_CONFIRM_PHRASE}
-              onClick={handleDeleteConfirm}
-            >
+            <Button color="red" loading={deleteBoard.isPending} onClick={handleDeleteConfirm}>
               Delete
             </Button>
           </Group>
