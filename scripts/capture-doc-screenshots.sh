@@ -10,7 +10,7 @@ set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 export SMOKE_SCREENSHOT_DIR="docs/screenshots"
-export SMOKE_BOARD_TITLE="Crystal Ball walkthrough"
+export SMOKE_BOARD_TITLE="OD Test Samples"
 export BACKEND_PORT="${BACKEND_PORT:-4100}"
 export FRONTEND_PORT="${FRONTEND_PORT:-5273}"
 

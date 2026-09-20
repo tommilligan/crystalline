@@ -50,7 +50,50 @@ const screenshotDir = process.env.SMOKE_SCREENSHOT_DIR
   : path.join(outDir, screenshotDirName)
 const baseUrl = cliArgs.find((arg) => !arg.startsWith('--')) ?? 'http://localhost:5173'
 
-const SCORE_DIMENSIONS = ['Time', 'Money', 'Quality']
+// Real worked example from `assets/original-whiteboard-example.png` (a pharma/QC OD test sample
+// decision) — text is verbatim off the board, so this exercises the app with realistic content
+// instead of a synthetic scenario. The board only ships three rating properties by default (Time,
+// Money, Quality); the other three the whiteboard actually scores against (People, Service,
+// Price) are added live via the Evaluation column's properties picker, covering that flow too.
+const SITUATION_TEXT = 'Reintegrate OD test samples back to final product (already filled + sealed)'
+
+const EXTRA_RATING_PROPERTIES = ['People', 'Service', 'Price']
+
+const OPTIONS = [
+  {
+    title: 'Return samples in all cases to the lot',
+    enabler: 'Simple, consistent',
+    blocker: 'Would need to assure no risk to mixing lots/prods and not damaged during transport.',
+    scores: { People: 3, Time: 3, Money: 5, Quality: 1, Service: 1, Price: 5 }, // 18
+  },
+  {
+    title: 'Return samples to lot with defined conditions',
+    enabler: 'Consistent approach but with rules to follow',
+    blocker: 'Must carefully define conditions.',
+    scores: { People: 3, Time: 3, Money: 5, Quality: 1, Service: 1, Price: 5 }, // 18
+  },
+  {
+    title: 'Do not return samples to lot',
+    enabler: 'Status quo',
+    blocker: 'Loss of >60 doses/lot',
+    scores: { People: 1, Time: 1, Money: 5, Quality: 3, Service: 1, Price: 5 }, // 16
+  },
+  {
+    title: 'Use samples for Stability, Retains or for QC testing',
+    enabler: 'Increase safety of final lot - discussion on retain samples/particles',
+    blocker: 'More work to implement (SOP changes)',
+    scores: { People: 5, Time: 5, Money: 5, Quality: 3, Service: 3, Price: 1 }, // 22 — chosen
+  },
+  {
+    title: 'Why continue OD testing? Quality stops routine testing',
+    enabler: 'Eliminates sample issue',
+    blocker: 'May affect filing',
+    scores: { People: 5, Time: 3, Money: 5, Quality: 1, Service: 1, Price: 5 }, // 20
+  },
+]
+
+// Verbatim from the whiteboard's Decision box.
+const COUNTERMEASURE_TEXT = 'Perform a one time SOP change with training'
 
 async function main() {
   if (isCustomScreenshotDir) {
@@ -119,53 +162,51 @@ async function main() {
     })
 
     await step('phase 1 — situation', async () => {
-      await fillEditor(0, 'Our QC lab is backlogged on OD test sample review.')
+      await fillEditor(0, SITUATION_TEXT)
       await page.locator('label', { hasText: 'Yes' }).click()
       const body = await page.locator('body').innerText()
-      await assert(body.includes('Our QC lab is backlogged'), 'situation text should be visible')
+      await assert(body.includes(SITUATION_TEXT), 'situation text should be visible')
       await page.getByRole('button', { name: 'Next >' }).click()
     })
 
-    const optionTitles = ['Hire a temp QC technician', 'Automate the OD test intake queue']
     await step('phase 2 — options', async () => {
       const optionInput = page.getByPlaceholder('Type an option, press Enter')
-      for (const title of optionTitles) {
+      for (const { title } of OPTIONS) {
         await optionInput.fill(title)
         await optionInput.press('Enter')
       }
       const body = await page.locator('body').innerText()
-      for (const title of optionTitles) {
+      for (const { title } of OPTIONS) {
         await assert(body.includes(title), `option "${title}" should be listed`)
       }
       await page.getByRole('button', { name: 'Next >' }).click()
     })
 
-    const scores = [
-      [3, 3, 4], // option 1: totals 10
-      [5, 5, 5], // option 2: totals 15
-    ]
     await step('phase 3 — evaluation (good/bad + ratings, merged)', async () => {
-      // Option 1's walkthrough step: Good/Bad text plus every rating property, side by side —
-      // both now live in the same accordion panel (the columns 3+4 merge).
-      await fillEditor(0, 'Fast to set up')
-      await fillEditor(1, 'Costs overtime budget')
-      for (const [dimIndex, dim] of SCORE_DIMENSIONS.entries()) {
-        await page
-          .getByRole('button', { name: `${dim}: ${scores[0][dimIndex]}` })
-          .first()
-          .click()
+      // The board only ships Time/Money/Quality by default — add the other three properties the
+      // whiteboard example actually scores against before walking through any option, since
+      // they're shared board configuration rather than per-option data.
+      const propertyInput = page.getByPlaceholder('Add a rating property, press Enter')
+      for (const label of EXTRA_RATING_PROPERTIES) {
+        await propertyInput.fill(label)
+        await propertyInput.press('Enter')
       }
-      await page.getByRole('button', { name: 'Next >' }).click() // advance to option 2's walkthrough step
 
-      await fillEditor(0, 'Scales well')
-      await fillEditor(1, 'Slow to roll out')
-      for (const [dimIndex, dim] of SCORE_DIMENSIONS.entries()) {
-        await page
-          .getByRole('button', { name: `${dim}: ${scores[1][dimIndex]}` })
-          .first()
-          .click()
+      for (const option of OPTIONS) {
+        // Each option's walkthrough step: Good/Bad text plus every rating property, side by side
+        // — both live in the same accordion panel (the columns 3+4 merge).
+        await fillEditor(0, option.enabler)
+        await fillEditor(1, option.blocker)
+        for (const [dim, value] of Object.entries(option.scores)) {
+          await page
+            .getByRole('button', { name: `${dim}: ${value}` })
+            .first()
+            .click()
+        }
+        // On every option but the last this advances the walkthrough to the next option's panel;
+        // on the last it advances the phase instead.
+        await page.getByRole('button', { name: 'Next >' }).click()
       }
-      await page.getByRole('button', { name: 'Next >' }).click() // advance to phase 4
     })
 
     await step('phase 4 — decision leaderboard', async () => {
@@ -175,30 +216,40 @@ async function main() {
         'Decision column should show its ranking leaderboard',
       )
       const leaderboardText = await leaderboard.innerText()
+      for (const option of OPTIONS) {
+        const total = Object.values(option.scores).reduce((sum, value) => sum + value, 0)
+        await assert(
+          leaderboardText.includes(`${total} points`),
+          `option "${option.title}" should show its total of ${total} points`,
+        )
+      }
+      const chosenIndex = leaderboardText.indexOf(OPTIONS[3].title) // 22 points, the top scorer
+      const runnerUpIndex = leaderboardText.indexOf(OPTIONS[4].title) // 20 points
+      const lowestIndex = leaderboardText.indexOf(OPTIONS[2].title) // 16 points, the bottom scorer
       await assert(
-        leaderboardText.includes('15 points') && leaderboardText.includes('10 points'),
-        'each option should show its total points',
-      )
-      const automateIndex = leaderboardText.indexOf('Automate the OD test intake queue')
-      const hireIndex = leaderboardText.indexOf('Hire a temp QC technician')
-      await assert(
-        automateIndex >= 0 && hireIndex >= 0 && automateIndex < hireIndex,
-        'higher-scoring option (15 points) should be listed above the lower-scoring one (10 points)',
+        chosenIndex >= 0 &&
+          runnerUpIndex >= 0 &&
+          lowestIndex >= 0 &&
+          chosenIndex < runnerUpIndex &&
+          runnerUpIndex < lowestIndex,
+        'options should be ranked highest-scoring first',
       )
       const body = await page.locator('body').innerText()
       await assert(
-        body.includes('Scales well') && body.includes('Fast to set up'),
+        body.includes(OPTIONS[0].enabler) && body.includes(OPTIONS[3].enabler),
         "the Evaluation column should stay visible as a read-only reference alongside Decision, showing each option's Good/Bad",
       )
     })
 
-    await step('decision — choose, countermeasure, agree, sign', async () => {
-      // Second option added in phase 2, so it's canonically "B" (spreadsheet-style display ID).
-      await page
-        .getByRole('button', { name: 'Select B: Automate the OD test intake queue' })
-        .click()
-      await fillEditor(0, 'Provision the automation budget ahead of rollout.')
+    // Fourth option added in phase 2, so it's canonically "D" (spreadsheet-style display ID) —
+    // matches the whiteboard's own "CHOSEN: Option 4".
+    const chosenOption = OPTIONS[3]
+    await step('decision — choose, countermeasure', async () => {
+      await page.getByRole('button', { name: `Select D: ${chosenOption.title}` }).click()
+      await fillEditor(0, COUNTERMEASURE_TEXT)
+    })
 
+    await step('decision — agree, sign', async () => {
       // Clicking Sign Decision before approver/agreement are filled shouldn't open the
       // confirmation modal — it should highlight the missing fields in place instead.
       const signButton = page.getByRole('button', { name: 'Sign Decision' })
@@ -224,9 +275,12 @@ async function main() {
       // "Commit to Action", not by the board's sign-off) so the team can fill in the plan. The
       // table always keeps at least one blank row present, so there's no separate "add the first
       // one" input to fill first.
-      await page.getByPlaceholder('e.g. Write an RFC').first().fill('Kick off automation pilot')
+      await page
+        .getByPlaceholder('e.g. Write an RFC')
+        .first()
+        .fill('Implement the one-time SOP change and train QC staff')
       await page.getByPlaceholder("Who's driving this").first().fill('Priya')
-      await page.getByPlaceholder('Pick a date').first().fill('01 Oct 2026')
+      await page.getByPlaceholder('Pick a date').first().fill('15 Oct 2026')
       await page.keyboard.press('Escape')
 
       const commitButton = page.getByRole('button', { name: 'Commit to Action' })

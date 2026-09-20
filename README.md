@@ -23,4 +23,4 @@ Originally a physical whiteboard exercise, this repo turns it into an interactiv
 
 The same phase-by-phase structure, in the app today:
 
-![Crystal Ball's board UI, showing options that have been evaluated and are now awaiting a decision](docs/screenshots/06-phase-4-decision-leaderboard.png)
+![Crystal Ball's board UI, showing options that have been evaluated and are now awaiting a decision](docs/screenshots/07-decision-choose-countermeasure.png)
