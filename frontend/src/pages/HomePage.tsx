@@ -33,6 +33,7 @@ import {
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useBoardsList, useCreateBoard, useDeleteBoard } from '../hooks/useBoardsRegistry'
+import { formatRelativeTime } from '../lib/date'
 import type { BoardMode, BoardSummary } from '../types/board'
 
 const MODE_OPTIONS: ReadonlyArray<{
@@ -214,7 +215,7 @@ export function HomePage() {
                       </Table.Td>
                       <Table.Td>
                         <Text size="sm" c="dimmed">
-                          {new Date(board.updatedAt).toLocaleString()}
+                          {formatRelativeTime(board.updatedAt)}
                         </Text>
                       </Table.Td>
                       <Table.Td w={1}>

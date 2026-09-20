@@ -1,5 +1,6 @@
 import { Badge, Divider, Group, Stack, Table, Text, Title } from '@mantine/core'
 import dayjs from 'dayjs'
+import { formatApprovalDate } from '../../lib/date'
 import type { DecisionData, NextStepData, OptionData, RatingProperty } from '../../types/board'
 import { AGREEMENT_OPTIONS, totalScore } from '../../types/board'
 import { EvaluationSummaryBody } from '../board/columns/OptionSummaries'
@@ -88,7 +89,7 @@ export function DecisionSummarySection({
         <Stack gap={2}>
           <Text fw={700}>Date</Text>
           <Text c={decision.date ? undefined : 'dimmed'}>
-            {decision.date ? dayjs(decision.date).format('D MMM YYYY') : '—'}
+            {decision.date ? formatApprovalDate(decision.date) : '—'}
           </Text>
         </Stack>
       </Group>

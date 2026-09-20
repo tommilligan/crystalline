@@ -33,6 +33,7 @@ import {
 } from '../../../hooks/useBoardMutations'
 import { useRatingProperties } from '../../../hooks/useBoardState'
 import { fireConfettiFromPoint } from '../../../lib/confetti'
+import { formatApprovalDate } from '../../../lib/date'
 import {
   useFragmentPlainText,
   useFragmentPlainTexts,
@@ -45,7 +46,6 @@ import {
   totalScore,
 } from '../../../types/board'
 import { CollaborativeTextField } from '../../editor/CollaborativeTextField'
-import { LiveClock } from '../LiveClock'
 import { SignBoardModal } from '../SignBoardModal'
 
 interface DecisionColumnProps {
@@ -388,7 +388,7 @@ export function DecisionColumn({
           <Text size="sm">
             This decision has been formally approved on{' '}
             <Text span fw={600}>
-              {dayjs(signedAt).format('D MMM YYYY')}
+              {formatApprovalDate(signedAt)}
             </Text>{' '}
             by{' '}
             <Text span fw={700}>
@@ -400,7 +400,9 @@ export function DecisionColumn({
           <>
             <Group gap={4} wrap="wrap" align="baseline">
               <Text size="sm">This decision has been formally approved on</Text>
-              <LiveClock />
+              <Text size="sm" fw={600}>
+                {formatApprovalDate(new Date())}
+              </Text>
               <Text size="sm">by:</Text>
             </Group>
             <TextInput

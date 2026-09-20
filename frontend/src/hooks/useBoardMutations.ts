@@ -12,7 +12,6 @@ import {
   getNextStepsArray,
   getOptionsArray,
   getRatingPropertiesArray,
-  getTimerMap,
 } from '../lib/boardDoc'
 import { seedTextFragment } from '../liveblocks-yjs/seedTextFragment'
 import type { Agreement, NextStepData } from '../types/board'
@@ -265,50 +264,6 @@ export function useUnsignBoard() {
         meta.set('nextStepsCommitted', false)
         meta.set('nextStepsCommittedAt', null)
       }
-    })
-  }, [doc])
-}
-
-/** Starts (or resumes from pause) the session timer. Writes only `endsAt`/`status` — clients
- * derive the ticking display locally by comparing `endsAt` to their own clock, so this is the
- * only network write until the next start/pause/reset. */
-export function useStartTimer() {
-  const { doc } = useBoardDoc()
-  return useCallback(() => {
-    doc.transact(() => {
-      const timer = getTimerMap(doc)
-      if (timer.get('status') === 'running') return
-      timer.set('endsAt', Date.now() + (timer.get('remainingMs') as number))
-      timer.set('status', 'running')
-    })
-  }, [doc])
-}
-
-/** Pauses the session timer, snapshotting the remaining time at the moment of pause. */
-export function usePauseTimer() {
-  const { doc } = useBoardDoc()
-  return useCallback(() => {
-    doc.transact(() => {
-      const timer = getTimerMap(doc)
-      if (timer.get('status') !== 'running') return
-      const endsAt = timer.get('endsAt') as number | null
-      const remainingMs =
-        endsAt === null ? (timer.get('remainingMs') as number) : Math.max(0, endsAt - Date.now())
-      timer.set('remainingMs', remainingMs)
-      timer.set('endsAt', null)
-      timer.set('status', 'paused')
-    })
-  }, [doc])
-}
-
-export function useResetTimer() {
-  const { doc } = useBoardDoc()
-  return useCallback(() => {
-    doc.transact(() => {
-      const timer = getTimerMap(doc)
-      timer.set('status', 'idle')
-      timer.set('remainingMs', timer.get('durationMs'))
-      timer.set('endsAt', null)
     })
   }, [doc])
 }

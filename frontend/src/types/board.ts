@@ -203,20 +203,3 @@ export function optionDisplayId(index: number): string {
   }
   return result
 }
-
-export const TimerStatusSchema = z.enum(['idle', 'running', 'paused'])
-export type TimerStatus = z.infer<typeof TimerStatusSchema>
-
-/** Synced session-timer state (advisory time-box on the situation phase, `docs/ui-notes.md`).
- * The `Y.Doc` is the single source of truth: a running timer needs only `endsAt` (the epoch ms
- * it counts down to), so clients compute the displayed remaining time locally against their own
- * clock — ticking never causes a write, only start/pause/reset do. */
-export const TimerStateSchema = z.object({
-  status: TimerStatusSchema,
-  durationMs: z.number(),
-  remainingMs: z.number(),
-  endsAt: z.number().nullable(),
-})
-export type TimerState = z.infer<typeof TimerStateSchema>
-
-export const DEFAULT_TIMER_DURATION_MS = 15 * 60 * 1000

@@ -8,17 +8,14 @@ import type {
   OptionFields,
   RatingProperty,
   ScoreSet,
-  TimerState,
 } from '../types/board'
 import {
   BoardMetaFieldsSchema,
   DEFAULT_RATING_PROPERTIES,
-  DEFAULT_TIMER_DURATION_MS,
   DecisionFieldsSchema,
   NextStepSchema,
   OptionFieldsSchema,
   RatingPropertySchema,
-  TimerStateSchema,
 } from '../types/board'
 
 /**
@@ -38,7 +35,6 @@ const DOC_KEYS = {
   ratingProperties: 'ratingProperties',
   decision: 'decision',
   nextSteps: 'nextSteps',
-  timer: 'timer',
 } as const
 
 // --- Top-level shared-type accessors ---------------------------------------------------------
@@ -59,9 +55,6 @@ export function getDecisionMap(doc: Y.Doc): AnyMap {
 }
 export function getNextStepsArray(doc: Y.Doc): AnyArray {
   return doc.getArray(DOC_KEYS.nextSteps)
-}
-export function getTimerMap(doc: Y.Doc): AnyMap {
-  return doc.getMap(DOC_KEYS.timer)
 }
 
 // --- Record lookup helpers ---------------------------------------------------------------------
@@ -138,12 +131,6 @@ export function createBoardDoc(doc: Y.Doc, title = 'Untitled board'): void {
     decision.set('countermeasure', new Y.XmlFragment())
     decision.set('dissent', new Y.XmlFragment())
 
-    const timer = getTimerMap(doc)
-    timer.set('status', 'idle')
-    timer.set('durationMs', DEFAULT_TIMER_DURATION_MS)
-    timer.set('remainingMs', DEFAULT_TIMER_DURATION_MS)
-    timer.set('endsAt', null)
-
     // `options`/`nextSteps` start empty — `getOptionsArray`/`getNextStepsArray` auto-vivify them
     // as a side effect of being read, nothing further to do here.
     getOptionsArray(doc)
@@ -218,13 +205,4 @@ export function readMeta(map: AnyMap): BoardMetaFields {
 
 export function getSituationFragment(doc: Y.Doc): Y.XmlFragment {
   return getMetaMap(doc).get('situation') as Y.XmlFragment
-}
-
-export function readTimer(map: AnyMap): TimerState {
-  return TimerStateSchema.parse({
-    status: map.get('status'),
-    durationMs: map.get('durationMs'),
-    remainingMs: map.get('remainingMs'),
-    endsAt: map.get('endsAt'),
-  })
 }

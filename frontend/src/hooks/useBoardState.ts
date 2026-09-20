@@ -8,13 +8,11 @@ import {
   getOptionsArray,
   getRatingPropertiesArray,
   getSituationFragment,
-  getTimerMap,
   readDecision,
   readMeta,
   readNextStep,
   readOption,
   readRatingProperty,
-  readTimer,
 } from '../lib/boardDoc'
 import type {
   DecisionData,
@@ -116,13 +114,6 @@ export function useNextStepsCommitted(): { committed: boolean; committedAt: stri
     return { committed: fields.nextStepsCommitted, committedAt: fields.nextStepsCommittedAt }
   }, [meta])
   return useYObserver(meta, select, shallowEqualObject)
-}
-
-export function useBoardTimer() {
-  const { doc } = useBoardDoc()
-  const map = getTimerMap(doc)
-  const select = useCallback(() => readTimer(map), [map])
-  return useYObserver(map, select, shallowEqualObject)
 }
 
 export function useBoardSituationAgreed(): boolean {

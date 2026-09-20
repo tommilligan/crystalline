@@ -30,7 +30,7 @@ State is split across four places, each deliberately narrow in scope:
 
 1. **Liveblocks Storage** (`frontend/src/liveblocks.config.ts`, `Storage` type) — the shared,
    structured board data: title, lifecycle state, the options list, rating properties, the
-   decision record, the session timer, and `situationAgreed`. Mutated only through the
+   decision record, and `situationAgreed`. Mutated only through the
    `use*` hooks in `frontend/src/hooks/useBoardMutations.ts`, which call Liveblocks'
    `useMutation`. Liveblocks' own storage history and multiplayer conflict resolution is what
    makes this safe with concurrent writers — see "Divergences" below for why this replaced the
@@ -96,9 +96,7 @@ per-browser id plus a display name/colour. What the backend actually guards:
 - **Hooks layer** (`frontend/src/hooks/`): `useBoardState.ts` (typed Storage reads),
   `useBoardMutations.ts` (typed Storage writes), `useBoardsRegistry.ts` (the local boards list,
   via React Query), `useRoomExists.ts`, `useColumnHasData.ts` (drives "resume where you left
-  off"), `useOptionWalkthrough.ts`, `useLocalIdentity.ts`, `useClockTick.ts` (drives the
-  session-timer display without triggering network writes — see `TimerState`'s doc comment in
-  `types/board.ts`).
+  off"), `useOptionWalkthrough.ts`, `useLocalIdentity.ts`.
 - **Export view** (`components/export/`) is its own route, not a mode toggle inside `BoardPage`
   — it joins the same Liveblocks room read-only, with its own print stylesheet and no board
   chrome, so it can be opened in a new tab or driven headlessly independent of the interactive
