@@ -16,6 +16,9 @@
    * - 8s * 25% = 2s delay
    */
   animation: shimmer 8s infinite linear;
+  /* `animation-delay` only affects the first iteration of an infinite animation, so this is a
+   * one-off pause before the shimmer first appears on page load, not a per-cycle delay. */
+  animation-delay: 5s;
 }
 
 @keyframes shimmer {
