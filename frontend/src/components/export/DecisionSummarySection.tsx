@@ -150,7 +150,7 @@ export function DecisionSummarySection({
                   {titleById.get(option.id) ?? 'Untitled option'}
                 </Text>
                 <Text fw={700} c="dimmed">
-                  {totalScore(option.scores, properties) ?? 0} points
+                  {totalScore(option.scores, properties) ?? '–'} points
                 </Text>
               </Group>
               <EvaluationSummaryBody option={option} properties={properties} />

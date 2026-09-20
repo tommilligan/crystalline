@@ -80,7 +80,7 @@ export function ExportView({ boardId }: { boardId: string }) {
 
       <div className={classes.sheet}>
         <Stack gap="xl">
-          <Title order={1}>{title}</Title>
+          <Title order={1}>{title || 'Untitled board'}</Title>
 
           <SituationSection text={situationText} agreed={situationAgreed} />
 

@@ -1,4 +1,4 @@
-import { Badge, SegmentedControl, Stack, Text } from '@mantine/core'
+import { SegmentedControl, Stack, Text } from '@mantine/core'
 import { useEffect, useId, useRef } from 'react'
 import { useBoardSynced } from '../../../board-doc/BoardDocContext'
 import { useSetSituationAgreed } from '../../../hooks/useBoardMutations'
@@ -6,6 +6,7 @@ import { useBoardSituationAgreed, useSituationFragment } from '../../../hooks/us
 import { useFragmentPlainText } from '../../../liveblocks-yjs/useFragmentPlainText'
 import { CollaborativeTextField } from '../../editor/CollaborativeTextField'
 import { NextButton } from '../NextButton'
+import { SituationSummary } from './SituationSummary'
 
 interface SituationColumnProps {
   disabled?: boolean
@@ -19,10 +20,10 @@ interface SituationColumnProps {
  * it was agreement on that specific wording.
  *
  * Once this column isn't the active one, it doesn't dim like the others (see the situation
- * special-case in `BoardColumnShell`) — instead the editable field itself transforms into a
- * plain read-out of the agreed statement plus an agreement badge (mirroring `SituationSection`
- * on the export page), since the team has moved on from editing it. Selecting the column again
- * reverses this back to the edit view.
+ * special-case in `BoardColumnShell`) — instead the editable field itself transforms into
+ * `SituationSummary`, a plain read-out of the agreed statement plus an agreement badge (shared
+ * with `SituationSection` on the export page), since the team has moved on from editing it.
+ * Selecting the column again reverses this back to the edit view.
  */
 export function SituationColumn({ disabled, active, onAdvancePhase }: SituationColumnProps) {
   const agreed = useBoardSituationAgreed()
@@ -57,16 +58,7 @@ export function SituationColumn({ disabled, active, onAdvancePhase }: SituationC
   }, [situationText, agreed, setSituationAgreed, synced])
 
   if (!active) {
-    return (
-      <Stack gap="xs">
-        <Text style={{ whiteSpace: 'pre-wrap' }} c={situationText ? undefined : 'dimmed'}>
-          {situationText || 'No problem statement yet.'}
-        </Text>
-        <Badge color={agreed ? 'teal' : 'gray'} variant="light" style={{ alignSelf: 'flex-start' }}>
-          {agreed ? 'Agreed' : 'Not Agreed'}
-        </Badge>
-      </Stack>
-    )
+    return <SituationSummary text={situationText} agreed={agreed} />
   }
 
   return (

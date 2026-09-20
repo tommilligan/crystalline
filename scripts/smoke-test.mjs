@@ -176,14 +176,14 @@ async function main() {
       )
       const leaderboardText = await leaderboard.innerText()
       await assert(
-        leaderboardText.includes('15 pts') && leaderboardText.includes('10 pts'),
+        leaderboardText.includes('15 points') && leaderboardText.includes('10 points'),
         'each option should show its total points',
       )
       const automateIndex = leaderboardText.indexOf('Automate the OD test intake queue')
       const hireIndex = leaderboardText.indexOf('Hire a temp QC technician')
       await assert(
         automateIndex >= 0 && hireIndex >= 0 && automateIndex < hireIndex,
-        'higher-scoring option (15 pts) should be listed above the lower-scoring one (10 pts)',
+        'higher-scoring option (15 points) should be listed above the lower-scoring one (10 points)',
       )
       const body = await page.locator('body').innerText()
       await assert(

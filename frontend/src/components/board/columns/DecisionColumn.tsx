@@ -100,7 +100,7 @@ function LeaderboardRow({
           {displayId}: {title}
         </Text>
         <Text size="xs" fw={700} c="dimmed" style={{ flexShrink: 0 }}>
-          {points ?? '–'} pts
+          {points ?? '–'} points
         </Text>
       </Group>
     </Card>

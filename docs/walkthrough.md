@@ -45,8 +45,8 @@ scoped to one option at a time.
 ## 6. Phase 4 — Decision leaderboard
 
 Evaluation scores roll up into a ranked leaderboard, highest total first — here "Automate the OD
-test intake queue" (30 pts) outranks "Hire a temp QC technician" (21 pts). The Evaluation column
-stays visible alongside it as a read-only reference.
+test intake queue" (30 points) outranks "Hire a temp QC technician" (21 points). The Evaluation
+column stays visible alongside it as a read-only reference.
 
 ![Decision phase leaderboard ranking the two options by total score, with Evaluation still visible alongside it](screenshots/06-phase-4-decision-leaderboard.png)
 
